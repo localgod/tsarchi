@@ -11,7 +11,7 @@
     - [Building the Project](#building-the-project)
   - [Usage](#usage)
     - [Running TSArchi](#running-tsarchi)
-      - [Example Command:](#example-command)
+      - [Example Command](#example-command)
     - [Parsing an ArchiMate File Programmatically](#parsing-an-archimate-file-programmatically)
   - [Contributing](#contributing)
   - [License](#license)
@@ -70,13 +70,14 @@ You can run the program via the command line using `node ./dist/tsarchi.mjs` wit
 - `--input <path>`: The path to the input `.archimate` file you wish to parse and manipulate.
 - `--output <path>`: The path where the modified model will be saved as a `.archimate` file.
 
-#### Example Command:
+#### Example Command
 
 ```bash
 node ./dist/tsarchi.mjs --input ./models/example.archimate --output ./models/output.archimate
 ```
 
 This command will:
+
 1. Parse the model in `./models/example.archimate`.
 2. Save the modified model to `./models/output.archimate`.
 

@@ -121,22 +121,29 @@ class Archimate {
         '@_xsi:type': `archimate:${child.type}`,
         '@_id': child.id,
         '@_targetConnections': child.targetConnections,
-        '@_fillColor': child.fillColor,
         '@_name': child.name,
-        '@_archimateElement': child.archimateElement,
         '@_textAlignment': child.textAlignment !== undefined ? String(child.textAlignment) : undefined,
+        '@_fillColor': child.fillColor,
+        '@_archimateElement': child.archimateElement,
         bounds: this.boundsToSchemaBounds(child.bounds),
         sourceConnection: child.sourceConnection ? this.sourceConnectionToSchemaSourceConnection(child.sourceConnection) : undefined,
       };
+
+
 
       if (child.child && Array.isArray(child.child)) {
         el.child = []
         el.child = this.saveChildren(el.child, child.child);
       }
-
       childElements.push(el);
-    });
+      if (child.documentation) {
+        el.documentation = child.documentation
+      }
 
+      if (child.fillColor) {
+        el['@_fillColor'] = child.fillColor
+      }
+    });
     return childElements;
   }
 
@@ -156,7 +163,6 @@ class Archimate {
       '@_y': b.y as unknown as string,
       '@_width': b.width as unknown as string,
       '@_height': b.height as unknown as string
-
     };
   }
 
@@ -177,7 +183,6 @@ class Archimate {
       '@_source': b.source,
       '@_target': b.target,
       '@_archimateRelationship': b.archimateRelationship
-
     };
   }
 
@@ -192,6 +197,7 @@ class Archimate {
       '@_textAlignment': textAlignment,
       sourceConnection,
       bounds,
+      documentation
     } = el;
 
     const o: Child = {
@@ -204,6 +210,7 @@ class Archimate {
       fillColor,
       textAlignment: textAlignment ? Number(textAlignment) : undefined,
       sourceConnection: sourceConnection ? this.SchemaSourceConnectionToSourceConnection(sourceConnection) : undefined,
+      documentation
     };
     return this.removeUndefinedProperties(o) as Child;
   }
@@ -230,11 +237,12 @@ class Archimate {
       if (Array.isArray(folder?.element)) {
 
         this.model[folderKey].elements = [];
-        folder.element.forEach(element => {
+        folder.element.forEach((element: SchemaElement) => {
 
           const el = { id: element['@_id'], name: element['@_name'], type: element['@_xsi:type'].replace(/^archimate:/, '') } as Element;
           el.source = element['@_source'] ? element['@_source'] : el.source
           el.target = element['@_target'] ? element['@_target'] : el.target;
+          el.documentation = element.documentation ? element.documentation : el.documentation
 
           el.properties = new Map<string, string>();
           if (Array.isArray(element.property)) {
@@ -251,8 +259,6 @@ class Archimate {
             el.child = jo
 
           }
-
-
           this.model[folderKey].elements?.push(el);
         });
       }
@@ -291,8 +297,15 @@ class Archimate {
           '@_xsi:type': `archimate:${el.type}`,
           '@_name': el.name,
           '@_id': el.id,
-          property: properties.length > 0 ? properties : undefined
         } as SchemaElement;
+
+        if (el.documentation) {
+          l.documentation = el.documentation
+        }
+
+        if (properties) {
+          l.property = properties
+        }
 
         if (el.source && el.target) {
           l['@_source'] = el.source
@@ -301,7 +314,6 @@ class Archimate {
 
         if (el.child) {
           l.child = this.saveChildren([], el.child)
-
         }
         return l
       })
@@ -313,10 +325,6 @@ class Archimate {
         '@_type': folderKey
       };
 
-
-
-
-
       out['archimate:model'].folder.push(folder);
     } else {
       const folder: SchemaFolder = {
@@ -327,8 +335,6 @@ class Archimate {
 
       out['archimate:model'].folder.push(folder);
     }
-
-
   }
 }
 

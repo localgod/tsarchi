@@ -1,0 +1,20 @@
+gitConfig:
+  alias.st: status
+tasks:
+  - name: Setup fnm (Fast node manager)
+    before: curl -fsSL https://fnm.vercel.app/install | bash
+    init: |
+      source /home/gitpod/.bashrc
+      fnm install --latest
+  - name: Global dependencies
+    before: npm install --location=global npm@latest typescript@latest markdownlint-cli@latest
+  - name: Setup tsarchi
+    init: npm install
+  - name: Start typecript service
+    command: npm run dev
+    openMode: tab-after
+
+vscode:
+  extensions:
+    - DavidAnson.vscode-markdownlint
+    - usernamehw.errorlens

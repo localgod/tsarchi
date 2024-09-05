@@ -16,13 +16,13 @@
   "devDependencies": {
     "@eslint/js": "^9.4.0",
     "@stylistic/eslint-plugin-ts": "^2.7.2",
-    "@types/node": "^20.14.2",
+    "@types/node": "^22.5.4",
     "eslint": "^9.4.0",
     "globals": "^15.4.0",
     "typescript-eslint": "rc-v8"
   },
   "dependencies": {
-    "commander": "^11.1.0",
-    "fast-xml-parser": "^4.3.6"
+    "fast-xml-parser": "^4.3.6",
+    "commander": "^12.1.0"
   }
 }

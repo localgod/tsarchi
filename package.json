@@ -1,0 +1,25 @@
+{
+  "name": "tsarchi",
+  "version": "1.0.0",
+  "description": "Typescript implmentation of the Archi model",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "npx tsc -watch",
+    "lint": "npx eslint .",
+    "lintfix": "npx eslint --fix --ignore-pattern 'dist' ."
+  },
+  "author": "Johannes Skov Frandsen",
+  "license": "ISC",
+  "devDependencies": {
+    "@eslint/js": "^9.4.0",
+    "@stylistic/eslint-plugin-ts": "^2.7.2",
+    "@types/node": "^20.14.2",
+    "eslint": "^9.4.0",
+    "globals": "^15.4.0",
+    "typescript-eslint": "rc-v8"
+  },
+  "dependencies": {
+    "fast-xml-parser": "^4.3.6"
+  }
+}

@@ -17,4 +17,5 @@ export interface Child {
   bounds: Bounds
   child?:Child[]
   sourceConnection?:SourceConnection
+  documentation?:string
 }

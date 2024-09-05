@@ -8,7 +8,8 @@
     "build": "npx tsc",
     "dev": "npx tsc -watch",
     "lint": "npx eslint .",
-    "lintfix": "npx eslint --fix --ignore-pattern 'dist' ."
+    "lintfix": "npx eslint --fix --ignore-pattern 'dist' .",
+    "mdlint": "markdownlint '**/*.md' --ignore node_modules --ignore slides --disable MD033 MD013 MD041"
   },
   "author": "Johannes Skov Frandsen",
   "license": "ISC",
@@ -21,7 +22,7 @@
     "typescript-eslint": "rc-v8"
   },
   "dependencies": {
-    "fast-xml-parser": "^4.3.6",
-    "commander": "^11.1.0"
+    "commander": "^11.1.0",
+    "fast-xml-parser": "^4.3.6"
   }
 }

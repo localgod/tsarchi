@@ -12,5 +12,6 @@ export interface ChildElement {
   '@_fillColor'?: string;
   '@_textAlignment'?: string;
   '@_archimateElement'?: string;
+  documentation?:string;
   sourceConnection?: SourceConnection;
 }

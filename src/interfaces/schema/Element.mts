@@ -5,7 +5,6 @@ import { SourceConnection } from "./SourceConnection.mjs";
 
 
 export interface Element {
-  property?: Array<Property> | Property;
   '@_xsi:type': string;
   '@_name': string;
   '@_id': string;
@@ -14,6 +13,8 @@ export interface Element {
   '@_archimateElement'?: string;
   '@_fillColor'?: string;
   '@_targetConnections'?: string;
+  documentation?:string;
+  property?: Array<Property> | Property;
   child?: ChildElement;
   bounds?: Bounds;
   sourceConnection?: SourceConnection;

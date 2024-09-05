@@ -1,7 +1,7 @@
+import { Command } from 'commander';
 import { XMLParser, XMLBuilder, XMLValidator, XmlBuilderOptions } from 'fast-xml-parser'
 import { Archimate } from './Archimate.mjs'
 import { readFile, writeFile } from 'fs/promises';
-import { inspect } from 'util';
 import { PathLike } from 'fs';
 
 export class TsArchi {
@@ -25,15 +25,15 @@ export class TsArchi {
     }
   }
 
-  async loadModel() {
-    const data = await this.load('test.archimate');
-    await this.model.load(data)
+  async loadModel(path:PathLike) {
+    const data = await this.load(path);
+    this.model.load(data)
     return this.model
   }
 
-  async saveModel() {
+  async saveModel(path:PathLike) {
     const out = this.model.store()
-    await this.save('out.archimate', out);
+    await this.save(path, out);
   }
 
   async save(path: PathLike, json: object) {
@@ -50,9 +50,19 @@ export class TsArchi {
   }
 }
 
-const tsa = new TsArchi()
-await tsa.loadModel()
-await tsa.saveModel()
-//console.log(inspect(json, false, null, true))
+const program = new Command()
+program.name('sync')
+program.description('Parse mood to archi import files');
+program.requiredOption('--input <path>', 'path to input file');
+program.requiredOption('--output <path>', 'path to output file');
+program.action(async (options: { input: string, output: string  }) => {
+  const tsa = new TsArchi()
+  await tsa.loadModel(options.input)
+  await tsa.saveModel(options.output)
+})
+program.parse()
+
+
+
 
 

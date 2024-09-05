@@ -1,5 +1,10 @@
-import { inspect } from 'util';
-import { ArchimateSchema, Folder as SchemaFolder, Element as SchemaElement, Property as SchemaProperty, ChildElement, Bounds as SchemaBounds, SourceConnection as SchemaSourceConnection } from './ArchimateSchema.interface.mjs'
+import { ArchimateSchema } from "./interfaces/schema/ArchimateSchema.mjs";
+import { Folder as SchemaFolder } from "./interfaces/schema/Folder.mjs";
+import { Element as SchemaElement } from "./interfaces/schema/Element.mjs";
+import { ChildElement } from "./interfaces/schema/ChildElement.mjs";
+import { SourceConnection as SchemaSourceConnection } from "./interfaces/schema/SourceConnection.mjs";
+import { Bounds as SchemaBounds } from "./interfaces/schema/Bounds.mjs";
+import { Property as SchemaProperty } from "./interfaces/schema/Property.mjs";
 import { Element } from './interfaces/Element.mjs';
 import { Model } from './interfaces/Model.mjs';
 import { Child } from './interfaces/Child.mjs';
@@ -147,7 +152,7 @@ class Archimate {
 
   private boundsToSchemaBounds(b: Bounds): SchemaBounds {
     return {
-      '@_x': b.x as unknown as string,    // Convert number to the type expected by SchemaBounds
+      '@_x': b.x as unknown as string,
       '@_y': b.y as unknown as string,
       '@_width': b.width as unknown as string,
       '@_height': b.height as unknown as string
@@ -203,7 +208,6 @@ class Archimate {
     return this.removeUndefinedProperties(o) as Child;
   }
 
-
   private removeUndefinedProperties(obj: object): object {
     return Object.entries(obj).reduce((acc, [key, value]) => {
       if (value !== undefined) {
@@ -253,10 +257,6 @@ class Archimate {
         });
       }
     }
-  }
-
-  public dump() {
-    console.log(inspect(this.model, false, null, true))
   }
 
   public store(): object {

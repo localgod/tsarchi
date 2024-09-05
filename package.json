@@ -1,10 +1,11 @@
 {
   "name": "tsarchi",
   "version": "1.0.0",
-  "description": "Typescript implmentation of the Archi model",
-  "main": "index.js",
+  "description": "Typescript implementation of the Archi model",
+  "main": "tsarchi.mjs",
   "type": "module",
   "scripts": {
+    "build": "npx tsc",
     "dev": "npx tsc -watch",
     "lint": "npx eslint .",
     "lintfix": "npx eslint --fix --ignore-pattern 'dist' ."
@@ -20,6 +21,7 @@
     "typescript-eslint": "rc-v8"
   },
   "dependencies": {
-    "fast-xml-parser": "^4.3.6"
+    "fast-xml-parser": "^4.3.6",
+    "commander": "^11.1.0"
   }
 }

@@ -1,7 +1,3 @@
-Here is the amended `README.md` to reflect the new way of calling the program using `node ./dist/tsarchi.mjs` with the required arguments `--input` and `--output`:
-
----
-
 # TSArchi
 
 **TSArchi** is a TypeScript-based utility for parsing `.archimate` files and manipulating the contained ArchiMate models. The project enables reading, editing, and saving enterprise architecture models compliant with the ArchiMate standard.

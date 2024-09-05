@@ -6,10 +6,7 @@ Here is the amended `README.md` to reflect the new way of calling the program us
 
 **TSArchi** is a TypeScript-based utility for parsing `.archimate` files and manipulating the contained ArchiMate models. The project enables reading, editing, and saving enterprise architecture models compliant with the ArchiMate standard.
 
-## Table of Contents
-
 - [TSArchi](#tsarchi)
-  - [Table of Contents](#table-of-contents)
   - [Introduction](#introduction)
   - [Features](#features)
   - [Getting Started](#getting-started)

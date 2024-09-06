@@ -11,6 +11,7 @@ import { Child } from './interfaces/Child.mjs';
 import { Bounds } from './interfaces/Bounds.mjs';
 import { SourceConnection } from './interfaces/SourceConnection.mjs';
 
+const ARCHIMATE_PREFIX = 'archimate:'
 
 const folderType = new Map<string, string>(
   [
@@ -38,45 +39,19 @@ class Archimate {
   }
 
   private init(): Model {
-    return {
-      strategy: {
-        name: folderType.get('strategy')!,
+    const model: Model = {} as Model;
+
+    folderType.forEach((name, key) => {
+      model[key as keyof Model] = {
+        name,
         id: this.generateRandomId()
-      },
-      business: {
-        name: folderType.get('business')!,
-        id: this.generateRandomId()
-      },
-      application: {
-        name: folderType.get('application')!,
-        id: this.generateRandomId()
-      },
-      technology: {
-        name: folderType.get('technology')!,
-        id: this.generateRandomId()
-      },
-      motivation: {
-        name: folderType.get('motivation')!,
-        id: this.generateRandomId()
-      },
-      implementation_migration: {
-        name: folderType.get('implementation_migration')!,
-        id: this.generateRandomId()
-      },
-      other: {
-        name: folderType.get('other')!,
-        id: this.generateRandomId()
-      },
-      relations: {
-        name: folderType.get('relations')!,
-        id: this.generateRandomId()
-      },
-      diagrams: {
-        name: folderType.get('diagrams')!,
-        id: this.generateRandomId()
-      }
-    }
+      };
+    });
+
+    return model;
   }
+
+
 
   private generateRandomId(): string {
     const characters = 'abcdef0123456789';
@@ -97,28 +72,24 @@ class Archimate {
     Object.keys(this.model).forEach((key) => this.loadFolder(data, key as keyof Model))
   }
 
-  private loadChildren(el: object[], child: ChildElement | ChildElement[]) {
-    if (!Array.isArray(child)) {
-      const j = this.convertChildElementToChild(child)
-      if (child.child) {
-
-        j.child = []
-        this.loadChildren(j.child, child.child)
+  private loadChildren(el: object[], child: ChildElement | ChildElement[]): object[] {
+    const children = Array.isArray(child) ? child : [child];
+    children.forEach(c => {
+      const j = this.convertChildElementToChild(c);
+      if (c.child) {
+        j.child = [];
+        this.loadChildren(j.child, c.child);
       }
-      el.push(j)
-    } else if (Array.isArray(child)) {
-      child.forEach(c => {
-
-        this.loadChildren(el, c)
-      })
-    }
-    return el
+      el.push(j);
+    });
+    return el;
   }
+  
 
   private saveChildren(childElements: ChildElement[], children: Child[]): ChildElement[] {
     children.forEach(child => {
       const el: ChildElement = {
-        '@_xsi:type': `archimate:${child.type}`,
+        '@_xsi:type': `${ARCHIMATE_PREFIX}${child.type}`,
         '@_id': child.id,
         '@_targetConnections': child.targetConnections,
         '@_name': child.name,
@@ -128,8 +99,6 @@ class Archimate {
         bounds: this.boundsToSchemaBounds(child.bounds),
         sourceConnection: child.sourceConnection ? this.sourceConnectionToSchemaSourceConnection(child.sourceConnection) : undefined,
       };
-
-
 
       if (child.child && Array.isArray(child.child)) {
         el.child = []
@@ -147,22 +116,21 @@ class Archimate {
     return childElements;
   }
 
-
   private schemaBoundsToBounds(b: SchemaBounds): Bounds {
     return {
-      x: b['@_x'] as unknown as number,
-      y: b['@_y'] as unknown as number,
-      height: b['@_height'] as unknown as number,
-      width: b['@_width'] as unknown as number
+      x: Number(b['@_x']),
+      y: Number(b['@_y']),
+      height: Number(b['@_height']),
+      width: Number(b['@_width'])
     }
   }
 
   private boundsToSchemaBounds(b: Bounds): SchemaBounds {
     return {
-      '@_x': b.x as unknown as string,
-      '@_y': b.y as unknown as string,
-      '@_width': b.width as unknown as string,
-      '@_height': b.height as unknown as string
+      '@_x': String(b.x),
+      '@_y': String(b.y),
+      '@_width': String(b.width),
+      '@_height': String(b.height)
     };
   }
 
@@ -172,13 +140,13 @@ class Archimate {
       archimateRelationship: b['@_archimateRelationship'],
       source: b['@_source'],
       target: b['@_target'],
-      type: b['@_xsi:type'].replace('archimate:', '')
+      type: b['@_xsi:type'].replace(ARCHIMATE_PREFIX, '')
     }
   }
 
   private sourceConnectionToSchemaSourceConnection(b: SourceConnection): SchemaSourceConnection {
     return {
-      '@_xsi:type': `archimate:${b.type}`,
+      '@_xsi:type': `${ARCHIMATE_PREFIX}${b.type}`,
       '@_id': b.id,
       '@_source': b.source,
       '@_target': b.target,
@@ -202,7 +170,7 @@ class Archimate {
 
     const o: Child = {
       id,
-      type: type.replace('archimate:', ''),
+      type: type.replace(ARCHIMATE_PREFIX, ''),
       bounds: this.schemaBoundsToBounds(bounds),
       name,
       archimateElement,
@@ -225,45 +193,57 @@ class Archimate {
   }
 
   private loadFolder(data: ArchimateSchema, folderKey: keyof Model) {
-    const folder: SchemaFolder | undefined = data['archimate:model'].folder.find((elm) => elm['@_type'] === folderKey);
+    const folder: SchemaFolder | undefined = this.findFolder(data, folderKey);
     if (folder) {
-
-      this.model[folderKey].id = folder['@_id'];
-      this.model[folderKey].name = folder['@_name']
-
-      if (typeof folder?.element === 'object' && !Array.isArray(folder?.element) && folder?.element !== null) {
-        folder.element = [folder?.element]
-      }
-      if (Array.isArray(folder?.element)) {
-
-        this.model[folderKey].elements = [];
-        folder.element.forEach((element: SchemaElement) => {
-
-          const el = { id: element['@_id'], name: element['@_name'], type: element['@_xsi:type'].replace(/^archimate:/, '') } as Element;
-          el.source = element['@_source'] ? element['@_source'] : el.source
-          el.target = element['@_target'] ? element['@_target'] : el.target;
-          el.documentation = element.documentation ? element.documentation : el.documentation
-
-          el.properties = new Map<string, string>();
-          if (Array.isArray(element.property)) {
-
-            element.property.forEach(p => {
-              el.properties?.set(p['@_key'], p['@_value']);
-            });
-          } else if (typeof element.property === 'object' && element.property !== null) {
-            el.properties?.set(element.property['@_key'], element.property['@_value']);
-          }
-
-          if (element.child) {
-            const jo = this.loadChildren([], element.child)
-            el.child = jo
-
-          }
-          this.model[folderKey].elements?.push(el);
-        });
-      }
+      this.setFolderMetadata(folderKey, folder);
+      this.processFolderElements(folderKey, folder);
     }
   }
+
+  private findFolder(data: ArchimateSchema, folderKey: keyof Model): SchemaFolder | undefined {
+    return data['archimate:model'].folder.find((elm) => elm['@_type'] === folderKey);
+  }
+
+  private setFolderMetadata(folderKey: keyof Model, folder: SchemaFolder) {
+    this.model[folderKey].id = folder['@_id'];
+    this.model[folderKey].name = folder['@_name'];
+  }
+
+  private processFolderElements(folderKey: keyof Model, folder: SchemaFolder) {
+    if (folder?.element) {
+      const elements = Array.isArray(folder.element) ? folder.element : [folder.element];
+      this.model[folderKey].elements = [];
+      elements.forEach((element: SchemaElement) => {
+        const el = this.createElement(element);
+        this.model[folderKey].elements?.push(el);
+      });
+    }
+  }
+
+  private createElement(element: SchemaElement): Element {
+    const el = {
+      id: element['@_id'],
+      name: element['@_name'],
+      type: element['@_xsi:type'].replace(/^archimate:/, ''),
+      source: element['@_source'] || undefined,
+      target: element['@_target'] || undefined,
+      documentation: element.documentation || undefined,
+      properties: new Map<string, string>(),
+      child: element.child ? this.loadChildren([], element.child) as Child[] : undefined
+    } as Element;
+
+    this.populateElementProperties(el, element);
+    return el;
+  }
+
+  private populateElementProperties(el: Element, element: SchemaElement) {
+    if (Array.isArray(element.property)) {
+      element.property.forEach(p => el.properties.set(p['@_key'], p['@_value']));
+    } else if (typeof element.property === 'object' && element.property !== null) {
+      el.properties.set(element.property['@_key'], element.property['@_value']);
+    }
+  }
+
 
   public store(): object {
     const out: ArchimateSchema = {
@@ -294,7 +274,7 @@ class Archimate {
         }
 
         const l = {
-          '@_xsi:type': `archimate:${el.type}`,
+          '@_xsi:type': `${ARCHIMATE_PREFIX}${el.type}`,
           '@_name': el.name,
           '@_id': el.id,
         } as SchemaElement;

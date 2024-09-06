@@ -1,7 +1,9 @@
 node_modules
-out
 dist
+*.archimate
 *.mjs
 *.archimate
 *.xml
 *.bak
+!sample.archimate
+

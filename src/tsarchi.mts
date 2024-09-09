@@ -27,12 +27,12 @@ export class TsArchi {
 
   async loadModel(path:PathLike) {
     const data = await this.load(path);
-    this.model.load(data)
+    this.model.parse(data)
     return this.model
   }
 
   async saveModel(path:PathLike) {
-    const out = this.model.store()
+    const out = this.model.serialize()
     await this.save(path, out);
   }
 

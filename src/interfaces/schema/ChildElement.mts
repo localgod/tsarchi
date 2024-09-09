@@ -3,8 +3,6 @@ import { SourceConnection } from "./SourceConnection.mjs";
 
 
 export interface ChildElement {
-  bounds: Bounds;
-  child?: ChildElement[];
   '@_xsi:type': string;
   '@_id': string;
   '@_name'?: string;
@@ -12,6 +10,8 @@ export interface ChildElement {
   '@_fillColor'?: string;
   '@_textAlignment'?: string;
   '@_archimateElement'?: string;
-  documentation?:string;
+  bounds: Bounds;
+  documentation?: string;
   sourceConnection?: SourceConnection;
+  child?: ChildElement[];
 }

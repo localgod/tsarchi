@@ -21,3 +21,7 @@ jobs:
         run: |
           npm run lint
           npm run mdlint
+      - name: Test
+        run: |
+          npm run sync
+          npm run test

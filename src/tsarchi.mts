@@ -53,8 +53,8 @@ export class TsArchi {
 const program = new Command()
 program.name('sync')
 program.description('Parse mood to archi import files');
-program.requiredOption('--input <path>', 'path to input file');
-program.requiredOption('--output <path>', 'path to output file');
+program.requiredOption('-i, --input <path>', 'path to input file');
+program.requiredOption('-o, --output <path>', 'path to output file');
 program.action(async (options: { input: string, output: string  }) => {
   const tsa = new TsArchi()
   await tsa.loadModel(options.input)

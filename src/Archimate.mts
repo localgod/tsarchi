@@ -1,4 +1,5 @@
 import { Model } from './interfaces/Model.mjs';
+import { ArchimateSchema } from './interfaces/schema/Schema.mjs';
 import { Parser } from './Parser.mjs'
 import { Serializer } from './Serializer.mjs'
 
@@ -57,7 +58,7 @@ export class Archimate {
 
   public parse(input: object) {
     const parser = new Parser(this.model)
-    this.name = input['archimate:model']?.['@_name'] || 'Unnamed Model';
+    this.name = (input as ArchimateSchema)['archimate:model']?.['@_name'] || 'Unnamed Model';
     this.model = parser.parse(input)
   }
 

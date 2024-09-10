@@ -1,8 +1,8 @@
-import { ArchimateSchema } from "./interfaces/schema/ArchimateSchema.mjs";
+import { Schema as ArchimateSchema } from "./interfaces/schema/Schema.mjs";
 import { Folder as SchemaFolder } from "./interfaces/schema/Folder.mjs";
 import { Element as SchemaElement } from "./interfaces/schema/Element.mjs";
 import { Element } from "./interfaces/Element.mjs";
-import { ChildElement } from "./interfaces/schema/ChildElement.mjs";
+import { Child as SchemaChild } from "./interfaces/schema/Child.mjs";
 import { Property as SchemaProperty } from "./interfaces/schema/Property.mjs";
 import { Model } from './interfaces/Model.mjs';
 import { Child } from './interfaces/Child.mjs';
@@ -64,7 +64,7 @@ export class Serializer {
     };
 
     if (Array.isArray(folderModel.elements)) {
-      folder.element = folderModel.elements.map((el) => this.serializeElement(el));
+      folder.element = folderModel.elements.map((el) => this.serializeElement(el))
     }
 
     schema['archimate:model'].folder.push(folder);
@@ -91,7 +91,8 @@ export class Serializer {
     }
 
     if (el.child) {
-      element.child = this.saveChildren(el.child);
+      const children = Array.isArray(el.child) ? el.child : [el.child];
+      element.child = this.saveChildren(children);
     }
 
     return element;
@@ -107,53 +108,53 @@ export class Serializer {
     return propertyArray;
   }
 
-  private saveChildren(children: Child[]): ChildElement[] {
+  private saveChildren(children: Child[]): SchemaChild[] {
     return children.map((child) => this.serializeChild(child));
   }
 
   /**
-   * Serialize a Child object into a ChildElement
+   * Serialize a Child object into a SchemaChild
    *
    * For testability it is important that optional properties are only added if they are set and in the correct order.
    */
-  private serializeChild(child: Child): ChildElement {
-    const childElement: ChildElement = {
+  private serializeChild(child: Child): SchemaChild {
+    const schemaChild: SchemaChild = {
       '@_xsi:type': `archimate:${child.type}`,
       '@_id': child.id,
       bounds: BoundsMapper.boundsToSchemaBounds(child.bounds)
     }
 
     if (child.sourceConnection) {
-      childElement.sourceConnection = SourceConnectionMapper.toSchemaSourceConnection(child.sourceConnection)
+      schemaChild.sourceConnection = SourceConnectionMapper.toSchemaSourceConnection(child.sourceConnection)
     }
 
     if (child.name) {
-      childElement['@_name'] = child.name
+      schemaChild['@_name'] = child.name
     }
 
     if (child.targetConnections) {
-      childElement['@_targetConnections'] = child.targetConnections
+      schemaChild['@_targetConnections'] = child.targetConnections
     }
 
     if (child.textAlignment) {
-      childElement['@_textAlignment'] = String(child.textAlignment)
+      schemaChild['@_textAlignment'] = String(child.textAlignment)
     }
     if (child.fillColor) {
-      childElement['@_fillColor'] = child.fillColor
+      schemaChild['@_fillColor'] = child.fillColor
     }
 
     if(child.archimateElement) {
-      childElement['@_archimateElement'] = child.archimateElement
+      schemaChild['@_archimateElement'] = child.archimateElement
     }
 
     if (child.child && Array.isArray(child.child)) {
-      childElement.child = this.saveChildren(child.child);
+      schemaChild.child = this.saveChildren(child.child);
     }
 
     if (child.documentation) {
-      childElement.documentation = child.documentation;
+      schemaChild.documentation = child.documentation;
     }
 
-    return childElement;
+    return schemaChild;
   }
 }

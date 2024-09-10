@@ -1,8 +1,8 @@
 import { Model } from "./interfaces/Model.mjs";
-import { ArchimateSchema } from "./interfaces/schema/ArchimateSchema.mjs";
+import { Schema as ArchimateSchema } from "./interfaces/schema/Schema.mjs";
 import { Folder as SchemaFolder } from "./interfaces/schema/Folder.mjs";
 import { Element as SchemaElement } from "./interfaces/schema/Element.mjs";
-import { ChildElement } from "./interfaces/schema/ChildElement.mjs";
+import { Child as SchemaChild} from "./interfaces/schema/Child.mjs";
 import { Element } from './interfaces/Element.mjs';
 import { Child } from './interfaces/Child.mjs';
 import { BoundsMapper } from './BoundMapper.mjs';
@@ -48,7 +48,9 @@ export class Parser {
 
   private processFolderElements(folderKey: keyof Model, folder: SchemaFolder): void {
     const elements = this.ensureArray(folder.element);
-    this.model[folderKey].elements = elements.map((element: SchemaElement) => this.createElement(element));
+    this.model[folderKey].elements = elements.map((element: SchemaElement | undefined) => 
+      element ? this.createElement(element) : undefined
+    ).filter((el): el is Element => el !== undefined)
   }
 
   private ensureArray<T>(element: T | T[]): T[] {
@@ -87,12 +89,12 @@ export class Parser {
     return properties
   }
 
-  private loadChildren(childElements: ChildElement | ChildElement[]): Child[] {
+  private loadChildren(childElements: SchemaChild | SchemaChild[]): Child[] {
     const children = this.ensureArray(childElements)
     return children.map((child) => this.convertChildElementToChild(child))
   }
 
-  private convertChildElementToChild(schemaChild: ChildElement): Child {
+  private convertChildElementToChild(schemaChild: SchemaChild): Child {
     const {
       '@_id': id,
       '@_xsi:type': xsiType,
@@ -123,7 +125,10 @@ export class Parser {
     return this.cleanUndefinedProperties(child);
   }
 
-  private cleanUndefinedProperties<T>(obj: T): T {
-    return Object.fromEntries(Object.entries(obj).filter(([v]) => v !== undefined)) as T;
+  private cleanUndefinedProperties<T extends Record<string, any>>(obj: T): T {
+    return Object.fromEntries(
+      Object.entries(obj).filter(([, value]) => value !== undefined)
+    ) as T;
   }
+  
 }

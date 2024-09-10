@@ -1,7 +1,7 @@
-
+import { Element } from './Element.mjs'
 export interface Folder {
   '@_name': string;
   '@_id': string;
   '@_type': string;
-  element?: Array<Element> | Element;
+  element?: Element | Element[];
 }

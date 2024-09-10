@@ -2,7 +2,7 @@ import { Bounds } from "./Bounds.mjs";
 import { SourceConnection } from "./SourceConnection.mjs";
 
 
-export interface ChildElement {
+export interface Child {
   '@_xsi:type': string;
   '@_id': string;
   '@_name'?: string;
@@ -13,5 +13,5 @@ export interface ChildElement {
   bounds: Bounds;
   documentation?: string;
   sourceConnection?: SourceConnection;
-  child?: ChildElement[];
+  child?: Child[];
 }

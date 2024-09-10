@@ -21,7 +21,16 @@ jobs:
         run: |
           npm run lint
           npm run mdlint
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: |
+          npm install --location=global npm@latest typescript@latest
+          npm ci
       - name: Test
         run: |
+          npm run build
           npm run sync
           npm run test

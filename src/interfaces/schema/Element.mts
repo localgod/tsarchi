@@ -1,5 +1,5 @@
 import { Bounds } from "./Bounds.mjs";
-import { ChildElement } from "./ChildElement.mjs";
+import { Child } from "./Child.mjs";
 import { Property } from "./Property.mjs";
 import { SourceConnection } from "./SourceConnection.mjs";
 
@@ -15,7 +15,7 @@ export interface Element {
   '@_targetConnections'?: string;
   documentation?:string;
   property?: Array<Property> | Property;
-  child?: ChildElement;
+  child?: Child | Child[];
   bounds?: Bounds;
   sourceConnection?: SourceConnection;
 }

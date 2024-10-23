@@ -130,5 +130,5 @@ export class Parser {
       Object.entries(obj).filter(([, value]) => value !== undefined)
     ) as T;
   }
-  
+
 }

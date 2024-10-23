@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "build": "npx tsc",
-    "sync": "node ./dist/tsarchi.mjs --input sample.archimate --output out.archimate",
+    "sync": "node ./dist/src/tsarchi.mjs --input sample.archimate --output out.archimate",
     "test": "node ./dist/tests/compare.mjs -i sample.archimate -o out.archimate",
     "dev": "npx tsc -watch",
     "lint": "npx eslint .",

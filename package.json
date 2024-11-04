@@ -16,7 +16,7 @@
   "author": "Johannes Skov Frandsen",
   "license": "ISC",
   "devDependencies": {
-    "@eslint/js": "^9.13.0",
+    "@eslint/js": "^9.14.0",
     "@stylistic/eslint-plugin-ts": "^2.9.0",
     "@types/node": "^22.8.1",
     "eslint": "^9.13.0",

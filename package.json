@@ -26,6 +26,6 @@
   "dependencies": {
     "chalk": "^5.4.1",
     "commander": "^13.1.0",
-    "fast-xml-parser": "^5.2.2"
+    "fast-xml-parser": "^5.2.3"
   }
 }

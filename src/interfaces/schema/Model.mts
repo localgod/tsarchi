@@ -1,4 +1,4 @@
-import { Folder } from "./Folder.mjs";
+import type { Folder } from "./Folder.mjs";
 
 
 export interface Model {

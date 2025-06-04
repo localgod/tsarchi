@@ -1,4 +1,4 @@
-import { Element } from './Element.mjs'
+import type { Element } from './Element.mjs';
 export interface Folder {
   '@_name': string;
   '@_id': string;

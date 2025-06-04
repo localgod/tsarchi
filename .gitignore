@@ -6,4 +6,6 @@ dist
 *.xml
 *.bak
 !sample.archimate
+*.tgz
+.tsbuildinfo
 

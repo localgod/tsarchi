@@ -1,5 +1,5 @@
-import { Bounds } from "./Bounds.mjs";
-import { SourceConnection } from "./SourceConnection.mjs";
+import type { Bounds } from "./Bounds.mjs";
+import type { SourceConnection } from "./SourceConnection.mjs";
 
 
 export interface Child {

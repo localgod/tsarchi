@@ -1,7 +1,7 @@
-import { Bounds } from "./Bounds.mjs";
-import { Child } from "./Child.mjs";
-import { Property } from "./Property.mjs";
-import { SourceConnection } from "./SourceConnection.mjs";
+import type { Bounds } from "./Bounds.mjs";
+import type { Child } from "./Child.mjs";
+import type { Property } from "./Property.mjs";
+import type { SourceConnection } from "./SourceConnection.mjs";
 
 
 export interface Element {

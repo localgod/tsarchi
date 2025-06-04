@@ -1,4 +1,4 @@
-import { Child } from "./Child.mjs";
+import type { Child } from "./Child.mjs";
 
 export interface Element {
   id: string;

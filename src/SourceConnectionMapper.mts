@@ -1,5 +1,5 @@
-import { SourceConnection as SchemaSourceConnection } from "./interfaces/schema/SourceConnection.mjs";
-import { SourceConnection } from './interfaces/SourceConnection.mjs';
+import type { SourceConnection as SchemaSourceConnection } from "./interfaces/schema/SourceConnection.mjs";
+import type { SourceConnection } from './interfaces/SourceConnection.mjs';
 export class SourceConnectionMapper {
   public static schemaToSourceConnection(b: SchemaSourceConnection): SourceConnection {
     return {

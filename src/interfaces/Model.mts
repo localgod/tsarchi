@@ -1,4 +1,4 @@
-import { Element } from './Element.mjs';
+import type { Element } from './Element.mjs';
 
 export interface Model {
   strategy: {

@@ -1,5 +1,5 @@
-import { Model } from './interfaces/Model.mjs';
-import { Schema as ArchimateSchema } from './interfaces/schema/Schema.mjs';
+import type { Model } from './interfaces/Model.mjs';
+import type { Schema as ArchimateSchema } from './interfaces/schema/Schema.mjs';
 import { Parser } from './Parser.mjs'
 import { Serializer } from './Serializer.mjs'
 

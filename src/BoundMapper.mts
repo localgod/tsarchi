@@ -1,5 +1,5 @@
-import { Bounds } from './interfaces/Bounds.mjs'
-import { Bounds as SchemaBounds } from "./interfaces/schema/Bounds.mjs"
+import type { Bounds } from './interfaces/Bounds.mjs';
+import type { Bounds as SchemaBounds } from "./interfaces/schema/Bounds.mjs";
 
 export class BoundsMapper {
   static schemaBoundsToBounds(b: SchemaBounds): Bounds {

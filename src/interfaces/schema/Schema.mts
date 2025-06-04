@@ -1,5 +1,5 @@
-import { Model } from "./Model.mjs";
-import { XmlMetadata } from "./XmlMetadata.mjs";
+import type { Model } from "./Model.mjs";
+import type { XmlMetadata } from "./XmlMetadata.mjs";
 
 
 export interface Schema {

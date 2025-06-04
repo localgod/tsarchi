@@ -1,8 +1,9 @@
 import { Command } from 'commander';
-import { XMLParser, XMLBuilder, XMLValidator, XmlBuilderOptions } from 'fast-xml-parser'
+import { XMLParser, XMLBuilder, XMLValidator } from 'fast-xml-parser'
+import type { XmlBuilderOptions } from 'fast-xml-parser'
 import { Archimate } from './Archimate.mjs'
 import { readFile, writeFile } from 'fs/promises';
-import { PathLike } from 'fs';
+import type { PathLike } from 'fs';
 
 export class TsArchi {
   model: Archimate

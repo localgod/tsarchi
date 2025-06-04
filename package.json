@@ -9,19 +9,33 @@
     "sync": "node ./dist/src/tsarchi.mjs --input sample.archimate --output out.archimate",
     "test": "node ./dist/tests/compare.mjs -i sample.archimate -o out.archimate",
     "dev": "npx tsc -watch",
-    "lint": "npx eslint .",
+    "lint": "npx eslint --ignore-pattern 'dist' .",
     "lintfix": "npx eslint --fix --ignore-pattern 'dist' .",
     "mdlint": "markdownlint '**/*.md' --ignore node_modules --ignore slides --disable MD033 MD013 MD041"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/localgod/tsarchi"
+  },
+  "keywords": [
+    "typescript",
+    "architecture",
+    "visualization"
+  ],
   "author": "Johannes Skov Frandsen",
-  "license": "ISC",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/localgod/tsarchi/issues"
+  },
+  "homepage": "https://github.com/localgod/tsarchi",
   "devDependencies": {
     "@eslint/js": "^9.28.0",
-    "@stylistic/eslint-plugin-ts": "^4.4.0",
+    "@stylistic/eslint-plugin": "^4.4.1",
+    "@types/json-schema": "^7.0.15",
     "@types/node": "^22.15.29",
     "eslint": "^9.28.0",
     "globals": "^16.2.0",
-    "typescript-eslint": "rc-v8"
+    "typescript-eslint": "^8.33.1"
   },
   "dependencies": {
     "chalk": "^5.4.1",

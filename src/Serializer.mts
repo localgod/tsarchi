@@ -1,11 +1,11 @@
-import { Schema as ArchimateSchema } from "./interfaces/schema/Schema.mjs";
-import { Folder as SchemaFolder } from "./interfaces/schema/Folder.mjs";
-import { Element as SchemaElement } from "./interfaces/schema/Element.mjs";
-import { Element } from "./interfaces/Element.mjs";
-import { Child as SchemaChild } from "./interfaces/schema/Child.mjs";
-import { Property as SchemaProperty } from "./interfaces/schema/Property.mjs";
-import { Model } from './interfaces/Model.mjs';
-import { Child } from './interfaces/Child.mjs';
+import type { Schema as ArchimateSchema } from "./interfaces/schema/Schema.mjs";
+import type { Folder as SchemaFolder } from "./interfaces/schema/Folder.mjs";
+import type { Element as SchemaElement } from "./interfaces/schema/Element.mjs";
+import type { Element } from "./interfaces/Element.mjs";
+import type { Child as SchemaChild } from "./interfaces/schema/Child.mjs";
+import type { Property as SchemaProperty } from "./interfaces/schema/Property.mjs";
+import type { Model } from './interfaces/Model.mjs';
+import type { Child } from './interfaces/Child.mjs';
 import { BoundsMapper } from './BoundMapper.mjs';
 import { SourceConnectionMapper } from './SourceConnectionMapper.mjs';
 

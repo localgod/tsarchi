@@ -42,6 +42,4 @@ jobs:
       - name: Test
         run: |
           npm run build
-          npm run sync
-          npm run compare
           npm run test

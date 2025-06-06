@@ -47,3 +47,5 @@ export interface Model {
     elements?: Element[];
   };
 }
+
+export type FolderKey = keyof Model;

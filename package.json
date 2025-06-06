@@ -2,12 +2,13 @@
   "name": "tsarchi",
   "version": "1.0.0",
   "description": "Typescript implementation of the Archi model",
-  "main": "tsarchi.mjs",
+  "main": "dist/cmd.mjs",
   "type": "module",
   "scripts": {
-    "build": "npx tsc",
-    "sync": "node ./dist/src/tsarchi.mjs --input sample.archimate --output out.archimate",
-    "test": "node ./dist/tests/compare.mjs -i sample.archimate -o out.archimate",
+    "build": "npx tsc --build --force",
+    "sync": "node ./dist/src/cmd.mjs --input sample.archimate --output out.archimate",
+    "test": "vitest",
+    "compare": "node ./dist/tests/compare.mjs -i sample.archimate -o out.archimate",
     "dev": "npx tsc -watch",
     "lint": "npx eslint --ignore-pattern 'dist' .",
     "lintfix": "npx eslint --fix --ignore-pattern 'dist' .",
@@ -40,6 +41,7 @@
   "dependencies": {
     "chalk": "^5.4.1",
     "commander": "^14.0.0",
-    "fast-xml-parser": "^5.2.3"
+    "fast-xml-parser": "^5.2.3",
+    "vitest": "^3.2.2"
   }
 }

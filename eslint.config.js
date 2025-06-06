@@ -13,7 +13,18 @@ export default [
   { languageOptions: { globals: globals.browser, parser: parserTs } },
   pluginJs.configs.recommended,
   ...tseslint.configs.recommended,
-  { languageOptions: { globals: globals.browser, parser: parserTs } },
+  {
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+        ...globals.node
+      },
+      parser: parserTs,
+      parserOptions: {
+        sourceType: "module",
+      }
+    }
+  },
   {
     plugins: {
       '@stylistic/ts': stylisticTs

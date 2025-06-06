@@ -1,0 +1,120 @@
+// src/constants/archimate-mappings.mts
+
+import type { FolderKey } from '../interfaces/Model.mjs';
+
+/**
+ * Maps FolderKey to a human-readable folder name.
+ */
+export const folderType = new Map<FolderKey, string>([
+  ['strategy', 'Strategy'],
+  ['business', 'Business'],
+  ['application', 'Application'],
+  ['technology', 'Technology & Physical'],
+  ['motivation', 'Motivation'],
+  ['implementation_migration', 'Implementation & Migration'],
+  ['other', 'Other'],
+  ['relations', 'Relations'],
+  ['diagrams', 'Views'],
+]);
+
+export const elementTypeToFolderKey: Map<string, FolderKey> = new Map([
+  // Strategy Layer
+  ['Capability', 'strategy'],
+  ['CourseOfAction', 'strategy'],
+  ['Resource', 'strategy'],
+  ['ValueStream', 'strategy'],
+  ['Stage', 'strategy'],
+  ['WorkPackage', 'strategy'],
+
+  // Business Layer
+  ['Actor', 'business'],
+  ['BusinessRole', 'business'],
+  ['BusinessCollaboration', 'business'],
+  ['BusinessInterface', 'business'],
+  ['BusinessProcess', 'business'],
+  ['BusinessFunction', 'business'],
+  ['BusinessInteraction', 'business'],
+  ['BusinessService', 'business'],
+  ['BusinessEvent', 'business'],
+  ['BusinessObject', 'business'],
+  ['Contract', 'business'],
+  ['BusinessProduct', 'business'],
+  ['Representation', 'business'],
+  ['Meaning', 'business'],
+  ['Value', 'business'],
+
+  // Application Layer
+  ['ApplicationComponent', 'application'],
+  ['ApplicationCollaboration', 'application'],
+  ['ApplicationInterface', 'application'],
+  ['ApplicationProcess', 'application'],
+  ['ApplicationFunction', 'application'],
+  ['ApplicationInteraction', 'application'],
+  ['ApplicationService', 'application'],
+  ['DataObject', 'application'],
+
+  // Technology & Physical Layer
+  ['Node', 'technology'],
+  ['Device', 'technology'],
+  ['SystemSoftware', 'technology'],
+  ['TechnologyCollaboration', 'technology'],
+  ['TechnologyInterface', 'technology'],
+  ['TechnologyProcess', 'technology'],
+  ['TechnologyFunction', 'technology'],
+  ['TechnologyInteraction', 'technology'],
+  ['TechnologyService', 'technology'],
+  ['CommunicationNetwork', 'technology'],
+  ['Path', 'technology'],
+  ['Artifact', 'technology'],
+  ['TechnologyEvent', 'technology'],
+  ['TechnologyObject', 'technology'],
+  ['DistributionNetwork', 'technology'],
+  ['Facility', 'technology'],
+  ['Material', 'technology'],
+
+  // Motivation Layer
+  ['Stakeholder', 'motivation'],
+  ['Driver', 'motivation'],
+  ['Assessment', 'motivation'],
+  ['Goal', 'motivation'],
+  ['Outcome', 'motivation'],
+  ['Principle', 'motivation'],
+  ['Requirement', 'motivation'],
+  ['Constraint', 'motivation'],
+  ['WorkPackage', 'implementation_migration'],
+  ['Deliverable', 'implementation_migration'],
+  ['ImplementationEvent', 'implementation_migration'],
+  ['Plateau', 'implementation_migration'],
+  ['Gap', 'implementation_migration'],
+  ['AssignmentRelationship', 'relations'],
+  ['AssociationRelationship', 'relations'],
+  ['AccessRelationship', 'relations'],
+  ['CompositionRelationship', 'relations'],
+  ['AggregationRelationship', 'relations'],
+  ['FlowRelationship', 'relations'],
+  ['TriggeringRelationship', 'relations'],
+  ['ServingRelationship', 'relations'],
+  ['RealizationRelationship', 'relations'],
+  ['UsedByRelationship', 'relations'],
+  ['InfluenceRelationship', 'relations'],
+  ['Junction', 'relations'],
+  ['SpecializationRelationship', 'relations'],
+  ['RepresentationRelationship', 'relations'],
+  ['MaterialRelationship', 'relations'],
+  ['Association', 'relations'],
+  ['Composition', 'relations'],
+  ['Aggregation', 'relations'],
+  ['Flow', 'relations'],
+  ['Triggering', 'relations'],
+  ['Serving', 'relations'],
+  ['Realization', 'relations'],
+  ['UsedBy', 'relations'],
+  ['Influence', 'relations'],
+  ['Specialization', 'relations'],
+  ['Representation', 'relations'],
+  ['Material', 'relations'],
+
+  // Diagrams (Views)
+  ['Diagram', 'diagrams'],
+  ['ArchimateDiagramModel', 'diagrams'],
+]);

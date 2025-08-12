@@ -3,6 +3,8 @@
   "version": "1.0.0",
   "description": "Typescript implementation of the Archi model",
   "main": "dist/cmd.mjs",
+  "types": "dist/**/*.d.mts",
+  "files": ["dist/**/*"],
   "type": "module",
   "scripts": {
     "build": "npx tsc --build --force",

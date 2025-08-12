@@ -1,6 +1,6 @@
 {
   "name": "tsarchi",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Typescript implementation of the Archi model",
   "main": "dist/cmd.mjs",
   "types": "dist/**/*.d.mts",

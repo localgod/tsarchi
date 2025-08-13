@@ -24,11 +24,12 @@ function scanDir(dir, relativePath = ".") {
       entry.isFile() &&
       entry.name.endsWith(".mts") &&
       !entry.name.endsWith(".d.ts") &&
-      !entry.path.endsWith("schema") &&
       entry.name !== "index.mts"
     ) {
-      const importPath = './' + path.join(relativePath, entry.name.replace(/\.mts$/, ".mjs"));
-      exportLines.push(`export * from "${importPath.replace(/\\/g, "/")}";`);
+      if (entry && entry.path && !entry.path.endsWith("schema")) {
+        const importPath = './' + path.join(relativePath, entry.name.replace(/\.mts$/, ".mjs"));
+        exportLines.push(`export * from "${importPath.replace(/\\/g, "/")}";`);
+      }
     }
   }
 }

@@ -19,7 +19,7 @@
     "dist"
   ],
   "scripts": {
-    "prebuild": "node scripts/generate-index.mjs",
+    "prebuild": "node scripts/generate-index.js",
     "build": "tsc --project tsconfig.json",
     "sync": "node ./dist/src/cmd.js --input sample.archimate --output out.archimate",
     "test": "vitest",

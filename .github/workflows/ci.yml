@@ -41,5 +41,6 @@ jobs:
           npm ci
       - name: Test
         run: |
+          npm run prebuild
           npm run build
           npm run test

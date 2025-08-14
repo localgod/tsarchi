@@ -12,13 +12,13 @@ program.action(async (options: { input: string, output: string }) => {
   await tsa.loadModel(options.input)
 
   const newAppComponent: Element = {
-    id: tsa.model.generateRandomId(), 
+    id: tsa.getModel().generateRandomId(), 
     type: 'ApplicationComponent',
     name: 'New Application Component',
     properties: new Map([['version', '1.0'], ['status', 'planned']])
   };
-  tsa.model.findElementInFolderByName('application', 'New Application Component')
-  tsa.addElementToModel(newAppComponent)
+  tsa.getModel().findElementInFolderByName('application', 'New Application Component')
+  tsa.getModel().upsertElement(newAppComponent)
   await tsa.saveModel(options.output)
 })
 program.parse()

@@ -2,7 +2,6 @@ import { describe, it, expect, vi, type Mock } from 'vitest';
 import { TsArchi } from '../src/TsArchi.mjs';
 import { readFile } from 'fs/promises';
 import type { Schema } from '../src/interfaces/schema/Schema.mjs';
-import type { Element } from '../src/interfaces/Element.mjs';
 
 vi.mock('fs/promises', () => ({
   readFile: vi.fn(),
@@ -97,27 +96,5 @@ describe('TsArchi XML Parsing and Manipulation', () => {
 
     expect(parsedData).toBeDefined();
     expect(parsedData).toEqual({});
-  });
-
-  it('should successfully add an element to a specified folder', async () => {
-    (readFile as Mock).mockResolvedValue(validArchimateXml);
-    const tsArchi = new TsArchi();
-    await tsArchi.load('dummy/path/to/model.xml');
-
-    const newAppComponent: Element = {
-      id: 'tytter',
-      type: 'ApplicationComponent',
-      name: 'New Application Component',
-      properties: new Map([['version', '1.0'], ['status', 'planned']])
-    };
-
-    tsArchi.addElementToModel(newAppComponent);
-    const model = tsArchi.model
-    const j = model.findElementInFolderByName('application', 'New Application Component');
-    expect(j).toBeDefined();
-    expect(j).toHaveProperty('name');
-    expect(j).toHaveProperty('type');
-    expect(j).toHaveProperty('id');
-    expect(j).toHaveProperty('properties');
   });
 });

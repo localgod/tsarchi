@@ -97,4 +97,24 @@ describe('TsArchi XML Parsing and Manipulation', () => {
     expect(parsedData).toBeDefined();
     expect(parsedData).toEqual({});
   });
+
+  it('should handle empty model data gracefully in loadModel', async () => {
+    (readFile as Mock).mockResolvedValue(invalidXml);
+
+    const tsArchi = new TsArchi();
+    const model = await tsArchi.loadModel('dummy/path/to/invalid.xml');
+
+    expect(model).toBeDefined();
+    expect(typeof model.generateRandomId).toBe('function');
+  });
+
+  it('should handle file read errors gracefully', async () => {
+    (readFile as Mock).mockRejectedValue(new Error('File not found'));
+
+    const tsArchi = new TsArchi();
+    const parsedData = await tsArchi.load('dummy/path/to/nonexistent.xml');
+
+    expect(parsedData).toBeDefined();
+    expect(parsedData).toEqual({});
+  });
 });

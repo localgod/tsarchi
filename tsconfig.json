@@ -5,7 +5,7 @@
     "lib": ["ES2020"],
     "module": "NodeNext",
     "moduleResolution": "nodenext",
-    "rootDir": "./src",
+    "rootDir": "./",
     "outDir": "./dist",
     "types": ["node"],
 
@@ -31,6 +31,6 @@
     /* Build speed */
     "skipLibCheck": true
   },
-  "include": ["src/**/*.mts"],
+  "include": ["src/**/*.mts", "examples/**/*.mts"],
   "exclude": ["dist", "node_modules", "**/*.spec.mts", "**/*.test.mts"]
 }

@@ -5,9 +5,6 @@
   "type": "module",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.mts",
-  "bin": {
-    "tsarchi": "./dist/src/cmd.js"
-  },
   "exports": {
     ".": {
       "import": "./dist/index.mjs",
@@ -21,7 +18,7 @@
   "scripts": {
     "prebuild": "node scripts/generate-index.js",
     "build": "tsc --project tsconfig.json",
-    "sync": "node ./dist/src/cmd.js --input sample.archimate --output out.archimate",
+    "example": "node ./dist/examples/sample01.mjs --input sample.archimate --output out.archimate",
     "test": "vitest",
     "compare": "node ./dist/tests/compare.js -i sample.archimate -o out.archimate",
     "dev": "tsc --watch",
@@ -58,7 +55,6 @@
   },
   "dependencies": {
     "chalk": "^5.4.1",
-    "commander": "^14.0.0",
     "fast-xml-parser": "^5.2.3"
   }
 }

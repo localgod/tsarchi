@@ -11,7 +11,7 @@
     - [Building the Project](#building-the-project)
   - [Usage](#usage)
     - [Running TSArchi](#running-tsarchi)
-      - [Example Command](#example-command)
+      - [Example Commands](#example-commands)
     - [Parsing an ArchiMate File Programmatically](#parsing-an-archimate-file-programmatically)
   - [Contributing](#contributing)
   - [License](#license)
@@ -76,16 +76,19 @@ You can run the program via the command line using the `tsarchi` command (after 
 #### Example Commands
 
 Using the installed binary:
+
 ```bash
 tsarchi --input ./models/example.archimate --output ./models/output.archimate
 ```
 
 Using Node.js directly:
+
 ```bash
 node ./dist/src/cmd.js --input ./models/example.archimate --output ./models/output.archimate
 ```
 
 Or using npm script:
+
 ```bash
 npm run sync
 ```

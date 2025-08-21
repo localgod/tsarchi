@@ -357,7 +357,7 @@ export class ViewManager {
     const padding = 20;
 
     switch (layoutType) {
-      case 'grid':
+      case 'grid': {
         const cols = Math.ceil(Math.sqrt(total));
         const row = Math.floor(index / cols);
         const col = index % cols;
@@ -367,8 +367,9 @@ export class ViewManager {
           width: baseWidth,
           height: baseHeight
         };
+      }
 
-      case 'circular':
+      case 'circular': {
         const angle = (2 * Math.PI * index) / total;
         const radius = Math.max(150, total * 20);
         return {
@@ -377,6 +378,7 @@ export class ViewManager {
           width: baseWidth,
           height: baseHeight
         };
+      }
 
       case 'hierarchical':
         return {

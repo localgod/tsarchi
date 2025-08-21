@@ -17,8 +17,13 @@ program.action(async (options: { input: string, output: string }) => {
     name: 'New Application Component',
     properties: new Map([['version', '1.0'], ['status', 'planned']])
   };
-  tsa.getModel().findElementInFolderByName('application', 'New Application Component')
-  tsa.getModel().upsertElement(newAppComponent)
+  
+  const existingComponent = tsa.getModel().findElementInFolderByName('application', 'New Application Component');
+  if (!existingComponent) {
+    tsa.getModel().upsertElement(newAppComponent);
+  } else {
+    console.log('Application component already exists, skipping creation.');
+  }
   await tsa.saveModel(options.output)
 })
 program.parse()

@@ -8,18 +8,7 @@ import type { Model } from './interfaces/Model.mjs';
 import type { Child } from './interfaces/Child.mjs';
 import { BoundsMapper } from './BoundMapper.mjs';
 import { SourceConnectionMapper } from './SourceConnectionMapper.mjs';
-
-const folderType = new Map<string, string>([
-  ['strategy', 'Strategy'],
-  ['business', 'Business'],
-  ['application', 'Application'],
-  ['technology', 'Technology & Physical'],
-  ['motivation', 'Motivation'],
-  ['implementation_migration', 'Implementation & Migration'],
-  ['other', 'Other'],
-  ['relations', 'Relations'],
-  ['diagrams', 'Views'],
-]);
+import { folderType } from './constants/archimate-mappings.mjs';
 
 export class Serializer {
   private model: Model

@@ -26,6 +26,9 @@ TSArchi provides a TypeScript-based tool for parsing, modifying, and saving `.ar
 - **Model Manipulation**: Add, modify, and remove elements and relationships in the parsed model.
 - **Model Serialization**: Save the modified model back into an `.archimate` file.
 - **Type Safety**: Enforces strong TypeScript types for all operations on the model.
+- **Error Resilience**: Graceful handling of invalid XML, missing data, and malformed files.
+- **Element Upsert**: Smart insert/update operations that preserve existing IDs while updating properties.
+- **Comprehensive Element Support**: Full support for all ArchiMate 3.x element types and relationships.
 
 ## Getting Started
 
@@ -65,27 +68,78 @@ This will compile the TypeScript source files into the `dist/` folder.
 
 ### Running TSArchi
 
-You can run the program via the command line using `node ./dist/tsarchi.mjs` with the following required arguments:
+You can run the program via the command line using the `tsarchi` command (after installation) or directly with Node.js:
 
 - `--input <path>`: The path to the input `.archimate` file you wish to parse and manipulate.
 - `--output <path>`: The path where the modified model will be saved as a `.archimate` file.
 
-#### Example Command
+#### Example Commands
 
+Using the installed binary:
 ```bash
-node ./dist/tsarchi.mjs --input ./models/example.archimate --output ./models/output.archimate
+tsarchi --input ./models/example.archimate --output ./models/output.archimate
+```
+
+Using Node.js directly:
+```bash
+node ./dist/src/cmd.js --input ./models/example.archimate --output ./models/output.archimate
+```
+
+Or using npm script:
+```bash
+npm run sync
 ```
 
 This command will:
 
-1. Parse the model in `./models/example.archimate`.
-2. Save the modified model to `./models/output.archimate`.
-
-You can extend the commands to do manipulations of the object model
+1. Parse the model in the input file.
+2. Add a new Application Component (if it doesn't already exist).
+3. Save the modified model to the output file.
 
 ### Parsing an ArchiMate File Programmatically
 
-This functionality is coming
+You can use TSArchi programmatically in your TypeScript/JavaScript projects:
+
+```typescript
+import { TsArchi } from 'tsarchi';
+
+const tsArchi = new TsArchi();
+
+// Load and parse an ArchiMate file
+const model = await tsArchi.loadModel('./path/to/model.archimate');
+
+// Add a new element
+const newElement = {
+  id: model.generateRandomId(),
+  type: 'ApplicationComponent',
+  name: 'My New Component',
+  properties: new Map([['version', '2.0']])
+};
+
+model.upsertElement(newElement);
+
+// Save the modified model
+await tsArchi.saveModel('./path/to/output.archimate');
+```
+
+#### Available Element Types
+
+TSArchi supports all standard ArchiMate element types organized by layers:
+
+- **Strategy Layer**: Capability, CourseOfAction, Resource, ValueStream, etc.
+- **Business Layer**: BusinessActor, BusinessRole, BusinessProcess, BusinessService, etc.
+- **Application Layer**: ApplicationComponent, ApplicationService, DataObject, etc.
+- **Technology Layer**: Node, Device, SystemSoftware, TechnologyService, etc.
+- **Motivation Layer**: Stakeholder, Driver, Goal, Requirement, etc.
+- **Implementation & Migration**: WorkPackage, Deliverable, ImplementationEvent, etc.
+
+#### Error Handling
+
+TSArchi includes robust error handling:
+
+- Invalid XML files return empty objects instead of throwing errors
+- Missing or malformed bounds data defaults to zero values
+- Duplicate elements are handled gracefully with upsert operations
 
 ## Contributing
 

@@ -39,9 +39,13 @@ export class TsArchi {
   }
 
   async loadModel(path: PathLike) {
-    const data = await this.load(path) as Schema;
-    this.model.parse(data)
-    return this.model
+    const data = await this.load(path);
+    if (data && typeof data === 'object' && 'archimate:model' in data) {
+      this.model.parse(data as Schema);
+    } else {
+      console.warn('Invalid or empty Archimate model data. Using empty model.');
+    }
+    return this.model;
   }
 
   async saveModel(path: PathLike) {

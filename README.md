@@ -10,7 +10,7 @@
     - [Installation](#installation)
     - [Building the Project](#building-the-project)
   - [Usage](#usage)
-    - [Running TSArchi](#running-tsarchi)
+    - [Running Examples](#running-examples)
       - [Example Commands](#example-commands)
     - [Parsing an ArchiMate File Programmatically](#parsing-an-archimate-file-programmatically)
   - [Contributing](#contributing)
@@ -66,38 +66,40 @@ This will compile the TypeScript source files into the `dist/` folder.
 
 ## Usage
 
-### Running TSArchi
+### Running Examples
 
-You can run the program via the command line using the `tsarchi` command (after installation) or directly with Node.js:
+TSArchi includes example scripts that demonstrate how to use the library:
 
 - `--input <path>`: The path to the input `.archimate` file you wish to parse and manipulate.
 - `--output <path>`: The path where the modified model will be saved as a `.archimate` file.
 
 #### Example Commands
 
-Using the installed binary:
+Running the sample example directly:
 
 ```bash
-tsarchi --input ./models/example.archimate --output ./models/output.archimate
-```
-
-Using Node.js directly:
-
-```bash
-node ./dist/src/cmd.js --input ./models/example.archimate --output ./models/output.archimate
+node ./dist/examples/sample01.mjs --input ./models/example.archimate --output ./models/output.archimate
 ```
 
 Or using npm script:
 
 ```bash
-npm run sync
+npm run example
 ```
 
-This command will:
+The example script will:
 
 1. Parse the model in the input file.
 2. Add a new Application Component (if it doesn't already exist).
 3. Save the modified model to the output file.
+
+#### Creating Your Own Examples
+
+You can create additional examples in the `examples/` folder. Each example should:
+
+- Import TSArchi from `../src/TsArchi.mjs`
+- Use native Node.js argument parsing (no external dependencies)
+- Follow the naming pattern `sampleXX.mts`
 
 ### Parsing an ArchiMate File Programmatically
 

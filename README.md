@@ -29,6 +29,8 @@ TSArchi provides a TypeScript-based tool for parsing, modifying, and saving `.ar
 - **Error Resilience**: Graceful handling of invalid XML, missing data, and malformed files.
 - **Element Upsert**: Smart insert/update operations that preserve existing IDs while updating properties.
 - **Comprehensive Element Support**: Full support for all ArchiMate 3.x element types and relationships.
+- **Advanced View Management**: Create, update, and manage ArchiMate diagrams with visual positioning and styling.
+- **Auto-layout Capabilities**: Generate views automatically with grid, circular, or hierarchical layouts.
 
 ## Getting Started
 
@@ -138,6 +140,99 @@ TSArchi supports all standard ArchiMate element types organized by layers:
 - **Motivation Layer**: Stakeholder, Driver, Goal, Requirement, etc.
 - **Implementation & Migration**: WorkPackage, Deliverable, ImplementationEvent, etc.
 
+#### View Management
+
+TSArchi provides comprehensive view management capabilities for creating and manipulating ArchiMate diagrams:
+
+```typescript
+import { TsArchi } from 'tsarchi';
+
+const tsArchi = new TsArchi();
+const model = await tsArchi.loadModel('./model.archimate');
+
+// Create a new view
+const view = model.createView('Application Overview', {
+  viewpoint: 'application',
+  documentation: 'Overview of application components'
+});
+
+// Add elements to the view with positioning
+const bounds1 = { x: 100, y: 100, width: 120, height: 55 };
+const bounds2 = { x: 300, y: 100, width: 120, height: 55 };
+
+const obj1 = model.addDiagramObject(view.id, 'app-component-1-id', bounds1, {
+  fillColor: '#c9e7b7',
+  textAlignment: 1
+});
+
+const obj2 = model.addDiagramObject(view.id, 'app-component-2-id', bounds2, {
+  fillColor: '#ffd93d'
+});
+
+// Create connections between elements
+model.addConnection(view.id, obj1.id, obj2.id, 'relationship-id', {
+  lineColor: '#0066cc',
+  lineWidth: 2
+});
+
+// Create groups to organize elements
+const groupBounds = { x: 50, y: 50, width: 400, height: 150 };
+const group = model.addGroup(view.id, 'Application Layer', groupBounds, {
+  fillColor: '#e6f3ff',
+  documentation: 'Application layer components'
+});
+
+// Add elements to groups
+model.addDiagramObjectToGroup(view.id, group.id, 'another-element-id', 
+  { x: 20, y: 20, width: 120, height: 55 });
+```
+
+#### Auto-generating Views
+
+Create views automatically from existing model elements:
+
+```typescript
+// Generate view from specific elements
+const elementIds = ['comp-1', 'comp-2', 'comp-3'];
+const generatedView = model.generateViewFromElements('Generated View', elementIds, {
+  layoutType: 'grid',
+  includeRelationships: true,
+  viewpoint: 'application'
+});
+
+// Create view from all elements of a specific type
+const appView = model.createViewByElementType('Application Components', 'ApplicationComponent', {
+  layoutType: 'circular',
+  includeRelationships: true
+});
+
+// Create view from all elements in a folder
+const businessView = model.createViewByFolder('Business Overview', 'business', {
+  layoutType: 'hierarchical'
+});
+```
+
+#### View Management Operations
+
+```typescript
+// List all views
+const allViews = model.listViews();
+console.log(`Found ${allViews.length} views`);
+
+// Get specific view
+const view = model.getView('view-id');
+
+// Update diagram object styling
+model.updateDiagramObjectStyle('view-id', 'object-id', {
+  fillColor: '#ff6b6b',
+  bounds: { x: 150, y: 150, width: 140, height: 65 },
+  textAlignment: 2
+});
+
+// Delete a view
+model.deleteView('view-id');
+```
+
 #### Error Handling
 
 TSArchi includes robust error handling:
@@ -145,6 +240,7 @@ TSArchi includes robust error handling:
 - Invalid XML files return empty objects instead of throwing errors
 - Missing or malformed bounds data defaults to zero values
 - Duplicate elements are handled gracefully with upsert operations
+- View operations validate element and relationship existence
 
 ## Contributing
 

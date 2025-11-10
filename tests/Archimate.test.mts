@@ -4,15 +4,19 @@ import { folderType } from '../src/constants/archimate-mappings.mjs';
 import type { Model } from '../src/interfaces/Model.mjs';
 
 vi.mock('../src/Parser.mjs', () => ({
-  Parser: vi.fn().mockImplementation(() => ({
-    parse: vi.fn().mockReturnValue({ mockFolder: { elements: [] } })
-  }))
+  Parser: vi.fn().mockImplementation(function() {
+    return {
+      parse: vi.fn().mockReturnValue({ mockFolder: { elements: [] } })
+    };
+  })
 }));
 
 vi.mock('../src/Serializer.mjs', () => ({
-  Serializer: vi.fn().mockImplementation(() => ({
-    serialize: vi.fn().mockReturnValue({ mockSerialized: true })
-  }))
+  Serializer: vi.fn().mockImplementation(function() {
+    return {
+      serialize: vi.fn().mockReturnValue({ mockSerialized: true })
+    };
+  })
 }));
 
 describe('Archimate', () => {

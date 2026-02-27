@@ -24,7 +24,8 @@
     "dev": "tsc --watch",
     "lint": "oxlint --ignore-path .gitignore .",
     "lintfix": "oxlint --fix --ignore-path .gitignore .",
-    "mdlint": "markdownlint '**/*.md' --ignore node_modules --ignore slides --disable MD033 MD013 MD041",
+    "format": "oxfmt --check README.md LICENSE.md CHANGELOG.md",
+    "formatfix": "oxfmt README.md LICENSE.md CHANGELOG.md",
     "prepublishOnly": "npm run build && npm test"
   },
   "repository": {
@@ -45,6 +46,7 @@
   "devDependencies": {
     "@types/json-schema": "^7.0.15",
     "@types/node": "^25.0.2",
+    "oxfmt": "^0.35.0",
     "oxlint": "^1.50.0",
     "vitest": "^4.0.3",
     "typescript": "^5.5.4"

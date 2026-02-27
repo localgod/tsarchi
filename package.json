@@ -24,8 +24,8 @@
     "dev": "tsc --watch",
     "lint": "eslint --ignore-pattern 'dist' .",
     "lintfix": "eslint --fix --ignore-pattern 'dist' .",
-    "format": "oxfmt --check src/ tests/ scripts/ eslint.config.js",
-    "formatfix": "oxfmt src/ tests/ scripts/ eslint.config.js",
+    "format": "oxfmt --check src/ tests/ scripts/ eslint.config.js README.md LICENSE.md CHANGELOG.md",
+    "formatfix": "oxfmt src/ tests/ scripts/ eslint.config.js README.md LICENSE.md CHANGELOG.md",
     "prepublishOnly": "npm run build && npm test"
   },
   "repository": {

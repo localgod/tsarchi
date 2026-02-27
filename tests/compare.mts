@@ -1,52 +1,49 @@
-import * as fs from "fs";
-import { XMLParser } from "fast-xml-parser";
-import chalk from "chalk";
-import { Command } from "commander";
+import * as fs from 'fs'
+import { XMLParser } from 'fast-xml-parser'
+import chalk from 'chalk'
+import { Command } from 'commander'
 
 const program = new Command();
 
+
 program
-  .version("1.0.0")
-  .description("XML Comparison Tool")
-  .requiredOption("-i, --input <inputFile>", "input XML file path")
-  .requiredOption("-o, --output <outputFile>", "output XML file path")
+  .version('1.0.0')
+  .description('XML Comparison Tool')
+  .requiredOption('-i, --input <inputFile>', 'input XML file path')
+  .requiredOption('-o, --output <outputFile>', 'output XML file path')
   .parse(process.argv);
 
 const options = program.opts();
+
 
 const inputFilePath = options.input;
 const outputFilePath = options.output;
 
 // Function to read and parse XML with normalization
 function parseAndNormalizeXML(filePath: string): any {
-  const fileContent = fs.readFileSync(filePath, "utf8");
+  const fileContent = fs.readFileSync(filePath, 'utf8');
 
   const parser = new XMLParser({
     ignoreAttributes: false,
-    attributeNamePrefix: "",
+    attributeNamePrefix: '',
     trimValues: true,
     parseTagValue: true,
-    allowBooleanAttributes: true,
+    allowBooleanAttributes: true
   });
 
-  return { parsed: parser.parse(fileContent), raw: fileContent.split("\n") };
+  return { parsed: parser.parse(fileContent), raw: fileContent.split('\n') };
 }
 
 // Function to compare two XML objects and accumulate errors
 function compareXMLObjects(
-  inputXML: any,
-  outputXML: any,
-  inputLines: string[],
-  outputLines: string[],
-  path = "",
-  errors: string[] = [],
+  inputXML: any, outputXML: any, inputLines: string[], outputLines: string[], path = '', errors: string[] = []
 ): void {
   if (typeof inputXML !== typeof outputXML) {
     errors.push(`Type mismatch at ${path}: ${typeof inputXML} vs ${typeof outputXML}`);
     return;
   }
 
-  if (typeof inputXML === "object") {
+  if (typeof inputXML === 'object') {
     if (Array.isArray(inputXML)) {
       if (inputXML.length !== outputXML.length) {
         errors.push(`Array length mismatch at ${path}: ${inputXML.length} vs ${outputXML.length}`);
@@ -54,14 +51,7 @@ function compareXMLObjects(
       }
 
       for (let i = 0; i < inputXML.length; i++) {
-        compareXMLObjects(
-          inputXML[i],
-          outputXML[i],
-          inputLines,
-          outputLines,
-          `${path}[${i}]`,
-          errors,
-        );
+        compareXMLObjects(inputXML[i], outputXML[i], inputLines, outputLines, `${path}[${i}]`, errors);
       }
     } else {
       const inputKeys = Object.keys(inputXML);
@@ -77,14 +67,7 @@ function compareXMLObjects(
           continue;
         }
 
-        compareXMLObjects(
-          inputXML[key],
-          outputXML[key],
-          inputLines,
-          outputLines,
-          `${path}.${key}`,
-          errors,
-        );
+        compareXMLObjects(inputXML[key], outputXML[key], inputLines, outputLines, `${path}.${key}`, errors);
       }
     }
   } else if (inputXML !== outputXML) {
@@ -122,14 +105,7 @@ function findLineNumber(element: string, xmlLines: string[], value: string | nul
     const errors: string[] = [];
 
     // Compare the XMLs and accumulate all errors
-    compareXMLObjects(
-      inputXMLData.parsed,
-      outputXMLData.parsed,
-      inputXMLData.raw,
-      outputXMLData.raw,
-      "",
-      errors,
-    );
+    compareXMLObjects(inputXMLData.parsed, outputXMLData.parsed, inputXMLData.raw, outputXMLData.raw, '', errors);
 
     if (errors.length > 0) {
       console.error(chalk.red.bold("Test Failed: Errors found."));
@@ -139,39 +115,23 @@ function findLineNumber(element: string, xmlLines: string[], value: string | nul
 
         // Extract the mismatched element and values from the error message
         const [path, inputValue, outputValue] = error.match(/at (.+?): '(.*?)' vs '(.*?)'/) || [];
-        const mismatchedElement = path?.split(".").pop(); // Extract the element name
+        const mismatchedElement = path?.split('.').pop(); // Extract the element name
 
         if (mismatchedElement) {
           // Find line numbers in both input and output XML files
           const inputLineNumber = findLineNumber(mismatchedElement, inputXMLData.raw, inputValue);
-          const outputLineNumber = findLineNumber(
-            mismatchedElement,
-            outputXMLData.raw,
-            outputValue,
-          );
+          const outputLineNumber = findLineNumber(mismatchedElement, outputXMLData.raw, outputValue);
 
           if (inputLineNumber !== -1) {
-            console.error(
-              chalk.yellow(
-                `Mismatch found in '${chalk.cyan(inputFilePath)}' at line ${inputLineNumber}`,
-              ),
-            );
+            console.error(chalk.yellow(`Mismatch found in '${chalk.cyan(inputFilePath)}' at line ${inputLineNumber}`));
           } else {
-            console.error(
-              chalk.yellow(`Mismatch in '${chalk.cyan(inputFilePath)}' but line not found.`),
-            );
+            console.error(chalk.yellow(`Mismatch in '${chalk.cyan(inputFilePath)}' but line not found.`));
           }
 
           if (outputLineNumber !== -1) {
-            console.error(
-              chalk.yellow(
-                `Mismatch found in '${chalk.cyan(outputFilePath)}' at line ${outputLineNumber}`,
-              ),
-            );
+            console.error(chalk.yellow(`Mismatch found in '${chalk.cyan(outputFilePath)}' at line ${outputLineNumber}`));
           } else {
-            console.error(
-              chalk.yellow(`Mismatch in '${chalk.cyan(outputFilePath)}' but line not found.`),
-            );
+            console.error(chalk.yellow(`Mismatch in '${chalk.cyan(outputFilePath)}' but line not found.`));
           }
         }
       }
@@ -179,7 +139,7 @@ function findLineNumber(element: string, xmlLines: string[], value: string | nul
       console.log(chalk.green.bold("Test Passed: XML files are identical."));
     }
   } catch (error) {
-    const e = error as Error;
+    const e = error as Error
     console.error(chalk.red.bold("Test Failed: "), chalk.red(e.message));
   }
 })();

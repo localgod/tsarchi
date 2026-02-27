@@ -1,4 +1,5 @@
+
 export interface Property {
-  "@_key": string;
-  "@_value": string;
+  '@_key': string;
+  '@_value': string;
 }

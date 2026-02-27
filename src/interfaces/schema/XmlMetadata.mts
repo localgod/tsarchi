@@ -1,4 +1,4 @@
 export interface XmlMetadata {
-  "@_version": string;
-  "@_encoding": string;
+  '@_version': string;
+  '@_encoding': string;
 }

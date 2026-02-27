@@ -1,14 +1,15 @@
-import { describe, it, expect, vi, type Mock } from "vitest";
-import { TsArchi } from "../src/TsArchi.mjs";
-import { readFile } from "fs/promises";
-import type { Schema } from "../src/interfaces/schema/Schema.mjs";
+import { describe, it, expect, vi, type Mock } from 'vitest';
+import { TsArchi } from '../src/TsArchi.mjs';
+import { readFile } from 'fs/promises';
+import type { Schema } from '../src/interfaces/schema/Schema.mjs';
 
-vi.mock("fs/promises", () => ({
+vi.mock('fs/promises', () => ({
   readFile: vi.fn(),
-  writeFile: vi.fn(),
+  writeFile: vi.fn()
 }));
 
-describe("TsArchi XML Parsing and Manipulation", () => {
+describe('TsArchi XML Parsing and Manipulation', () => { 
+
   const validArchimateXml = `
     <?xml version="1.0" encoding="UTF-8"?>
     <archimate:model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:archimate="http://www.archimatetool.com/archimate" name="Test Model" id="id-test-model" version="5.0.0">
@@ -28,50 +29,51 @@ describe("TsArchi XML Parsing and Manipulation", () => {
     </not-archimate>
   `;
 
-  it("should successfully parse valid Archimate XML and contain the archimate:model section", async () => {
+  it('should successfully parse valid Archimate XML and contain the archimate:model section', async () => {
     (readFile as Mock).mockResolvedValue(validArchimateXml);
 
     const tsArchi = new TsArchi();
-    const parsedData = (await tsArchi.load("dummy/path/to/model.xml")) as Schema;
+    const parsedData = await tsArchi.load('dummy/path/to/model.xml') as Schema;
 
     expect(parsedData).toBeDefined();
-    expect(parsedData).toHaveProperty("archimate:model");
-    expect(parsedData["archimate:model"]).toBeDefined();
+    expect(parsedData).toHaveProperty('archimate:model');
+    expect(parsedData['archimate:model']).toBeDefined();
   });
 
-  it("should contain specific folders within the archimate:model section", async () => {
+  it('should contain specific folders within the archimate:model section', async () => {
+
     (readFile as Mock).mockResolvedValue(validArchimateXml);
 
     const tsArchi = new TsArchi();
-    const parsedData = (await tsArchi.load("dummy/path/to/model.xml")) as Schema;
+    const parsedData = await tsArchi.load('dummy/path/to/model.xml') as Schema;
 
-    expect(parsedData["archimate:model"]).toHaveProperty("folder");
-    expect(Array.isArray(parsedData["archimate:model"].folder)).toBe(true);
-    expect(parsedData["archimate:model"].folder.length).toBeGreaterThan(0);
-
-    const folders = parsedData["archimate:model"].folder;
-    const businessFolder = folders.find((f: any) => f["@_type"] === "business");
-    const applicationFolder = folders.find((f: any) => f["@_type"] === "application");
-    const technologyFolder = folders.find((f: any) => f["@_type"] === "technology");
+    expect(parsedData['archimate:model']).toHaveProperty('folder');
+    expect(Array.isArray(parsedData['archimate:model'].folder)).toBe(true);
+    expect(parsedData['archimate:model'].folder.length).toBeGreaterThan(0);
+ 
+    const folders = parsedData['archimate:model'].folder;
+    const businessFolder = folders.find((f: any) => f['@_type'] === 'business');
+    const applicationFolder = folders.find((f: any) => f['@_type'] === 'application');
+    const technologyFolder = folders.find((f: any) => f['@_type'] === 'technology');
 
     expect(businessFolder).toBeDefined();
-    expect(businessFolder).toHaveProperty("@_name", "Business");
+    expect(businessFolder).toHaveProperty('@_name', 'Business');
     expect(applicationFolder).toBeDefined();
-    expect(applicationFolder).toHaveProperty("@_name", "Application");
+    expect(applicationFolder).toHaveProperty('@_name', 'Application');
     expect(technologyFolder).toBeDefined();
-    expect(technologyFolder).toHaveProperty("@_name", "Technology & Physical");
+    expect(technologyFolder).toHaveProperty('@_name', 'Technology & Physical');
   });
 
-  it("should contain elements within a specific folder", async () => {
+  it('should contain elements within a specific folder', async () => {
     (readFile as Mock).mockResolvedValue(validArchimateXml);
 
     const tsArchi = new TsArchi();
-    const parsedData = (await tsArchi.load("dummy/path/to/model.xml")) as Schema;
-    const folders = parsedData["archimate:model"].folder;
-    const businessFolder = folders.find((f: any) => f["@_type"] === "business");
+    const parsedData = await tsArchi.load('dummy/path/to/model.xml') as Schema;
+    const folders = parsedData['archimate:model'].folder;
+    const businessFolder = folders.find((f: any) => f['@_type'] === 'business');
 
     expect(businessFolder).toBeDefined();
-    expect(businessFolder).toHaveProperty("element");
+    expect(businessFolder).toHaveProperty('element');
 
     const elements = Array.isArray(businessFolder!.element)
       ? businessFolder!.element
@@ -80,37 +82,37 @@ describe("TsArchi XML Parsing and Manipulation", () => {
     expect(Array.isArray(elements)).toBe(true);
 
     expect(elements.length).toBeGreaterThan(0);
-    const testActorElement = elements.find((e: any) => e["@_name"] === "Test Actor");
+    const testActorElement = elements.find((e: any) => e['@_name'] === 'Test Actor');
     expect(testActorElement).toBeDefined();
-    expect(testActorElement).toHaveProperty("@_xsi:type", "archimate:BusinessActor");
-    expect(testActorElement).toHaveProperty("@_id", "id-test-actor");
+    expect(testActorElement).toHaveProperty('@_xsi:type', 'archimate:BusinessActor');
+    expect(testActorElement).toHaveProperty('@_id', 'id-test-actor');
   });
 
-  it("should return an empty object for invalid XML", async () => {
+  it('should return an empty object for invalid XML', async () => {
     (readFile as Mock).mockResolvedValue(invalidXml);
 
     const tsArchi = new TsArchi();
-    const parsedData = await tsArchi.load("dummy/path/to/invalid.xml");
+    const parsedData = await tsArchi.load('dummy/path/to/invalid.xml');
 
     expect(parsedData).toBeDefined();
     expect(parsedData).toEqual({});
   });
 
-  it("should handle empty model data gracefully in loadModel", async () => {
+  it('should handle empty model data gracefully in loadModel', async () => {
     (readFile as Mock).mockResolvedValue(invalidXml);
 
     const tsArchi = new TsArchi();
-    const model = await tsArchi.loadModel("dummy/path/to/invalid.xml");
+    const model = await tsArchi.loadModel('dummy/path/to/invalid.xml');
 
     expect(model).toBeDefined();
-    expect(typeof model.generateRandomId).toBe("function");
+    expect(typeof model.generateRandomId).toBe('function');
   });
 
-  it("should handle file read errors gracefully", async () => {
-    (readFile as Mock).mockRejectedValue(new Error("File not found"));
+  it('should handle file read errors gracefully', async () => {
+    (readFile as Mock).mockRejectedValue(new Error('File not found'));
 
     const tsArchi = new TsArchi();
-    const parsedData = await tsArchi.load("dummy/path/to/nonexistent.xml");
+    const parsedData = await tsArchi.load('dummy/path/to/nonexistent.xml');
 
     expect(parsedData).toBeDefined();
     expect(parsedData).toEqual({});

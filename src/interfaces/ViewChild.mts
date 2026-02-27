@@ -1,8 +1,8 @@
-import type { Bounds } from "./Bounds.mjs";
+import type { Bounds } from './Bounds.mjs';
 
 export interface ViewChild {
   id: string;
-  type: "Group" | "DiagramObject" | "Note";
+  type: 'Group' | 'DiagramObject' | 'Note';
   name?: string;
   bounds: Bounds;
   fillColor?: string;

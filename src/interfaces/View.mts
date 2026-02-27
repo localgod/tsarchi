@@ -1,9 +1,9 @@
-import type { ViewChild } from "./ViewChild.mjs";
+import type { ViewChild } from './ViewChild.mjs';
 
 export interface View {
   id: string;
   name: string;
-  type: "ArchimateDiagramModel";
+  type: 'ArchimateDiagramModel';
   documentation?: string;
   viewpoint?: string;
   background?: string;
@@ -13,14 +13,14 @@ export interface View {
 }
 
 export interface ViewGroup extends ViewChild {
-  type: "Group";
+  type: 'Group';
   name?: string;
   children?: ViewChild[];
   documentation?: string;
 }
 
 export interface ViewDiagramObject extends ViewChild {
-  type: "DiagramObject";
+  type: 'DiagramObject';
   archimateElement: string;
   targetConnections?: string[];
   sourceConnections?: ViewConnection[];
@@ -28,7 +28,7 @@ export interface ViewDiagramObject extends ViewChild {
 
 export interface ViewConnection {
   id: string;
-  type: "Connection";
+  type: 'Connection';
   source: string;
   target: string;
   archimateRelationship?: string;

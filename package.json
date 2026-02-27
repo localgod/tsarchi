@@ -22,10 +22,10 @@
     "test": "vitest",
     "compare": "node ./dist/tests/compare.js -i sample.archimate -o out.archimate",
     "dev": "tsc --watch",
-    "lint": "eslint --ignore-pattern 'dist' .",
-    "lintfix": "eslint --fix --ignore-pattern 'dist' .",
-    "format": "oxfmt --check src/ tests/ scripts/ eslint.config.js README.md LICENSE.md CHANGELOG.md",
-    "formatfix": "oxfmt src/ tests/ scripts/ eslint.config.js README.md LICENSE.md CHANGELOG.md",
+    "lint": "oxlint --ignore-path .gitignore .",
+    "lintfix": "oxlint --fix --ignore-path .gitignore .",
+    "format": "oxfmt --check README.md LICENSE.md CHANGELOG.md",
+    "formatfix": "oxfmt README.md LICENSE.md CHANGELOG.md",
     "prepublishOnly": "npm run build && npm test"
   },
   "repository": {
@@ -44,16 +44,12 @@
   },
   "homepage": "https://github.com/localgod/tsarchi",
   "devDependencies": {
-    "@eslint/js": "^10.0.1",
-    "@stylistic/eslint-plugin": "^5.1.0",
     "@types/json-schema": "^7.0.15",
     "@types/node": "^25.0.2",
-    "eslint": "^10.0.0",
-    "globals": "^17.0.0",
     "oxfmt": "^0.35.0",
-    "typescript": "^5.5.4",
-    "typescript-eslint": "^8.33.1",
-    "vitest": "^4.0.3"
+    "oxlint": "^1.50.0",
+    "vitest": "^4.0.3",
+    "typescript": "^5.5.4"
   },
   "dependencies": {
     "chalk": "^5.4.1",

@@ -22,8 +22,8 @@
     "test": "vitest",
     "compare": "node ./dist/tests/compare.js -i sample.archimate -o out.archimate",
     "dev": "tsc --watch",
-    "lint": "eslint --ignore-pattern 'dist' .",
-    "lintfix": "eslint --fix --ignore-pattern 'dist' .",
+    "lint": "oxlint --ignore-path .gitignore .",
+    "lintfix": "oxlint --fix --ignore-path .gitignore .",
     "mdlint": "markdownlint '**/*.md' --ignore node_modules --ignore slides --disable MD033 MD013 MD041",
     "prepublishOnly": "npm run build && npm test"
   },
@@ -43,13 +43,9 @@
   },
   "homepage": "https://github.com/localgod/tsarchi",
   "devDependencies": {
-    "@eslint/js": "^10.0.1",
-    "@stylistic/eslint-plugin": "^5.1.0",
     "@types/json-schema": "^7.0.15",
     "@types/node": "^25.0.2",
-    "eslint": "^10.0.0",
-    "globals": "^17.0.0",
-    "typescript-eslint": "^8.33.1",
+    "oxlint": "^1.50.0",
     "vitest": "^4.0.3",
     "typescript": "^5.5.4"
   },

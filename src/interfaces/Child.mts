@@ -6,16 +6,16 @@ export interface Child {
   id: string;
   name?: string;
   targetConnections?: string;
-  archimateElement?:string;
-  fontColor?: string
+  archimateElement?: string;
+  fontColor?: string;
   lineWidth?: number;
   textAlignment?: number;
-  fillColor?: string
+  fillColor?: string;
   alpha?: number;
   textPosition?: number;
   borderType?: number;
-  bounds: Bounds
-  child?:Child[]
-  sourceConnection?:SourceConnection
-  documentation?:string
+  bounds: Bounds;
+  child?: Child[];
+  sourceConnection?: SourceConnection;
+  documentation?: string;
 }

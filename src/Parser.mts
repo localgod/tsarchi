@@ -3,10 +3,10 @@ import type { Schema as ArchimateSchema } from "./interfaces/schema/Schema.mjs";
 import type { Folder as SchemaFolder } from "./interfaces/schema/Folder.mjs";
 import type { Element as SchemaElement } from "./interfaces/schema/Element.mjs";
 import type { Child as SchemaChild } from "./interfaces/schema/Child.mjs";
-import type { Element } from './interfaces/Element.mjs';
-import type { Child } from './interfaces/Child.mjs';
-import { BoundsMapper } from './BoundMapper.mjs';
-import { SourceConnectionMapper } from './SourceConnectionMapper.mjs';
+import type { Element } from "./interfaces/Element.mjs";
+import type { Child } from "./interfaces/Child.mjs";
+import { BoundsMapper } from "./BoundMapper.mjs";
+import { SourceConnectionMapper } from "./SourceConnectionMapper.mjs";
 
 export class Parser {
   private model: Model;
@@ -22,8 +22,8 @@ export class Parser {
   }
 
   private validateInput(input: object): ArchimateSchema {
-    if (!input || typeof input !== 'object') {
-      throw new Error('Invalid input data');
+    if (!input || typeof input !== "object") {
+      throw new Error("Invalid input data");
     }
     return input as ArchimateSchema;
   }
@@ -37,20 +37,22 @@ export class Parser {
   }
 
   private findFolder(data: ArchimateSchema, folderKey: keyof Model): SchemaFolder | undefined {
-    return data['archimate:model']?.folder?.find((elm) => elm['@_type'] === folderKey);
+    return data["archimate:model"]?.folder?.find((elm) => elm["@_type"] === folderKey);
   }
 
   private setFolderMetadata(folderKey: keyof Model, folder: SchemaFolder): void {
     const folderModel = this.model[folderKey];
-    folderModel.id = folder['@_id'] || '';
-    folderModel.name = folder['@_name'] || '';
+    folderModel.id = folder["@_id"] || "";
+    folderModel.name = folder["@_name"] || "";
   }
 
   private processFolderElements(folderKey: keyof Model, folder: SchemaFolder): void {
     const elements = this.ensureArray(folder.element);
-    this.model[folderKey].elements = elements.map((element: SchemaElement | undefined) => 
-      element ? this.createElement(element) : undefined
-    ).filter((el): el is Element => el !== undefined)
+    this.model[folderKey].elements = elements
+      .map((element: SchemaElement | undefined) =>
+        element ? this.createElement(element) : undefined,
+      )
+      .filter((el): el is Element => el !== undefined);
   }
 
   private ensureArray<T>(element: T | T[]): T[] {
@@ -59,21 +61,21 @@ export class Parser {
 
   private createElement(schemaElement: SchemaElement): Element {
     const element: Element = {
-      id: schemaElement['@_id'],
-      name: schemaElement['@_name'],
-      type: this.extractElementType(schemaElement['@_xsi:type']),
-      source: schemaElement['@_source'],
-      target: schemaElement['@_target'],
+      id: schemaElement["@_id"],
+      name: schemaElement["@_name"],
+      type: this.extractElementType(schemaElement["@_xsi:type"]),
+      source: schemaElement["@_source"],
+      target: schemaElement["@_target"],
       documentation: schemaElement.documentation,
       properties: this.createPropertiesMap(schemaElement),
-      child: schemaElement.child ? this.loadChildren(schemaElement.child) : undefined
+      child: schemaElement.child ? this.loadChildren(schemaElement.child) : undefined,
     };
 
     return element;
   }
 
   private extractElementType(typeString: string | undefined): string {
-    return typeString ? typeString.replace(/^archimate:/, '') : 'Unknown'
+    return typeString ? typeString.replace(/^archimate:/, "") : "Unknown";
   }
 
   private createPropertiesMap(element: SchemaElement): Map<string, string> {
@@ -82,30 +84,30 @@ export class Parser {
 
     propsArray.forEach((property) => {
       if (property) {
-        properties.set(property['@_key'], property['@_value'])
+        properties.set(property["@_key"], property["@_value"]);
       }
-    })
+    });
 
-    return properties
+    return properties;
   }
 
   private loadChildren(childElements: SchemaChild | SchemaChild[]): Child[] {
-    const children = this.ensureArray(childElements)
-    return children.map((child) => this.convertChildElementToChild(child))
+    const children = this.ensureArray(childElements);
+    return children.map((child) => this.convertChildElementToChild(child));
   }
 
   private convertChildElementToChild(schemaChild: SchemaChild): Child {
     const {
-      '@_id': id,
-      '@_xsi:type': xsiType,
-      '@_name': name,
-      '@_archimateElement': archimateElement,
-      '@_targetConnections': targetConnections,
-      '@_fillColor': fillColor,
-      '@_textAlignment': textAlignment,
+      "@_id": id,
+      "@_xsi:type": xsiType,
+      "@_name": name,
+      "@_archimateElement": archimateElement,
+      "@_targetConnections": targetConnections,
+      "@_fillColor": fillColor,
+      "@_textAlignment": textAlignment,
       sourceConnection,
       bounds,
-      documentation
+      documentation,
     } = schemaChild;
 
     const child: Child = {
@@ -117,18 +119,17 @@ export class Parser {
       fillColor,
       textAlignment: textAlignment ? Number(textAlignment) : undefined,
       bounds: BoundsMapper.schemaBoundsToBounds(bounds),
-      sourceConnection: sourceConnection ? SourceConnectionMapper.schemaToSourceConnection(sourceConnection) : undefined,
-      documentation
-    }
+      sourceConnection: sourceConnection
+        ? SourceConnectionMapper.schemaToSourceConnection(sourceConnection)
+        : undefined,
+      documentation,
+    };
 
     child.child = schemaChild.child ? this.loadChildren(schemaChild.child) : undefined;
     return this.cleanUndefinedProperties(child);
   }
 
   private cleanUndefinedProperties<T extends Record<string, any>>(obj: T): T {
-    return Object.fromEntries(
-      Object.entries(obj).filter(([, value]) => value !== undefined)
-    ) as T;
+    return Object.fromEntries(Object.entries(obj).filter(([, value]) => value !== undefined)) as T;
   }
-
 }

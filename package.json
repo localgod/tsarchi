@@ -24,7 +24,8 @@
     "dev": "tsc --watch",
     "lint": "eslint --ignore-pattern 'dist' .",
     "lintfix": "eslint --fix --ignore-pattern 'dist' .",
-    "mdlint": "markdownlint '**/*.md' --ignore node_modules --ignore slides --disable MD033 MD013 MD041",
+    "format": "oxfmt --check src/ tests/ scripts/ eslint.config.js",
+    "formatfix": "oxfmt src/ tests/ scripts/ eslint.config.js",
     "prepublishOnly": "npm run build && npm test"
   },
   "repository": {
@@ -49,9 +50,10 @@
     "@types/node": "^25.0.2",
     "eslint": "^10.0.0",
     "globals": "^17.0.0",
+    "oxfmt": "^0.35.0",
+    "typescript": "^5.5.4",
     "typescript-eslint": "^8.33.1",
-    "vitest": "^4.0.3",
-    "typescript": "^5.5.4"
+    "vitest": "^4.0.3"
   },
   "dependencies": {
     "chalk": "^5.4.1",

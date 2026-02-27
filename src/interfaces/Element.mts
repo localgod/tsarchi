@@ -4,7 +4,7 @@ export interface Element {
   id: string;
   type: string;
   name: string;
-  documentation?:string;
+  documentation?: string;
   source?: string;
   target?: string;
   child?: Child | Child[];

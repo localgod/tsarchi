@@ -4,23 +4,23 @@ import type { Element as SchemaElement } from "./interfaces/schema/Element.mjs";
 import type { Element } from "./interfaces/Element.mjs";
 import type { Child as SchemaChild } from "./interfaces/schema/Child.mjs";
 import type { Property as SchemaProperty } from "./interfaces/schema/Property.mjs";
-import type { Model } from './interfaces/Model.mjs';
-import type { Child } from './interfaces/Child.mjs';
-import { BoundsMapper } from './BoundMapper.mjs';
-import { SourceConnectionMapper } from './SourceConnectionMapper.mjs';
-import { folderType } from './constants/archimate-mappings.mjs';
+import type { Model } from "./interfaces/Model.mjs";
+import type { Child } from "./interfaces/Child.mjs";
+import { BoundsMapper } from "./BoundMapper.mjs";
+import { SourceConnectionMapper } from "./SourceConnectionMapper.mjs";
+import { folderType } from "./constants/archimate-mappings.mjs";
 
 export class Serializer {
-  private model: Model
-  private name:string
+  private model: Model;
+  private name: string;
 
   constructor(model: Model) {
     this.model = model;
-    this.name = ''
+    this.name = "";
   }
 
-  public serialize(name:string): ArchimateSchema {
-    this.name = name
+  public serialize(name: string): ArchimateSchema {
+    this.name = name;
     const schema: ArchimateSchema = this.createSchemaModel();
 
     Object.keys(this.model).forEach((key) => this.storeFolder(schema, key as keyof Model));
@@ -30,14 +30,14 @@ export class Serializer {
 
   private createSchemaModel(): ArchimateSchema {
     return {
-      '?xml': { '@_version': '1.0', '@_encoding': 'UTF-8' },
-      'archimate:model': {
+      "?xml": { "@_version": "1.0", "@_encoding": "UTF-8" },
+      "archimate:model": {
         folder: [],
-        '@_xmlns:xsi': 'http://www.w3.org/2001/XMLSchema-instance',
-        '@_xmlns:archimate': 'http://www.archimatetool.com/archimate',
-        '@_name': this.name,
-        '@_id': 'id-d81fe19001de4c3cb53c05c2b757d35d',
-        '@_version': '5.0.0',
+        "@_xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
+        "@_xmlns:archimate": "http://www.archimatetool.com/archimate",
+        "@_name": this.name,
+        "@_id": "id-d81fe19001de4c3cb53c05c2b757d35d",
+        "@_version": "5.0.0",
       },
     };
   }
@@ -46,24 +46,24 @@ export class Serializer {
     const folderModel = this.model[folderKey];
 
     const folder: SchemaFolder = {
-      '@_name': folderType.get(folderKey) ?? 'Unknown Folder',
-      '@_id': folderModel.id,
-      '@_type': folderKey,
+      "@_name": folderType.get(folderKey) ?? "Unknown Folder",
+      "@_id": folderModel.id,
+      "@_type": folderKey,
       element: [],
     };
 
     if (Array.isArray(folderModel.elements)) {
-      folder.element = folderModel.elements.map((el) => this.serializeElement(el))
+      folder.element = folderModel.elements.map((el) => this.serializeElement(el));
     }
 
-    schema['archimate:model'].folder.push(folder);
+    schema["archimate:model"].folder.push(folder);
   }
 
   private serializeElement(el: Element): SchemaElement {
     const element: SchemaElement = {
-      '@_xsi:type': `archimate:${el.type}`,
-      '@_name': el.name,
-      '@_id': el.id,
+      "@_xsi:type": `archimate:${el.type}`,
+      "@_name": el.name,
+      "@_id": el.id,
     };
 
     if (el.documentation) {
@@ -75,8 +75,8 @@ export class Serializer {
     }
 
     if (el.source && el.target) {
-      element['@_source'] = el.source;
-      element['@_target'] = el.target;
+      element["@_source"] = el.source;
+      element["@_target"] = el.target;
     }
 
     if (el.child) {
@@ -91,7 +91,7 @@ export class Serializer {
     const propertyArray: SchemaProperty[] = [];
 
     properties.forEach((value, key) => {
-      propertyArray.push({ '@_key': key, '@_value': value });
+      propertyArray.push({ "@_key": key, "@_value": value });
     });
 
     return propertyArray;
@@ -108,32 +108,34 @@ export class Serializer {
    */
   private serializeChild(child: Child): SchemaChild {
     const schemaChild: SchemaChild = {
-      '@_xsi:type': `archimate:${child.type}`,
-      '@_id': child.id,
-      bounds: BoundsMapper.boundsToSchemaBounds(child.bounds)
-    }
+      "@_xsi:type": `archimate:${child.type}`,
+      "@_id": child.id,
+      bounds: BoundsMapper.boundsToSchemaBounds(child.bounds),
+    };
 
     if (child.sourceConnection) {
-      schemaChild.sourceConnection = SourceConnectionMapper.toSchemaSourceConnection(child.sourceConnection)
+      schemaChild.sourceConnection = SourceConnectionMapper.toSchemaSourceConnection(
+        child.sourceConnection,
+      );
     }
 
     if (child.name) {
-      schemaChild['@_name'] = child.name
+      schemaChild["@_name"] = child.name;
     }
 
     if (child.targetConnections) {
-      schemaChild['@_targetConnections'] = child.targetConnections
+      schemaChild["@_targetConnections"] = child.targetConnections;
     }
 
     if (child.textAlignment) {
-      schemaChild['@_textAlignment'] = String(child.textAlignment)
+      schemaChild["@_textAlignment"] = String(child.textAlignment);
     }
     if (child.fillColor) {
-      schemaChild['@_fillColor'] = child.fillColor
+      schemaChild["@_fillColor"] = child.fillColor;
     }
 
-    if(child.archimateElement) {
-      schemaChild['@_archimateElement'] = child.archimateElement
+    if (child.archimateElement) {
+      schemaChild["@_archimateElement"] = child.archimateElement;
     }
 
     if (child.child && Array.isArray(child.child)) {

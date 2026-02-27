@@ -20,12 +20,12 @@ jobs:
          cache-dependency-path: 'package-lock.json'
       - name: Install dependencies
         run: |
-          npm install --location=global npm@latest typescript@latest markdownlint-cli@latest
+          npm install --location=global npm@latest typescript@latest
           npm ci
       - name: Lint
         run: |
           npm run lint
-          npm run mdlint
+          npm run format
   test:
     runs-on: ubuntu-latest
     steps:

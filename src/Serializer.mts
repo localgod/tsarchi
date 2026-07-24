@@ -1,4 +1,6 @@
 import type { Schema as ArchimateSchema } from "./interfaces/schema/Schema.mjs";
+import type { Model as SchemaModel } from "./interfaces/schema/Model.mjs";
+import type { XmlMetadata } from "./interfaces/schema/XmlMetadata.mjs";
 import type { Folder as SchemaFolder } from "./interfaces/schema/Folder.mjs";
 import type { Element as SchemaElement } from "./interfaces/schema/Element.mjs";
 import type { Element } from "./interfaces/Element.mjs";
@@ -12,15 +14,26 @@ import { folderType } from './constants/archimate-mappings.mjs';
 
 export class Serializer {
   private model: Model
-  private name:string
+  private modelMetadata: Omit<SchemaModel, 'folder'>
+  private xmlMetadata: XmlMetadata
 
   constructor(model: Model) {
     this.model = model;
-    this.name = ''
+    this.xmlMetadata = { '@_version': '1.0', '@_encoding': 'UTF-8' };
+    this.modelMetadata = {
+      '@_xmlns:xsi': 'http://www.w3.org/2001/XMLSchema-instance',
+      '@_xmlns:archimate': 'http://www.archimatetool.com/archimate',
+      '@_name': '',
+      '@_id': 'id-d81fe19001de4c3cb53c05c2b757d35d',
+      '@_version': '5.0.0',
+    };
   }
 
-  public serialize(name:string): ArchimateSchema {
-    this.name = name
+  public serialize(modelMetadata: Omit<SchemaModel, 'folder'> | string, xmlMetadata?: XmlMetadata): ArchimateSchema {
+    this.modelMetadata = typeof modelMetadata === 'string'
+      ? { ...this.modelMetadata, '@_name': modelMetadata }
+      : modelMetadata
+    this.xmlMetadata = xmlMetadata || this.xmlMetadata
     const schema: ArchimateSchema = this.createSchemaModel();
 
     Object.keys(this.model).forEach((key) => this.storeFolder(schema, key as keyof Model));
@@ -30,14 +43,10 @@ export class Serializer {
 
   private createSchemaModel(): ArchimateSchema {
     return {
-      '?xml': { '@_version': '1.0', '@_encoding': 'UTF-8' },
+      '?xml': this.xmlMetadata,
       'archimate:model': {
         folder: [],
-        '@_xmlns:xsi': 'http://www.w3.org/2001/XMLSchema-instance',
-        '@_xmlns:archimate': 'http://www.archimatetool.com/archimate',
-        '@_name': this.name,
-        '@_id': 'id-d81fe19001de4c3cb53c05c2b757d35d',
-        '@_version': '5.0.0',
+        ...this.modelMetadata,
       },
     };
   }

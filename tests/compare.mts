@@ -1,21 +1,28 @@
 import * as fs from 'fs'
 import { XMLParser } from 'fast-xml-parser'
 import chalk from 'chalk'
-import { Command } from 'commander'
 
-const program = new Command();
+function parseArgs(args: string[]): { input: string; output: string } {
+  const options: { input?: string; output?: string } = {};
 
+  for (let i = 0; i < args.length; i++) {
+    if ((args[i] === '-i' || args[i] === '--input') && i + 1 < args.length) {
+      options.input = args[i + 1];
+      i++;
+    } else if ((args[i] === '-o' || args[i] === '--output') && i + 1 < args.length) {
+      options.output = args[i + 1];
+      i++;
+    }
+  }
 
-program
-  .version('1.0.0')
-  .description('XML Comparison Tool')
-  .requiredOption('-i, --input <inputFile>', 'input XML file path')
-  .requiredOption('-o, --output <outputFile>', 'output XML file path')
-  .parse(process.argv);
+  if (!options.input || !options.output) {
+    throw new Error('Usage: node compare.mjs -i <input-file> -o <output-file>');
+  }
 
-const options = program.opts();
+  return options as { input: string; output: string };
+}
 
-
+const options = parseArgs(process.argv.slice(2));
 const inputFilePath = options.input;
 const outputFilePath = options.output;
 
@@ -36,7 +43,7 @@ function parseAndNormalizeXML(filePath: string): any {
 
 // Function to compare two XML objects and accumulate errors
 function compareXMLObjects(
-  inputXML: any, outputXML: any, inputLines: string[], outputLines: string[], path = '', errors: string[] = []
+  inputXML: any, outputXML: any, path = '', errors: string[] = []
 ): void {
   if (typeof inputXML !== typeof outputXML) {
     errors.push(`Type mismatch at ${path}: ${typeof inputXML} vs ${typeof outputXML}`);
@@ -51,7 +58,7 @@ function compareXMLObjects(
       }
 
       for (let i = 0; i < inputXML.length; i++) {
-        compareXMLObjects(inputXML[i], outputXML[i], inputLines, outputLines, `${path}[${i}]`, errors);
+        compareXMLObjects(inputXML[i], outputXML[i], `${path}[${i}]`, errors);
       }
     } else {
       const inputKeys = Object.keys(inputXML);
@@ -67,7 +74,7 @@ function compareXMLObjects(
           continue;
         }
 
-        compareXMLObjects(inputXML[key], outputXML[key], inputLines, outputLines, `${path}.${key}`, errors);
+        compareXMLObjects(inputXML[key], outputXML[key], `${path}.${key}`, errors);
       }
     }
   } else if (inputXML !== outputXML) {
@@ -105,7 +112,7 @@ function findLineNumber(element: string, xmlLines: string[], value: string | nul
     const errors: string[] = [];
 
     // Compare the XMLs and accumulate all errors
-    compareXMLObjects(inputXMLData.parsed, outputXMLData.parsed, inputXMLData.raw, outputXMLData.raw, '', errors);
+    compareXMLObjects(inputXMLData.parsed, outputXMLData.parsed, '', errors);
 
     if (errors.length > 0) {
       console.error(chalk.red.bold("Test Failed: Errors found."));

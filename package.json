@@ -3,12 +3,12 @@
   "version": "1.0.2",
   "description": "TypeScript implementation of the Archi model",
   "type": "module",
-  "module": "./dist/index.mjs",
-  "types": "./dist/index.d.mts",
+  "module": "./dist/src/index.mjs",
+  "types": "./dist/src/index.d.mts",
   "exports": {
     ".": {
-      "import": "./dist/index.mjs",
-      "types": "./dist/index.d.mts"
+      "import": "./dist/src/index.mjs",
+      "types": "./dist/src/index.d.mts"
     },
     "./package.json": "./package.json"
   },
@@ -19,8 +19,9 @@
     "prebuild": "node scripts/generate-index.js",
     "build": "tsc --project tsconfig.json",
     "example": "node ./dist/examples/sample01.mjs --input sample.archimate --output out.archimate",
+    "pretest": "npm run build",
     "test": "vitest",
-    "compare": "node ./dist/tests/compare.js -i sample.archimate -o out.archimate",
+    "compare": "node ./dist/tests/roundtrip-compare.mjs",
     "dev": "tsc --watch",
     "lint": "oxlint --ignore-path .gitignore .",
     "lintfix": "oxlint --fix --ignore-path .gitignore .",

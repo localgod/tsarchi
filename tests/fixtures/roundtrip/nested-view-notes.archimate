@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<archimate:model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:archimate="http://www.archimatetool.com/archimate" name="nested view notes" id="id-nested-view-model" version="5.0.0">
+  <folder name="Strategy" id="id-nested-strategy" type="strategy"/>
+  <folder name="Business" id="id-nested-business" type="business"/>
+  <folder name="Application" id="id-nested-application" type="application">
+    <element xsi:type="archimate:ApplicationComponent" name="Frontend" id="id-frontend"/>
+    <element xsi:type="archimate:ApplicationComponent" name="Backend" id="id-backend"/>
+  </folder>
+  <folder name="Technology &amp; Physical" id="id-nested-technology" type="technology"/>
+  <folder name="Motivation" id="id-nested-motivation" type="motivation"/>
+  <folder name="Implementation &amp; Migration" id="id-nested-implementation" type="implementation_migration"/>
+  <folder name="Other" id="id-nested-other" type="other"/>
+  <folder name="Relations" id="id-nested-relations" type="relations">
+    <element xsi:type="archimate:FlowRelationship" name="api call" id="id-api-call" source="id-frontend" target="id-backend"/>
+  </folder>
+  <folder name="Views" id="id-nested-views" type="diagrams">
+    <element xsi:type="archimate:ArchimateDiagramModel" name="Application View" id="id-application-view">
+      <child xsi:type="archimate:Group" id="id-app-group" name="Applications" textAlignment="1" fillColor="#eeeeee">
+        <bounds x="40" y="40" width="460" height="240"/>
+        <child xsi:type="archimate:DiagramObject" id="id-frontend-object" archimateElement="id-frontend">
+          <bounds x="40" y="80" width="120" height="55"/>
+          <sourceConnection xsi:type="archimate:Connection" id="id-api-connection" source="id-frontend-object" target="id-backend-object" archimateRelationship="id-api-call"/>
+        </child>
+        <child xsi:type="archimate:DiagramObject" id="id-backend-object" targetConnections="id-api-connection" archimateElement="id-backend" fillColor="#c9e7b7">
+          <bounds x="280" y="80" width="120" height="55"/>
+        </child>
+        <child xsi:type="archimate:Note" id="id-note" name="Deployment note" fillColor="#fff2cc">
+          <bounds x="160" y="160" width="160" height="70"/>
+          <documentation>Keep the note attached to the application view.</documentation>
+        </child>
+        <documentation>Grouped application components.</documentation>
+      </child>
+    </element>
+  </folder>
+</archimate:model>

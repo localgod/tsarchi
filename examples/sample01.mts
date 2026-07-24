@@ -37,7 +37,7 @@ async function main() {
   await tsa.loadModel(options.input);
 
   const newAppComponent: Element = {
-    id: tsa.getModel().generateRandomId(), 
+    id: tsa.getModel().generateUniqueId(), 
     type: 'ApplicationComponent',
     name: 'New Application Component',
     properties: new Map([['version', '1.0'], ['status', 'planned']])

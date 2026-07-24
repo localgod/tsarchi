@@ -5,6 +5,7 @@ import type { Element as SchemaElement } from "./interfaces/schema/Element.mjs";
 import type { Child as SchemaChild } from "./interfaces/schema/Child.mjs";
 import type { Element } from './interfaces/Element.mjs';
 import type { Child } from './interfaces/Child.mjs';
+import type { ArchimateModelType } from './constants/archimate-mappings.mjs';
 import { BoundsMapper } from './BoundMapper.mjs';
 import { SourceConnectionMapper } from './SourceConnectionMapper.mjs';
 
@@ -61,7 +62,7 @@ export class Parser {
     const element: Element = {
       id: schemaElement['@_id'],
       name: schemaElement['@_name'],
-      type: this.extractElementType(schemaElement['@_xsi:type']),
+      type: this.extractElementType(schemaElement['@_xsi:type']) as ArchimateModelType,
       source: schemaElement['@_source'],
       target: schemaElement['@_target'],
       documentation: schemaElement.documentation,

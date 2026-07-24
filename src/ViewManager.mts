@@ -6,9 +6,11 @@ import type { Bounds } from './interfaces/Bounds.mjs';
 
 export class ViewManager {
   private model: Model;
+  private generateUniqueId: () => string;
 
-  constructor(model: Model) {
+  constructor(model: Model, generateUniqueId?: () => string) {
     this.model = model;
+    this.generateUniqueId = generateUniqueId || (() => this.generateId());
   }
 
   /**
@@ -20,7 +22,7 @@ export class ViewManager {
     documentation?: string;
   }): View {
     const view: View = {
-      id: this.generateId(),
+      id: this.generateUniqueId(),
       name,
       type: 'ArchimateDiagramModel',
       children: [],
@@ -85,7 +87,7 @@ export class ViewManager {
     }
 
     const diagramObject: ViewDiagramObject = {
-      id: this.generateId(),
+      id: this.generateUniqueId(),
       type: 'DiagramObject',
       archimateElement: elementId,
       bounds,
@@ -114,7 +116,7 @@ export class ViewManager {
     if (!view) return null;
 
     const group: ViewGroup = {
-      id: this.generateId(),
+      id: this.generateUniqueId(),
       type: 'Group',
       name,
       bounds,
@@ -153,7 +155,7 @@ export class ViewManager {
     }
 
     const diagramObject: ViewDiagramObject = {
-      id: this.generateId(),
+      id: this.generateUniqueId(),
       type: 'DiagramObject',
       archimateElement: elementId,
       bounds,
@@ -197,7 +199,7 @@ export class ViewManager {
     }
 
     const connection: ViewConnection = {
-      id: this.generateId(),
+      id: this.generateUniqueId(),
       type: 'Connection',
       source: sourceObjectId,
       target: targetObjectId,

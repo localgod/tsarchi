@@ -1,6 +1,6 @@
 {
   "name": "tsarchi",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "TypeScript implementation of the Archi model",
   "type": "module",
   "module": "./dist/src/index.mjs",

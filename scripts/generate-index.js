@@ -27,8 +27,10 @@ function scanDir(dir, relativePath = ".") {
       entry.name !== "index.mts" &&
       entry.name !== "cmd.mts"
     ) {
-      if (entry && entry.path && !entry.path.endsWith("schema")) {
-        const importPath = './' + path.join(relativePath, entry.name.replace(/\.mts$/, ".mjs"));
+      const isSchemaFile = relativePath.split(path.sep).includes("schema");
+
+      if (!isSchemaFile) {
+        const importPath = "./" + path.join(relativePath, entry.name.replace(/\.mts$/, ".mjs"));
         exportLines.push(`export * from "${importPath.replace(/\\/g, "/")}";`);
       }
     }

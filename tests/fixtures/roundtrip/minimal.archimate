@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<archimate:model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:archimate="http://www.archimatetool.com/archimate" name="minimal" id="id-minimal-model" version="5.0.0">
+  <folder name="Strategy" id="id-minimal-strategy" type="strategy"/>
+  <folder name="Business" id="id-minimal-business" type="business"/>
+  <folder name="Application" id="id-minimal-application" type="application"/>
+  <folder name="Technology &amp; Physical" id="id-minimal-technology" type="technology"/>
+  <folder name="Motivation" id="id-minimal-motivation" type="motivation"/>
+  <folder name="Implementation &amp; Migration" id="id-minimal-implementation" type="implementation_migration"/>
+  <folder name="Other" id="id-minimal-other" type="other"/>
+  <folder name="Relations" id="id-minimal-relations" type="relations"/>
+  <folder name="Views" id="id-minimal-views" type="diagrams"/>
+</archimate:model>

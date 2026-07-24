@@ -49,6 +49,7 @@ export class TsArchi {
   }
 
   async saveModel(path: PathLike) {
+    this.model.assertValidModel()
     const out = this.model.serialize()
     await this.save(path, out);
   }

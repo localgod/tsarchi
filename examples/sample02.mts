@@ -38,28 +38,28 @@ async function main() {
 
   // Create some sample elements if they don't exist
   const webApp: Element = {
-    id: model.generateRandomId(),
+    id: model.generateUniqueId(),
     type: 'ApplicationComponent',
     name: 'Web Application',
     properties: new Map([['technology', 'React'], ['status', 'active']])
   };
 
   const database: Element = {
-    id: model.generateRandomId(),
+    id: model.generateUniqueId(),
     type: 'ApplicationComponent', 
     name: 'Database',
     properties: new Map([['technology', 'PostgreSQL'], ['status', 'active']])
   };
 
   const apiGateway: Element = {
-    id: model.generateRandomId(),
+    id: model.generateUniqueId(),
     type: 'ApplicationComponent',
     name: 'API Gateway',
     properties: new Map([['technology', 'Kong'], ['status', 'active']])
   };
 
   const dataFlow: Element = {
-    id: model.generateRandomId(),
+    id: model.generateUniqueId(),
     type: 'FlowRelationship',
     name: 'Data Flow',
     source: webApp.id,
@@ -67,7 +67,7 @@ async function main() {
   };
 
   const apiCall: Element = {
-    id: model.generateRandomId(),
+    id: model.generateUniqueId(),
     type: 'FlowRelationship', 
     name: 'API Call',
     source: webApp.id,

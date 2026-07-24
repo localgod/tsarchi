@@ -31,6 +31,6 @@
     /* Build speed */
     "skipLibCheck": true
   },
-  "include": ["src/**/*.mts", "examples/**/*.mts"],
+  "include": ["src/**/*.mts", "examples/**/*.mts", "tests/compare.mts", "tests/roundtrip-compare.mts"],
   "exclude": ["dist", "node_modules", "**/*.spec.mts", "**/*.test.mts"]
 }

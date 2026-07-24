@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<archimate:model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:archimate="http://www.archimatetool.com/archimate" name="relationships and properties" id="id-rel-props-model" version="5.0.0">
+  <folder name="Strategy" id="id-rel-props-strategy" type="strategy"/>
+  <folder name="Business" id="id-rel-props-business" type="business">
+    <element xsi:type="archimate:BusinessActor" name="Customer" id="id-customer">
+      <documentation>External customer actor.</documentation>
+      <property key="segment" value="enterprise"/>
+    </element>
+  </folder>
+  <folder name="Application" id="id-rel-props-application" type="application">
+    <element xsi:type="archimate:ApplicationComponent" name="Portal" id="id-portal">
+      <documentation>Customer-facing portal.</documentation>
+      <property key="owner" value="digital"/>
+      <property key="criticality" value="high"/>
+    </element>
+    <element xsi:type="archimate:ApplicationService" name="Portal Service" id="id-portal-service">
+      <property key="sla" value="gold"/>
+    </element>
+  </folder>
+  <folder name="Technology &amp; Physical" id="id-rel-props-technology" type="technology">
+    <element xsi:type="archimate:Node" name="Web Cluster" id="id-web-cluster"/>
+  </folder>
+  <folder name="Motivation" id="id-rel-props-motivation" type="motivation"/>
+  <folder name="Implementation &amp; Migration" id="id-rel-props-implementation" type="implementation_migration"/>
+  <folder name="Other" id="id-rel-props-other" type="other"/>
+  <folder name="Relations" id="id-rel-props-relations" type="relations">
+    <element xsi:type="archimate:ServingRelationship" name="serves" id="id-serving" source="id-portal" target="id-portal-service">
+      <documentation>Portal exposes the service.</documentation>
+      <property key="protocol" value="https"/>
+    </element>
+    <element xsi:type="archimate:AssignmentRelationship" name="assigned to" id="id-assignment" source="id-web-cluster" target="id-portal"/>
+  </folder>
+  <folder name="Views" id="id-rel-props-views" type="diagrams"/>
+</archimate:model>

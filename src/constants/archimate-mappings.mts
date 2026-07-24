@@ -2,6 +2,158 @@
 
 import type { FolderKey } from '../interfaces/Model.mjs';
 
+export const archimateStrategyElementTypes = [
+  'Capability',
+  'CourseOfAction',
+  'Resource',
+  'ValueStream',
+  'Stage',
+] as const;
+
+export const archimateBusinessElementTypes = [
+  'BusinessActor',
+  'Actor',
+  'BusinessRole',
+  'BusinessCollaboration',
+  'BusinessInterface',
+  'BusinessProcess',
+  'BusinessFunction',
+  'BusinessInteraction',
+  'BusinessService',
+  'BusinessEvent',
+  'BusinessObject',
+  'Contract',
+  'BusinessProduct',
+  'Representation',
+  'Meaning',
+  'Value',
+] as const;
+
+export const archimateApplicationElementTypes = [
+  'ApplicationComponent',
+  'ApplicationCollaboration',
+  'ApplicationInterface',
+  'ApplicationProcess',
+  'ApplicationFunction',
+  'ApplicationInteraction',
+  'ApplicationService',
+  'DataObject',
+] as const;
+
+export const archimateTechnologyElementTypes = [
+  'Node',
+  'Device',
+  'SystemSoftware',
+  'TechnologyCollaboration',
+  'TechnologyInterface',
+  'TechnologyProcess',
+  'TechnologyFunction',
+  'TechnologyInteraction',
+  'TechnologyService',
+  'CommunicationNetwork',
+  'Path',
+  'Artifact',
+  'TechnologyEvent',
+  'TechnologyObject',
+  'DistributionNetwork',
+  'Facility',
+  'Material',
+] as const;
+
+export const archimateMotivationElementTypes = [
+  'Stakeholder',
+  'Driver',
+  'Assessment',
+  'Goal',
+  'Outcome',
+  'Principle',
+  'Requirement',
+  'Constraint',
+] as const;
+
+export const archimateImplementationMigrationElementTypes = [
+  'WorkPackage',
+  'Deliverable',
+  'ImplementationEvent',
+  'Plateau',
+  'Gap',
+] as const;
+
+export const archimateRelationshipTypes = [
+  'AssignmentRelationship',
+  'AssociationRelationship',
+  'AccessRelationship',
+  'CompositionRelationship',
+  'AggregationRelationship',
+  'FlowRelationship',
+  'TriggeringRelationship',
+  'ServingRelationship',
+  'RealizationRelationship',
+  'UsedByRelationship',
+  'InfluenceRelationship',
+  'Junction',
+  'SpecializationRelationship',
+  'RepresentationRelationship',
+  'MaterialRelationship',
+] as const;
+
+export const archimateRelationshipAliasTypes = [
+  'Association',
+  'Composition',
+  'Aggregation',
+  'Flow',
+  'Triggering',
+  'Serving',
+  'Realization',
+  'UsedBy',
+  'Influence',
+  'Specialization',
+  'Material',
+] as const;
+
+export const archimateViewTypes = [
+  'Diagram',
+  'ArchimateDiagramModel',
+] as const;
+
+export const archimateModelTypes = [
+  ...archimateStrategyElementTypes,
+  ...archimateBusinessElementTypes,
+  ...archimateApplicationElementTypes,
+  ...archimateTechnologyElementTypes,
+  ...archimateMotivationElementTypes,
+  ...archimateImplementationMigrationElementTypes,
+  ...archimateRelationshipTypes,
+  ...archimateRelationshipAliasTypes,
+  ...archimateViewTypes,
+] as const;
+
+export type ArchimateStrategyElementType = typeof archimateStrategyElementTypes[number];
+export type ArchimateBusinessElementType = typeof archimateBusinessElementTypes[number];
+export type ArchimateApplicationElementType = typeof archimateApplicationElementTypes[number];
+export type ArchimateTechnologyElementType = typeof archimateTechnologyElementTypes[number];
+export type ArchimateMotivationElementType = typeof archimateMotivationElementTypes[number];
+export type ArchimateImplementationMigrationElementType = typeof archimateImplementationMigrationElementTypes[number];
+export type ArchimateRelationshipType = typeof archimateRelationshipTypes[number];
+export type ArchimateRelationshipAliasType = typeof archimateRelationshipAliasTypes[number];
+export type ArchimateViewType = typeof archimateViewTypes[number];
+export type ArchimateElementType =
+  | ArchimateStrategyElementType
+  | ArchimateBusinessElementType
+  | ArchimateApplicationElementType
+  | ArchimateTechnologyElementType
+  | ArchimateMotivationElementType
+  | ArchimateImplementationMigrationElementType;
+export type ArchimateModelType =
+  | ArchimateElementType
+  | ArchimateRelationshipType
+  | ArchimateRelationshipAliasType
+  | ArchimateViewType;
+
+export function isArchimateModelType(type: string): type is ArchimateModelType {
+  return elementTypeToFolderKey.has(type as ArchimateModelType);
+}
+
 /**
  * Maps FolderKey to a human-readable folder name.
  */
@@ -17,104 +169,31 @@ export const folderType = new Map<FolderKey, string>([
   ['diagrams', 'Views'],
 ]);
 
-export const elementTypeToFolderKey: Map<string, FolderKey> = new Map([
+const elementTypeFolderEntries = [
   // Strategy Layer
-  ['Capability', 'strategy'],
-  ['CourseOfAction', 'strategy'],
-  ['Resource', 'strategy'],
-  ['ValueStream', 'strategy'],
-  ['Stage', 'strategy'],
-  ['WorkPackage', 'strategy'],
+  ...archimateStrategyElementTypes.map(type => [type, 'strategy'] as const),
 
   // Business Layer
-  ['Actor', 'business'],
-  ['BusinessRole', 'business'],
-  ['BusinessCollaboration', 'business'],
-  ['BusinessInterface', 'business'],
-  ['BusinessProcess', 'business'],
-  ['BusinessFunction', 'business'],
-  ['BusinessInteraction', 'business'],
-  ['BusinessService', 'business'],
-  ['BusinessEvent', 'business'],
-  ['BusinessObject', 'business'],
-  ['Contract', 'business'],
-  ['BusinessProduct', 'business'],
-  ['Representation', 'business'],
-  ['Meaning', 'business'],
-  ['Value', 'business'],
+  ...archimateBusinessElementTypes.map(type => [type, 'business'] as const),
 
   // Application Layer
-  ['ApplicationComponent', 'application'],
-  ['ApplicationCollaboration', 'application'],
-  ['ApplicationInterface', 'application'],
-  ['ApplicationProcess', 'application'],
-  ['ApplicationFunction', 'application'],
-  ['ApplicationInteraction', 'application'],
-  ['ApplicationService', 'application'],
-  ['DataObject', 'application'],
+  ...archimateApplicationElementTypes.map(type => [type, 'application'] as const),
 
   // Technology & Physical Layer
-  ['Node', 'technology'],
-  ['Device', 'technology'],
-  ['SystemSoftware', 'technology'],
-  ['TechnologyCollaboration', 'technology'],
-  ['TechnologyInterface', 'technology'],
-  ['TechnologyProcess', 'technology'],
-  ['TechnologyFunction', 'technology'],
-  ['TechnologyInteraction', 'technology'],
-  ['TechnologyService', 'technology'],
-  ['CommunicationNetwork', 'technology'],
-  ['Path', 'technology'],
-  ['Artifact', 'technology'],
-  ['TechnologyEvent', 'technology'],
-  ['TechnologyObject', 'technology'],
-  ['DistributionNetwork', 'technology'],
-  ['Facility', 'technology'],
-  ['Material', 'technology'],
+  ...archimateTechnologyElementTypes.map(type => [type, 'technology'] as const),
 
   // Motivation Layer
-  ['Stakeholder', 'motivation'],
-  ['Driver', 'motivation'],
-  ['Assessment', 'motivation'],
-  ['Goal', 'motivation'],
-  ['Outcome', 'motivation'],
-  ['Principle', 'motivation'],
-  ['Requirement', 'motivation'],
-  ['Constraint', 'motivation'],
-  ['WorkPackage', 'implementation_migration'],
-  ['Deliverable', 'implementation_migration'],
-  ['ImplementationEvent', 'implementation_migration'],
-  ['Plateau', 'implementation_migration'],
-  ['Gap', 'implementation_migration'],
-  ['AssignmentRelationship', 'relations'],
-  ['AssociationRelationship', 'relations'],
-  ['AccessRelationship', 'relations'],
-  ['CompositionRelationship', 'relations'],
-  ['AggregationRelationship', 'relations'],
-  ['FlowRelationship', 'relations'],
-  ['TriggeringRelationship', 'relations'],
-  ['ServingRelationship', 'relations'],
-  ['RealizationRelationship', 'relations'],
-  ['UsedByRelationship', 'relations'],
-  ['InfluenceRelationship', 'relations'],
-  ['Junction', 'relations'],
-  ['SpecializationRelationship', 'relations'],
-  ['RepresentationRelationship', 'relations'],
-  ['MaterialRelationship', 'relations'],
-  ['Association', 'relations'],
-  ['Composition', 'relations'],
-  ['Aggregation', 'relations'],
-  ['Flow', 'relations'],
-  ['Triggering', 'relations'],
-  ['Serving', 'relations'],
-  ['Realization', 'relations'],
-  ['UsedBy', 'relations'],
-  ['Influence', 'relations'],
-  ['Specialization', 'relations'],
-  ['Representation', 'relations'],
-  ['Material', 'relations'],
+  ...archimateMotivationElementTypes.map(type => [type, 'motivation'] as const),
+
+  // Implementation & Migration Layer
+  ...archimateImplementationMigrationElementTypes.map(type => [type, 'implementation_migration'] as const),
+
+  // Relationships
+  ...archimateRelationshipTypes.map(type => [type, 'relations'] as const),
+  ...archimateRelationshipAliasTypes.map(type => [type, 'relations'] as const),
 
   // Diagrams (Views)
-  ['Diagram', 'diagrams'],
-  ['ArchimateDiagramModel', 'diagrams'],
-]);
+  ...archimateViewTypes.map(type => [type, 'diagrams'] as const),
+] satisfies ReadonlyArray<readonly [ArchimateModelType, FolderKey]>;
+
+export const elementTypeToFolderKey: Map<ArchimateModelType, FolderKey> = new Map(elementTypeFolderEntries);

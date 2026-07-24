@@ -117,7 +117,7 @@ const model = await tsArchi.loadModel("./path/to/model.archimate");
 
 // Add a new element
 const newElement = {
-  id: model.generateRandomId(),
+  id: model.generateUniqueId(),
   type: "ApplicationComponent",
   name: "My New Component",
   properties: new Map([["version", "2.0"]]),
@@ -127,6 +127,25 @@ model.upsertElement(newElement);
 
 // Save the modified model
 await tsArchi.saveModel("./path/to/output.archimate");
+```
+
+#### Relationship Management
+
+Relationships can be created and queried directly:
+
+```typescript
+const relationship = model.upsertRelationship({
+  id: model.generateUniqueId(),
+  name: "App Flow",
+  type: "FlowRelationship",
+  source: "source-element-id",
+  target: "target-element-id",
+});
+
+const outgoing = model.findRelationshipsForElement("source-element-id", "source");
+const between = model.findRelationshipsBetween("source-element-id", "target-element-id");
+
+model.deleteRelationship(relationship.id);
 ```
 
 #### Available Element Types
@@ -139,6 +158,20 @@ TSArchi supports all standard ArchiMate element types organized by layers:
 - **Technology Layer**: Node, Device, SystemSoftware, TechnologyService, etc.
 - **Motivation Layer**: Stakeholder, Driver, Goal, Requirement, etc.
 - **Implementation & Migration**: WorkPackage, Deliverable, ImplementationEvent, etc.
+
+TypeScript consumers can import the supported type unions and runtime guard:
+
+```typescript
+import type { ArchimateElementType, ArchimateRelationshipType } from "tsarchi";
+import { isArchimateModelType } from "tsarchi";
+
+const elementType: ArchimateElementType = "ApplicationComponent";
+const relationshipType: ArchimateRelationshipType = "FlowRelationship";
+
+if (isArchimateModelType(elementType)) {
+  // safe to use with typed model APIs
+}
+```
 
 #### View Management
 
@@ -245,6 +278,15 @@ TSArchi includes robust error handling:
 - Missing or malformed bounds data defaults to zero values
 - Duplicate elements are handled gracefully with upsert operations
 - View operations validate element and relationship existence
+- Models are validated before saving to catch duplicate IDs, unknown types, broken relationships, and broken view references
+
+```typescript
+const issues = model.validateModel();
+
+if (issues.length > 0) {
+  console.error(issues);
+}
+```
 
 ## Contributing
 

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, type Mock } from 'vitest';
 import { TsArchi } from '../src/TsArchi.mjs';
-import { readFile } from 'fs/promises';
+import { readFile, writeFile } from 'fs/promises';
 import type { Schema } from '../src/interfaces/schema/Schema.mjs';
 
 vi.mock('fs/promises', () => ({
@@ -116,5 +116,29 @@ describe('TsArchi XML Parsing and Manipulation', () => {
 
     expect(parsedData).toBeDefined();
     expect(parsedData).toEqual({});
+  });
+
+  it('should validate the model before saving', async () => {
+    vi.clearAllMocks();
+
+    const tsArchi = new TsArchi();
+    const model = tsArchi.getModel();
+    model.upsertElement({
+      id: 'app-1',
+      name: 'App 1',
+      type: 'ApplicationComponent'
+    });
+    model.upsertElement({
+      id: 'broken-rel',
+      name: 'Broken Relationship',
+      type: 'FlowRelationship',
+      source: 'app-1',
+      target: 'missing-target'
+    });
+
+    await expect(tsArchi.saveModel('dummy/path/to/output.archimate')).rejects.toMatchObject({
+      name: 'ArchimateValidationError'
+    });
+    expect(writeFile).not.toHaveBeenCalled();
   });
 });

@@ -118,7 +118,7 @@ export class Parser {
       fillColor,
       textAlignment: textAlignment ? Number(textAlignment) : undefined,
       bounds: BoundsMapper.schemaBoundsToBounds(bounds),
-      sourceConnection: sourceConnection ? SourceConnectionMapper.schemaToSourceConnection(sourceConnection) : undefined,
+      sourceConnection: sourceConnection ? SourceConnectionMapper.schemaToSourceConnections(sourceConnection) : undefined,
       documentation
     }
 

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<archimate:model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:archimate="http://www.archimatetool.com/archimate" name="untyped connections" id="id-untyped-model" version="5.0.0">
+  <folder name="Strategy" id="id-untyped-strategy" type="strategy"/>
+  <folder name="Business" id="id-untyped-business" type="business"/>
+  <folder name="Application" id="id-untyped-application" type="application">
+    <element xsi:type="archimate:ApplicationComponent" name="Gateway" id="id-gateway"/>
+    <element xsi:type="archimate:ApplicationComponent" name="Orders" id="id-orders"/>
+    <element xsi:type="archimate:ApplicationComponent" name="Billing" id="id-billing"/>
+  </folder>
+  <folder name="Technology &amp; Physical" id="id-untyped-technology" type="technology"/>
+  <folder name="Motivation" id="id-untyped-motivation" type="motivation"/>
+  <folder name="Implementation &amp; Migration" id="id-untyped-implementation" type="implementation_migration"/>
+  <folder name="Other" id="id-untyped-other" type="other"/>
+  <folder name="Relations" id="id-untyped-relations" type="relations">
+    <element xsi:type="archimate:FlowRelationship" name="orders" id="id-gateway-orders" source="id-gateway" target="id-orders"/>
+    <element xsi:type="archimate:FlowRelationship" name="billing" id="id-gateway-billing" source="id-gateway" target="id-billing"/>
+  </folder>
+  <folder name="Views" id="id-untyped-views" type="diagrams">
+    <element xsi:type="archimate:ArchimateDiagramModel" name="Gateway View" id="id-gateway-view">
+      <child xsi:type="archimate:DiagramObject" id="id-gateway-object" archimateElement="id-gateway">
+        <bounds x="40" y="40" width="120" height="55"/>
+        <sourceConnection xsi:type="archimate:Connection" id="id-orders-connection" source="id-gateway-object" target="id-orders-object" archimateRelationship="id-gateway-orders"/>
+        <sourceConnection xsi:type="archimate:Connection" id="id-billing-connection" source="id-gateway-object" target="id-billing-object" archimateRelationship="id-gateway-billing"/>
+      </child>
+      <child xsi:type="archimate:DiagramObject" id="id-orders-object" targetConnections="id-orders-connection" archimateElement="id-orders">
+        <bounds x="280" y="40" width="120" height="55"/>
+      </child>
+      <child xsi:type="archimate:DiagramObject" id="id-billing-object" targetConnections="id-billing-connection id-note-connection" archimateElement="id-billing">
+        <bounds x="280" y="160" width="120" height="55"/>
+      </child>
+      <child xsi:type="archimate:Note" id="id-untyped-note" name="Billing is batched nightly">
+        <bounds x="40" y="160" width="160" height="55"/>
+        <sourceConnection id="id-note-connection" source="id-untyped-note" target="id-billing-object"/>
+      </child>
+    </element>
+  </folder>
+</archimate:model>

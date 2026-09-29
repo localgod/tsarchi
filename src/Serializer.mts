@@ -123,7 +123,7 @@ export class Serializer {
     }
 
     if (child.sourceConnection) {
-      schemaChild.sourceConnection = SourceConnectionMapper.toSchemaSourceConnection(child.sourceConnection)
+      schemaChild.sourceConnection = SourceConnectionMapper.toSchemaSourceConnections(child.sourceConnection)
     }
 
     if (child.name) {

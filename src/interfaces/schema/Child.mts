@@ -12,6 +12,6 @@ export interface Child {
   '@_archimateElement'?: string;
   bounds: Bounds;
   documentation?: string;
-  sourceConnection?: SourceConnection;
+  sourceConnection?: SourceConnection | SourceConnection[];
   child?: Child[];
 }

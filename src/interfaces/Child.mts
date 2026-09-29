@@ -16,6 +16,6 @@ export interface Child {
   borderType?: number;
   bounds: Bounds
   child?:Child[]
-  sourceConnection?:SourceConnection
+  sourceConnection?: SourceConnection | SourceConnection[]
   documentation?:string
 }

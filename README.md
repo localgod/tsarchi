@@ -278,9 +278,12 @@ const businessView = model.createViewByFolder("Business Overview", "business", {
 #### View Management Operations
 
 ```typescript
-// List all views
+// List all views (ArchiMate, sketch and canvas)
 const allViews = model.listViews();
 console.log(`Found ${allViews.length} views`);
+
+// List only ArchiMate views
+const archimateViews = model.listViews({ type: "ArchimateDiagramModel" });
 
 // Get specific view
 const view = model.getView("view-id");

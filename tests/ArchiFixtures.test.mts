@@ -178,4 +178,16 @@ describe('Archi-produced models', () => {
     expect(archimate.validateModel()).toEqual([]);
     expect(findChild(archimate, '17cdf396', '99a52921')).toBeUndefined();
   });
+
+  it('should remove diagram objects nested in other diagram objects when deleting their element', async () => {
+    for (const [elementId, objectId] of [['8ab84e91', 'c9fc8676'], ['8ecabfc2', '9fb7222b']]) {
+      const archimate = await parseFixture('testDeleteHandler.archimate');
+      expect(findChild(archimate, '12917bec', objectId)).toBeDefined();
+
+      expect(archimate.deleteElement(elementId)).toBe(true);
+
+      expect(archimate.validateModel()).toEqual([]);
+      expect(findChild(archimate, '12917bec', objectId)).toBeUndefined();
+    }
+  });
 });

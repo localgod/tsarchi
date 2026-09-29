@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<archimate:model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:archimate="http://www.archimatetool.com/archimate" name="nested diagram objects" id="id-nested-model" version="5.0.0">
+  <folder name="Strategy" id="id-nested-strategy" type="strategy"/>
+  <folder name="Business" id="id-nested-business" type="business"/>
+  <folder name="Application" id="id-nested-application" type="application">
+    <element xsi:type="archimate:ApplicationComponent" name="Portal" id="id-portal"/>
+    <element xsi:type="archimate:ApplicationInterface" name="API" id="id-api"/>
+    <element xsi:type="archimate:DataObject" name="Database" id="id-db"/>
+  </folder>
+  <folder name="Technology &amp; Physical" id="id-nested-technology" type="technology">
+    <element xsi:type="archimate:Node" name="Server" id="id-server"/>
+  </folder>
+  <folder name="Motivation" id="id-nested-motivation" type="motivation"/>
+  <folder name="Implementation &amp; Migration" id="id-nested-implementation" type="implementation_migration"/>
+  <folder name="Other" id="id-nested-other" type="other"/>
+  <folder name="Relations" id="id-nested-relations" type="relations">
+    <element xsi:type="archimate:AccessRelationship" id="id-rel-api-db" source="id-api" target="id-db"/>
+    <element xsi:type="archimate:AssignmentRelationship" id="id-rel-server-portal" source="id-server" target="id-portal"/>
+  </folder>
+  <folder name="Views" id="id-nested-views" type="diagrams">
+    <element xsi:type="archimate:ArchimateDiagramModel" name="Nested" id="id-nested-view">
+      <child xsi:type="archimate:DiagramObject" id="id-portal-object" archimateElement="id-portal">
+        <bounds x="12" y="12" width="400" height="200"/>
+        <child xsi:type="archimate:DiagramObject" id="id-api-object" targetConnections="id-note-to-api" archimateElement="id-api">
+          <bounds x="24" y="36" width="240" height="120"/>
+          <sourceConnection xsi:type="archimate:Connection" id="id-api-to-db" targetConnections="id-note-to-connection" source="id-api-object" target="id-db-object" archimateRelationship="id-rel-api-db"/>
+          <child xsi:type="archimate:DiagramObject" id="id-deep-portal-object" archimateElement="id-portal">
+            <bounds x="12" y="36" width="120" height="55"/>
+          </child>
+        </child>
+      </child>
+      <child xsi:type="archimate:DiagramObject" id="id-server-object" archimateElement="id-server">
+        <bounds x="480" y="12" width="240" height="120"/>
+        <sourceConnection xsi:type="archimate:Connection" id="id-server-to-portal" source="id-server-object" target="id-nested-portal-object" archimateRelationship="id-rel-server-portal"/>
+        <child xsi:type="archimate:DiagramObject" id="id-nested-portal-object" targetConnections="id-server-to-portal" archimateElement="id-portal">
+          <bounds x="24" y="36" width="120" height="55"/>
+        </child>
+      </child>
+      <child xsi:type="archimate:Group" id="id-group" name="Group">
+        <bounds x="12" y="240" width="400" height="200"/>
+        <child xsi:type="archimate:DiagramObject" id="id-group-api-object" archimateElement="id-api">
+          <bounds x="24" y="36" width="240" height="120"/>
+          <child xsi:type="archimate:DiagramObject" id="id-group-portal-object" archimateElement="id-portal">
+            <bounds x="12" y="36" width="120" height="55"/>
+          </child>
+        </child>
+      </child>
+      <child xsi:type="archimate:DiagramObject" id="id-db-object" targetConnections="id-api-to-db id-note-to-db" archimateElement="id-db">
+        <bounds x="480" y="240" width="120" height="55"/>
+      </child>
+      <child xsi:type="archimate:Note" id="id-note">
+        <bounds x="480" y="360" width="185" height="80"/>
+        <sourceConnection xsi:type="archimate:Connection" id="id-note-to-api" source="id-note" target="id-api-object"/>
+        <sourceConnection xsi:type="archimate:Connection" id="id-note-to-connection" source="id-note" target="id-api-to-db"/>
+        <sourceConnection xsi:type="archimate:Connection" id="id-note-to-db" source="id-note" target="id-db-object"/>
+        <content>Explains the portal</content>
+      </child>
+    </element>
+  </folder>
+</archimate:model>

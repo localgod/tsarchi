@@ -6,7 +6,7 @@ import type { Element } from './interfaces/Element.mjs';
 import type { Folder } from './interfaces/Folder.mjs';
 import type { Relationship, RelationshipInput } from './interfaces/Relationship.mjs';
 import type { Child } from './interfaces/Child.mjs';
-import type { View, ViewConnection, ViewDiagramObject } from './interfaces/View.mjs';
+import type { View, ViewConnection } from './interfaces/View.mjs';
 import type { Bounds } from './interfaces/Bounds.mjs';
 import { ArchimateValidationError } from './interfaces/ValidationIssue.mjs';
 import type { ValidationIssue } from './interfaces/ValidationIssue.mjs';
@@ -727,52 +727,53 @@ export class Archimate {
   }
 
   private removeDiagramObjectsForElement(elementId: string): void {
-    for (const viewElement of this.model.diagrams.elements || []) {
-      if (!viewElement.child) continue;
-
-      const children = (Array.isArray(viewElement.child) ? viewElement.child : [viewElement.child]) as StoredViewChild[];
-      viewElement.child = this.removeDiagramObjectsFromChildren(children, elementId) as Child[];
-    }
+    this.removeViewChildren(child => child.type === 'DiagramObject' && child.archimateElement === elementId);
   }
 
   private removeDiagramModelReferences(viewId: string): void {
+    this.removeViewChildren(child => child.type === 'DiagramModelReference' && child.model === viewId);
+  }
+
+  /**
+   * Removes matching children at any depth in every view, with their contents,
+   * connections from or to anything removed, and every targetConnections
+   * reference to a removed connection.
+   */
+  private removeViewChildren(shouldRemove: (child: StoredViewChild) => boolean): void {
     for (const viewElement of this.model.diagrams.elements || []) {
       if (!viewElement.child) continue;
 
       const children = (Array.isArray(viewElement.child) ? viewElement.child : [viewElement.child]) as StoredViewChild[];
       const removedIds = new Set<string>();
-      const keptChildren = this.removeDiagramModelReferencesFromChildren(children, viewId, removedIds);
+      const keptChildren = this.removeMatchingChildren(children, shouldRemove, removedIds);
       if (removedIds.size === 0) continue;
 
       viewElement.child = keptChildren as Child[];
-      // Connections from other objects to a removed reference go with it, as do connections attached to those.
+      // Connections from other objects to a removed child go with it, as do connections attached to those.
       while (this.removeViewConnectionsFromChildren(keptChildren, new Set(), removedIds));
       this.removeTargetConnectionReferences(keptChildren, removedIds);
     }
   }
 
   /**
-   * Removes references to the view at any depth, collecting the ids of the removed references and their connections.
+   * Removes matching children at any depth, collecting the ids of the removed children, their contents and their connections.
    */
-  private removeDiagramModelReferencesFromChildren(
+  private removeMatchingChildren(
     children: StoredViewChild[],
-    viewId: string,
+    shouldRemove: (child: StoredViewChild) => boolean,
     removedIds: Set<string>,
   ): StoredViewChild[] {
     const keptChildren: StoredViewChild[] = [];
 
     for (const child of children) {
-      if (child.type === 'DiagramModelReference' && child.model === viewId) {
-        removedIds.add(child.id);
-        for (const connection of this.getAllSourceConnections(child)) {
-          removedIds.add(connection.id);
-        }
+      if (shouldRemove(child)) {
+        this.collectSubtreeIds(child, removedIds);
         continue;
       }
 
       const nested = this.getNestedChildren(child);
       if (nested.length > 0) {
-        const keptNested = this.removeDiagramModelReferencesFromChildren(nested, viewId, removedIds);
+        const keptNested = this.removeMatchingChildren(nested, shouldRemove, removedIds);
         if (keptNested.length === 0 && Array.isArray(child.child)) {
           delete child.child;
         } else if (keptNested.length !== nested.length) {
@@ -786,25 +787,14 @@ export class Archimate {
     return keptChildren;
   }
 
-  private removeDiagramObjectsFromChildren(children: StoredViewChild[], elementId: string): StoredViewChild[] {
-    const keptChildren: StoredViewChild[] = [];
-
-    for (const child of children) {
-      if (child.type === 'DiagramObject' && (child as ViewDiagramObject).archimateElement === elementId) {
-        continue;
-      }
-
-      if (child.type === 'Group') {
-        this.updateNestedChildren(child, this.removeDiagramObjectsFromChildren(
-          this.getNestedChildren(child),
-          elementId
-        ));
-      }
-
-      keptChildren.push(child);
+  private collectSubtreeIds(child: StoredViewChild, ids: Set<string>): void {
+    ids.add(child.id);
+    for (const connection of this.getAllSourceConnections(child)) {
+      ids.add(connection.id);
     }
-
-    return keptChildren;
+    for (const nested of this.getNestedChildren(child)) {
+      this.collectSubtreeIds(nested, ids);
+    }
   }
 
   /**

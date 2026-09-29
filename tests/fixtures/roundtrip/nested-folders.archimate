@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<archimate:model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:archimate="http://www.archimatetool.com/archimate" name="nested folders" id="id-nested-model" version="5.0.0">
+  <folder name="Strategy" id="id-nested-strategy" type="strategy"/>
+  <folder name="Business" id="id-nested-business" type="business">
+    <element xsi:type="archimate:BusinessActor" name="Customer" id="id-customer"/>
+  </folder>
+  <folder name="Application" id="id-nested-application" type="application">
+    <documentation>All applications.</documentation>
+    <folder name="Portals" id="id-folder-portals">
+      <documentation>Customer-facing systems.</documentation>
+      <property key="owner" value="digital"/>
+      <folder name="Legacy" id="id-folder-legacy">
+        <element xsi:type="archimate:ApplicationComponent" name="Old Portal" id="id-old-portal"/>
+      </folder>
+      <element xsi:type="archimate:ApplicationComponent" name="Portal" id="id-portal"/>
+      <element xsi:type="archimate:ApplicationService" name="Portal Service" id="id-portal-service"/>
+    </folder>
+    <folder name="Empty" id="id-folder-empty"/>
+    <element xsi:type="archimate:ApplicationComponent" name="CRM" id="id-crm"/>
+  </folder>
+  <folder name="Technology &amp; Physical" id="id-nested-technology" type="technology"/>
+  <folder name="Motivation" id="id-nested-motivation" type="motivation"/>
+  <folder name="Implementation &amp; Migration" id="id-nested-implementation" type="implementation_migration"/>
+  <folder name="Other" id="id-nested-other" type="other"/>
+  <folder name="Relations" id="id-nested-relations" type="relations">
+    <folder name="Serving" id="id-folder-serving">
+      <element xsi:type="archimate:ServingRelationship" name="serves" id="id-serving" source="id-portal" target="id-customer"/>
+    </folder>
+  </folder>
+  <folder name="Views" id="id-nested-views" type="diagrams">
+    <folder name="Overviews" id="id-folder-overviews">
+      <element xsi:type="archimate:ArchimateDiagramModel" name="Portal View" id="id-portal-view">
+        <child xsi:type="archimate:DiagramObject" id="id-portal-object" archimateElement="id-portal">
+          <bounds x="12" y="12" width="120" height="55"/>
+        </child>
+      </element>
+    </folder>
+  </folder>
+</archimate:model>

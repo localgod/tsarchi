@@ -3,6 +3,7 @@ import type { Schema as ArchimateSchema } from './interfaces/schema/Schema.mjs';
 import type { Model as SchemaModel } from './interfaces/schema/Model.mjs';
 import type { XmlMetadata } from './interfaces/schema/XmlMetadata.mjs';
 import type { Element } from './interfaces/Element.mjs';
+import type { Folder } from './interfaces/Folder.mjs';
 import type { Relationship, RelationshipInput } from './interfaces/Relationship.mjs';
 import type { Child } from './interfaces/Child.mjs';
 import type { View, ViewConnection, ViewDiagramObject } from './interfaces/View.mjs';
@@ -91,6 +92,7 @@ export class Archimate {
     for (const folderKey of Object.keys(this.model) as FolderKey[]) {
       const folder = this.model[folderKey];
       if (folder.id === id) return true;
+      if (this.foldersHaveId(folder.folders || [], id)) return true;
 
       for (const element of folder.elements || []) {
         if (element.id === id) return true;
@@ -230,6 +232,7 @@ export class Archimate {
       location.folder.elements![location.index] = updatedElement;
     } else {
       location.folder.elements!.splice(location.index, 1);
+      this.removeFromNestedFolders(location.folder.folders || [], elementId);
       const nextFolder = this.model[nextFolderKey];
       if (!nextFolder.elements) nextFolder.elements = [];
       nextFolder.elements.push(updatedElement);
@@ -251,6 +254,7 @@ export class Archimate {
 
     const deletedElement = location.element;
     location.folder.elements!.splice(location.index, 1);
+    this.removeFromNestedFolders(location.folder.folders || [], elementId);
 
     const removedRelationshipIds = new Set<string>();
     if (location.folderKey !== 'relations') {
@@ -371,6 +375,7 @@ export class Archimate {
     for (const folderKey of Object.keys(this.model) as FolderKey[]) {
       const folder = this.model[folderKey];
       this.recordId(folder.id, `folder.${folderKey}`, seenIds, issues);
+      this.recordFolderIds(folder.folders || [], `folder.${folderKey}`, seenIds, issues);
 
       for (const [index, element] of (folder.elements || []).entries()) {
         const path = `folder.${folderKey}.elements[${index}]`;
@@ -551,6 +556,16 @@ export class Archimate {
   public findElementsByFolder(folderKey: FolderKey): Element[] {
     const folder = this.model[folderKey];
     return folder.elements || [];
+  }
+
+  /**
+   * Returns the nested folders of a top-level folder, in document order.
+   *
+   * Elements in nested folders are also included in `findElementsByFolder`;
+   * a nested folder lists the ids of the elements placed directly in it.
+   */
+  public getFolders(folderKey: FolderKey): Folder[] {
+    return this.model[folderKey].folders || [];
   }
 
   /**
@@ -738,6 +753,32 @@ export class Archimate {
     }
 
     return false;
+  }
+
+  private foldersHaveId(folders: Folder[], id: string): boolean {
+    return folders.some(folder => folder.id === id || this.foldersHaveId(folder.folders || [], id));
+  }
+
+  private removeFromNestedFolders(folders: Folder[], elementId: string): void {
+    for (const folder of folders) {
+      if (folder.elementIds) {
+        folder.elementIds = folder.elementIds.filter(id => id !== elementId);
+      }
+      this.removeFromNestedFolders(folder.folders || [], elementId);
+    }
+  }
+
+  private recordFolderIds(
+    folders: Folder[],
+    path: string,
+    seenIds: Map<string, string>,
+    issues: ValidationIssue[]
+  ): void {
+    for (const [index, folder] of folders.entries()) {
+      const folderPath = `${path}.folders[${index}]`;
+      this.recordId(folder.id, folderPath, seenIds, issues);
+      this.recordFolderIds(folder.folders || [], folderPath, seenIds, issues);
+    }
   }
 
   private assertRelationshipType(type: ArchimateModelType): asserts type is ArchimateRelationshipType | ArchimateRelationshipAliasType {

@@ -129,6 +129,18 @@ model.upsertElement(newElement);
 await tsArchi.saveModel("./path/to/output.archimate");
 ```
 
+#### Nested Folders
+
+User-created folders are kept on load and written back in place on save. Element lookups such as `findElementsByFolder` include elements from nested folders; `getFolders` returns the folder tree, where each folder lists the ids of the elements placed directly in it:
+
+```typescript
+for (const folder of model.getFolders("application")) {
+  console.log(folder.name, folder.elementIds, folder.folders);
+}
+```
+
+New elements are added at the top level of their folder.
+
 #### Relationship Management
 
 Relationships can be created and queried directly:

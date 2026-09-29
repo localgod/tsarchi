@@ -4,7 +4,7 @@ import type { Schema as ArchimateSchema } from './interfaces/schema/Schema.mjs';
 import type { ModelAttributes } from './interfaces/schema/Model.mjs';
 import type { XmlMetadata } from './interfaces/schema/XmlMetadata.mjs';
 import type { Element } from './interfaces/Element.mjs';
-import type { Folder } from './interfaces/Folder.mjs';
+import type { Folder, FolderDetails } from './interfaces/Folder.mjs';
 import type { Relationship, RelationshipInput } from './interfaces/Relationship.mjs';
 import type { Child } from './interfaces/Child.mjs';
 import type { View, ViewConnection } from './interfaces/View.mjs';
@@ -714,7 +714,45 @@ export class Archimate {
    * A key set to undefined, an empty string or an empty map removes that detail; keys left out are unchanged.
    */
   public updateFolder(folderKey: FolderKey, patch: Partial<Omit<ModelFolderDetails, 'id'>>): ModelFolderDetails {
-    const folder = this.model[folderKey];
+    return Archimate.applyFolderPatch(this.model[folderKey], patch);
+  }
+
+  /**
+   * Returns the id, name, documentation, properties and features of the folder with the given id, top-level or
+   * nested at any depth, or null when there is none. Maps are copies; use `updateFolderById` to change them.
+   */
+  public getFolderById(folderId: string): FolderDetails | null {
+    const folder = this.findFolderById(folderId);
+    return folder ? Archimate.folderDetails(folder) : null;
+  }
+
+  /**
+   * Updates the name, documentation, properties or features of the folder with the given id, top-level or nested
+   * at any depth, and returns its new details. A key set to undefined, an empty string or an empty map removes that
+   * detail; keys left out are unchanged. Throws when there is no folder with that id.
+   */
+  public updateFolderById(folderId: string, patch: Partial<Omit<FolderDetails, 'id'>>): FolderDetails {
+    const folder = this.findFolderById(folderId);
+    if (!folder) throw new Error(`Folder "${folderId}" not found in model.`);
+    return Archimate.applyFolderPatch(folder, patch);
+  }
+
+  private findFolderById(folderId: string): ModelFolder | Folder | undefined {
+    const search = (folders: Folder[]): Folder | undefined => {
+      for (const folder of folders) {
+        const found = folder.id === folderId ? folder : search(folder.folders || []);
+        if (found) return found;
+      }
+      return undefined;
+    };
+    for (const folder of Object.values(this.model)) {
+      const found = folder.id === folderId ? folder : search(folder.folders || []);
+      if (found) return found;
+    }
+    return undefined;
+  }
+
+  private static applyFolderPatch(folder: ModelFolder | Folder, patch: Partial<Omit<FolderDetails, 'id'>>): FolderDetails {
     if ('name' in patch) {
       if (!patch.name) throw new Error('A folder name cannot be empty.');
       folder.name = patch.name;
@@ -725,7 +763,7 @@ export class Archimate {
     return Archimate.folderDetails(folder);
   }
 
-  private static folderDetails({ id, name, documentation, properties, features }: ModelFolder): ModelFolderDetails {
+  private static folderDetails({ id, name, documentation, properties, features }: ModelFolder | Folder): FolderDetails {
     return {
       id,
       name,

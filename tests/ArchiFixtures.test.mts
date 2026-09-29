@@ -31,6 +31,14 @@ function collectSourceConnections(node: unknown, found: Record<string, unknown>[
 }
 
 describe('Archi-produced models', () => {
+  it.each(['Archisurance.archimate', 'testDeleteHandler.archimate'])(
+    'should not report missing-name for unnamed relationships in %s',
+    async (name) => {
+      const archimate = await parseFixture(name);
+      expect(archimate.validateModel().filter(issue => issue.code === 'missing-name')).toEqual([]);
+    }
+  );
+
   it.each(['Archisurance.archimate', 'test.archimate', 'testCopySnapshot.archimate'])(
     'should parse %s',
     async (name) => {

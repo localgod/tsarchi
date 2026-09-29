@@ -17,5 +17,5 @@ export interface Element {
   property?: Array<Property> | Property;
   child?: Child | Child[];
   bounds?: Bounds;
-  sourceConnection?: SourceConnection;
+  sourceConnection?: SourceConnection | SourceConnection[];
 }

@@ -1,5 +1,7 @@
 export interface SourceConnection {
   type: string;
+  /** True when the source file omitted xsi:type; the attribute is then left out again on save. */
+  implicitType?: boolean;
   id: string;
   name?: string;
   fontColor?: string

@@ -1,4 +1,7 @@
 import type { Folder } from "./Folder.mjs";
+import type { Metadata } from "./Metadata.mjs";
+import type { Profile } from "./Profile.mjs";
+import type { Property } from "./Property.mjs";
 
 
 export interface ModelAttributes {
@@ -12,5 +15,9 @@ export interface ModelAttributes {
 
 export interface Model extends ModelAttributes {
   folder: Array<Folder>;
+  property?: Property | Property[];
   purpose?: string;
+  /** Archi writes an empty `<metadata/>` as an empty string. */
+  metadata?: Metadata | '';
+  profile?: Profile | Profile[];
 }

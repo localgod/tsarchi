@@ -14,6 +14,7 @@ export * from "./interfaces/Child.mjs";
 export * from "./interfaces/Element.mjs";
 export * from "./interfaces/Folder.mjs";
 export * from "./interfaces/Model.mjs";
+export * from "./interfaces/Profile.mjs";
 export * from "./interfaces/Relationship.mjs";
 export * from "./interfaces/SourceConnection.mjs";
 export * from "./interfaces/ValidationIssue.mjs";

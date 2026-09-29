@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<archimate:model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:archimate="http://www.archimatetool.com/archimate" name="diagram features" id="id-feat-model" version="5.0.0">
+  <folder name="Strategy" id="id-feat-strategy" type="strategy"/>
+  <folder name="Business" id="id-feat-business" type="business">
+    <element xsi:type="archimate:BusinessActor" name="Customer" id="id-customer"/>
+    <element xsi:type="archimate:BusinessRole" name="Insurant" id="id-insurant"/>
+  </folder>
+  <folder name="Application" id="id-feat-application" type="application"/>
+  <folder name="Technology &amp; Physical" id="id-feat-technology" type="technology"/>
+  <folder name="Motivation" id="id-feat-motivation" type="motivation"/>
+  <folder name="Implementation &amp; Migration" id="id-feat-implementation" type="implementation_migration"/>
+  <folder name="Other" id="id-feat-other" type="other"/>
+  <folder name="Relations" id="id-feat-relations" type="relations"/>
+  <folder name="Views" id="id-feat-views" type="diagrams">
+    <element xsi:type="archimate:ArchimateDiagramModel" name="Styled" id="id-view-styled">
+      <child xsi:type="archimate:DiagramObject" id="id-dmo-customer" fillColor="#ffffb5" archimateElement="id-customer">
+        <bounds x="24" y="24" width="120" height="55"/>
+        <feature name="iconColor" value="#ff0000"/>
+        <feature name="custom" value="kept"/>
+        <feature name="lineAlpha" value="128"/>
+        <feature name="gradient" value="2"/>
+        <feature name="iconVisible" value="2"/>
+        <feature name="deriveElementLineColor" value="false"/>
+        <feature name="lineStyle" value="1"/>
+      </child>
+      <child xsi:type="archimate:DiagramObject" id="id-dmo-insurant" archimateElement="id-insurant">
+        <bounds x="204" y="24" width="120" height="55"/>
+      </child>
+    </element>
+  </folder>
+</archimate:model>

@@ -21,21 +21,31 @@ export const childAttributes: readonly AttributeSpec[] = [
   ['textPosition', 'textPosition', 'number'],
   ['fillColor', 'fillColor', 'string'],
   ['alpha', 'alpha', 'number'],
-  ['gradient', 'gradient', 'number'],
   ['lineColor', 'lineColor', 'string'],
   ['lineWidth', 'lineWidth', 'number'],
-  ['lineAlpha', 'lineAlpha', 'number'],
   ['font', 'font', 'string'],
   ['fontColor', 'fontColor', 'string'],
   ['borderType', 'borderType', 'number'],
   ['borderColor', 'borderColor', 'string'],
-  ['iconColor', 'iconColor', 'string'],
   ['imagePath', 'imagePath', 'string'],
   ['imagePosition', 'imagePosition', 'number'],
   ['locked', 'locked', 'boolean'],
   ['hintTitle', 'hintTitle', 'string'],
   ['figure', 'type', 'number'],
   ['model', 'model', 'string'],
+];
+
+/**
+ * Style settings Archi stores on diagram children as `<feature name="…" value="…"/>` rather than as attributes
+ * (`FEATURE_*` constants in Archi's `IDiagramModelObject.java`). The spec's second entry is the feature name.
+ */
+export const childFeatures: readonly AttributeSpec[] = [
+  ['lineAlpha', 'lineAlpha', 'number'],
+  ['gradient', 'gradient', 'number'],
+  ['iconVisible', 'iconVisible', 'number'],
+  ['iconColor', 'iconColor', 'string'],
+  ['deriveElementLineColor', 'deriveElementLineColor', 'boolean'],
+  ['lineStyle', 'lineStyle', 'number'],
 ];
 
 /**
@@ -110,6 +120,34 @@ export class DiagramAttributeMapper {
   public static featuresToSchema(features: Map<string, string> | undefined): SchemaFeature[] | undefined {
     if (!features || features.size === 0) return undefined;
     return Array.from(features, ([name, value]) => ({ '@_name': name, '@_value': value }));
+  }
+
+  /**
+   * Reads the given features into model properties, skipping absent ones.
+   */
+  public static readFeatures(features: Map<string, string> | undefined, specs: readonly AttributeSpec[]): Record<string, string | number | boolean> {
+    return DiagramAttributeMapper.readAttributes(
+      Object.fromEntries(Array.from(features ?? [], ([name, value]) => [`@_${name}`, value])),
+      specs,
+    );
+  }
+
+  /**
+   * Merges the given model properties into a copy of the features. A set property replaces the feature in place,
+   * or is appended when new; an unset property removes it.
+   */
+  public static writeFeatures(model: object, features: Map<string, string> | undefined, specs: readonly AttributeSpec[]): Map<string, string> {
+    const source = model as Record<string, unknown>;
+    const result = new Map(features);
+    for (const [property, name] of specs) {
+      const value = source[property];
+      if (value === undefined || value === null) {
+        result.delete(name);
+      } else {
+        result.set(name, String(value));
+      }
+    }
+    return result;
   }
 
   public static schemaToBendpoints(bendpoint: SchemaBendpoint | SchemaBendpoint[] | undefined): ViewBendpoint[] | undefined {

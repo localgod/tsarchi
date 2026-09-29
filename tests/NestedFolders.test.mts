@@ -109,3 +109,88 @@ describe('nested folders', () => {
     expect(elementIds(folders.find(folder => folder['@_type'] === 'application'))).toEqual(['id-crm', 'id-new']);
   });
 });
+
+describe('nested folder details', () => {
+  const file = 'tests/fixtures/roundtrip/nested-folders.archimate';
+
+  it('should return the details of a nested folder at any depth', async () => {
+    const archimate = await parseFile(file);
+
+    expect(archimate.getFolderById('id-folder-portals')).toEqual({
+      id: 'id-folder-portals',
+      name: 'Portals',
+      documentation: 'Customer-facing systems.',
+      properties: new Map([['owner', 'digital']]),
+    });
+    expect(archimate.getFolderById('id-folder-legacy')).toEqual({ id: 'id-folder-legacy', name: 'Legacy' });
+    expect(archimate.getFolderById('id-folder-overviews')).toEqual({ id: 'id-folder-overviews', name: 'Overviews' });
+  });
+
+  it('should return the details of a top-level folder by id', async () => {
+    const archimate = await parseFile(file);
+
+    expect(archimate.getFolderById('id-nested-application')).toEqual(archimate.getFolder('application'));
+  });
+
+  it('should return null for an unknown folder id', async () => {
+    const archimate = await parseFile(file);
+
+    expect(archimate.getFolderById('id-portal')).toBeNull();
+    expect(archimate.getFolderById('id-missing')).toBeNull();
+  });
+
+  it('should return copies of the folder maps', async () => {
+    const archimate = await parseFile(file);
+
+    archimate.getFolderById('id-folder-portals')?.properties?.set('changed', 'no');
+
+    expect(archimate.getFolderById('id-folder-portals')?.properties).toEqual(new Map([['owner', 'digital']]));
+  });
+
+  it('should write nested folder details set in code and keep its contents', async () => {
+    const archimate = await parseFile(file);
+
+    const details = archimate.updateFolderById('id-folder-legacy', {
+      name: 'Retired',
+      documentation: 'No longer used.',
+      properties: new Map([['owner', 'ops']]),
+      features: new Map([['folderFeature', 'yes']]),
+    });
+
+    expect(details).toEqual(archimate.getFolderById('id-folder-legacy'));
+    const legacy = findSchemaFolder(archimate.serialize()['archimate:model'].folder, 'id-folder-legacy') as unknown as Record<string, unknown>;
+    expect(legacy['@_name']).toBe('Retired');
+    expect(legacy.documentation).toBe('No longer used.');
+    expect(legacy.property).toEqual([{ '@_key': 'owner', '@_value': 'ops' }]);
+    expect(legacy.feature).toEqual([{ '@_name': 'folderFeature', '@_value': 'yes' }]);
+    expect(elementIds(legacy as SchemaFolder)).toEqual(['id-old-portal']);
+    expect(archimate.validateModel()).toEqual([]);
+  });
+
+  it('should remove nested folder details that are cleared and leave the others unchanged', async () => {
+    const archimate = await parseFile(file);
+
+    archimate.updateFolderById('id-folder-portals', { documentation: undefined, properties: new Map() });
+
+    expect(archimate.getFolderById('id-folder-portals')).toEqual({ id: 'id-folder-portals', name: 'Portals' });
+    const portals = findSchemaFolder(archimate.serialize()['archimate:model'].folder, 'id-folder-portals') as unknown as Record<string, unknown>;
+    expect(portals.documentation).toBeUndefined();
+    expect(portals.property).toBeUndefined();
+    expect(elementIds(portals as SchemaFolder)).toEqual(['id-portal', 'id-portal-service']);
+  });
+
+  it('should update a top-level folder by id', async () => {
+    const archimate = await parseFile(file);
+
+    archimate.updateFolderById('id-nested-application', { documentation: '' });
+
+    expect(archimate.getFolder('application')).toEqual({ id: 'id-nested-application', name: 'Application' });
+  });
+
+  it('should reject an unknown folder id and an empty folder name', async () => {
+    const archimate = await parseFile(file);
+
+    expect(() => archimate.updateFolderById('id-missing', { name: 'x' })).toThrow('Folder "id-missing" not found in model.');
+    expect(() => archimate.updateFolderById('id-folder-legacy', { name: '' })).toThrow('A folder name cannot be empty.');
+  });
+});

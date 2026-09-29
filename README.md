@@ -145,7 +145,16 @@ New elements are added at the top level of their folder.
 
 ```typescript
 const { name, documentation } = model.getFolder("business");
-model.updateFolder("business", { documentation: "Business layer", properties: new Map([["Owner", "EA"]]) });
+model.updateFolder("business", {
+  documentation: "Business layer",
+  properties: new Map([["Owner", "EA"]]),
+});
+```
+
+`getFolderById` and `updateFolderById` do the same for any folder, nested at any depth or top-level, by its id. `getFolderById` returns `null` when there is no folder with that id, and `updateFolderById` throws:
+
+```typescript
+model.updateFolderById("id-folder-portals", { name: "Customer Portals", documentation: undefined });
 ```
 
 #### Relationship Management

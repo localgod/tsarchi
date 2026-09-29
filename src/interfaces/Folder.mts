@@ -19,3 +19,8 @@ export interface Folder {
    */
   unrecognized?: Record<string, unknown>;
 }
+
+/**
+ * The details of a folder, without its elements, nested folders and unrecognised content.
+ */
+export type FolderDetails = Pick<Folder, 'id' | 'name' | 'documentation' | 'properties' | 'features'>;

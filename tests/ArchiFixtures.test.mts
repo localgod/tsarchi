@@ -190,4 +190,12 @@ describe('Archi-produced models', () => {
       expect(findChild(archimate, '12917bec', objectId)).toBeUndefined();
     }
   });
+
+  it('should load style features written by Archi into typed properties', async () => {
+    const archimate = await parseFixture('Archisurance-xmlexchange.archimate');
+    const viewId = '9e9cb71c-3504-4de0-beee-0a0f3c27fdaf';
+
+    expect(findChild(archimate, viewId, '1f1e1d12-f53a-4be5-bf16-07103923aa77')?.lineStyle).toBe(2);
+    expect(findChild(archimate, viewId, 'e5a21845-8bbe-4cdb-a3f1-b75fe7b6eb2f')?.deriveElementLineColor).toBe(false);
+  });
 });

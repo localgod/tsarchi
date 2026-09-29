@@ -14,15 +14,12 @@ export interface Child {
   '@_archimateElement'?: string;
   '@_lineColor'?: string;
   '@_lineWidth'?: string;
-  '@_lineAlpha'?: string;
   '@_font'?: string;
   '@_fontColor'?: string;
   '@_alpha'?: string;
-  '@_gradient'?: string;
   '@_textPosition'?: string;
   '@_borderType'?: string;
   '@_borderColor'?: string;
-  '@_iconColor'?: string;
   '@_imagePath'?: string;
   '@_imagePosition'?: string;
   '@_locked'?: string;

@@ -269,8 +269,8 @@ export class Archimate {
     for (const relationship of this.removeRelationshipsForElement(elementId)) {
       removedRelationshipIds.add(relationship.id);
     }
-    for (const relationshipId of removedRelationshipIds) {
-      this.removeViewConnectionsForRelationship(relationshipId);
+    if (removedRelationshipIds.size > 0) {
+      this.removeViewConnectionsForRelationships(removedRelationshipIds);
     }
     if (location.folderKey !== 'relations') {
       this.removeDiagramObjectsForElement(elementId);
@@ -722,47 +722,126 @@ export class Archimate {
     return keptChildren;
   }
 
-  private removeViewConnectionsForRelationship(relationshipId: string): void {
+  /**
+   * Removes view connections for the relationships, connections nested in them,
+   * connections attached to a removed connection, and every targetConnections
+   * reference to a removed connection.
+   */
+  private removeViewConnectionsForRelationships(relationshipIds: Set<string>): void {
     for (const viewElement of this.model.diagrams.elements || []) {
       if (!viewElement.child) continue;
 
       const children = (Array.isArray(viewElement.child) ? viewElement.child : [viewElement.child]) as StoredViewChild[];
-      this.removeViewConnectionsFromChildren(children, relationshipId);
+      const removedConnectionIds = new Set<string>();
+      // A connection can be attached to a removed connection that was visited earlier or later.
+      while (this.removeViewConnectionsFromChildren(children, relationshipIds, removedConnectionIds));
+      if (removedConnectionIds.size > 0) {
+        this.removeTargetConnectionReferences(children, removedConnectionIds);
+      }
     }
   }
 
-  private removeViewConnectionsFromChildren(children: StoredViewChild[], relationshipId: string): void {
+  /**
+   * Returns true when a connection was removed.
+   */
+  private removeViewConnectionsFromChildren(
+    children: StoredViewChild[],
+    relationshipIds: Set<string>,
+    removedConnectionIds: Set<string>,
+  ): boolean {
+    let removedAny = false;
+
     for (const child of children) {
-      if (child.type === 'DiagramObject') {
-        const diagramObject = child as ViewDiagramObject;
-        const removedConnectionIds = new Set<string>();
-
-        diagramObject.sourceConnections = diagramObject.sourceConnections?.filter(connection => {
-          const shouldRemove = connection.archimateRelationship === relationshipId;
-          if (shouldRemove) removedConnectionIds.add(connection.id);
-          return !shouldRemove;
-        });
-
-        if (removedConnectionIds.size > 0) {
-          this.removeTargetConnectionReferences(children, removedConnectionIds);
+      if (child.sourceConnections) {
+        const kept = this.removeViewConnections(child.sourceConnections, relationshipIds, removedConnectionIds);
+        if (kept.length !== child.sourceConnections.length) {
+          child.sourceConnections = kept;
+          removedAny = true;
         }
-      } else if (child.type === 'Group') {
-        this.removeViewConnectionsFromChildren(this.getNestedChildren(child), relationshipId);
+      }
+      const loadedOwner = child as { sourceConnection?: StoredViewConnection | StoredViewConnection[] };
+      if (this.removeLoadedViewConnections(loadedOwner, relationshipIds, removedConnectionIds)) removedAny = true;
+      if (this.removeViewConnectionsFromChildren(this.getNestedChildren(child), relationshipIds, removedConnectionIds)) {
+        removedAny = true;
       }
     }
+
+    return removedAny;
+  }
+
+  /**
+   * Filters the `sourceConnection` loaded from a file, keeping its single-object or array shape.
+   */
+  private removeLoadedViewConnections(
+    owner: { sourceConnection?: StoredViewConnection | StoredViewConnection[] },
+    relationshipIds: Set<string>,
+    removedConnectionIds: Set<string>,
+  ): boolean {
+    const sourceConnection = owner.sourceConnection;
+    if (!sourceConnection) return false;
+
+    const connections = Array.isArray(sourceConnection) ? sourceConnection : [sourceConnection];
+    let removedAny = false;
+    for (const connection of connections) {
+      if (this.removeLoadedViewConnections(connection, relationshipIds, removedConnectionIds)) removedAny = true;
+    }
+
+    const kept = this.removeViewConnections(connections, relationshipIds, removedConnectionIds);
+    if (kept.length === connections.length) return removedAny;
+
+    if (kept.length === 0) {
+      delete owner.sourceConnection;
+    } else {
+      owner.sourceConnection = Array.isArray(sourceConnection) ? kept : kept[0];
+    }
+    return true;
+  }
+
+  private removeViewConnections<T extends ViewConnection>(
+    connections: T[],
+    relationshipIds: Set<string>,
+    removedConnectionIds: Set<string>,
+  ): T[] {
+    return connections.filter(connection => {
+      const shouldRemove = (connection.archimateRelationship !== undefined && relationshipIds.has(connection.archimateRelationship))
+        || removedConnectionIds.has(connection.source)
+        || removedConnectionIds.has(connection.target);
+      if (shouldRemove) {
+        // Connections nested in a removed connection go with it.
+        for (const removed of this.flattenConnections([connection as StoredViewConnection])) {
+          removedConnectionIds.add(removed.id);
+        }
+      }
+      return !shouldRemove;
+    });
   }
 
   private removeTargetConnectionReferences(children: StoredViewChild[], connectionIds: Set<string>): void {
     for (const child of children) {
-      if (child.type === 'DiagramObject') {
-        if (Array.isArray(child.targetConnections)) {
-          child.targetConnections = child.targetConnections.filter(id => !connectionIds.has(id));
-        } else if (child.targetConnections && connectionIds.has(child.targetConnections)) {
-          delete child.targetConnections;
-        }
-      } else if (child.type === 'Group') {
-        this.removeTargetConnectionReferences(this.getNestedChildren(child), connectionIds);
+      this.removeTargetConnectionReference(child, connectionIds);
+      for (const connection of this.getAllSourceConnections(child)) {
+        this.removeTargetConnectionReference(connection, connectionIds);
       }
+      this.removeTargetConnectionReferences(this.getNestedChildren(child), connectionIds);
+    }
+  }
+
+  private removeTargetConnectionReference(
+    owner: { targetConnections?: string | string[] },
+    connectionIds: Set<string>,
+  ): void {
+    if (Array.isArray(owner.targetConnections)) {
+      owner.targetConnections = owner.targetConnections.filter(id => !connectionIds.has(id));
+      return;
+    }
+
+    const ids = this.getTargetConnectionIds(owner);
+    const kept = ids.filter(id => !connectionIds.has(id));
+    if (kept.length === ids.length) return;
+    if (kept.length === 0) {
+      delete owner.targetConnections;
+    } else {
+      owner.targetConnections = kept.join(' ');
     }
   }
 
@@ -1066,13 +1145,18 @@ export class Archimate {
    * The child's connections, including connections nested in them (connection-to-connection).
    */
   private getAllSourceConnections(child: StoredViewChild): StoredViewConnection[] {
-    const collect = (connections: StoredViewConnection[]): StoredViewConnection[] =>
-      connections.flatMap(connection => {
-        const nested = connection.sourceConnection;
-        if (!nested) return [connection];
-        return [connection, ...collect(Array.isArray(nested) ? nested : [nested])];
-      });
-    return collect(this.getSourceConnections(child));
+    return this.flattenConnections(this.getSourceConnections(child));
+  }
+
+  /**
+   * The connections and every connection nested in them.
+   */
+  private flattenConnections(connections: StoredViewConnection[]): StoredViewConnection[] {
+    return connections.flatMap(connection => {
+      const nested = connection.sourceConnection;
+      if (!nested) return [connection];
+      return [connection, ...this.flattenConnections(Array.isArray(nested) ? nested : [nested])];
+    });
   }
 
   private getTargetConnectionIds(owner: { targetConnections?: string | string[] }): string[] {

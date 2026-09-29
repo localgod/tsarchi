@@ -141,6 +141,13 @@ for (const folder of model.getFolders("application")) {
 
 New elements are added at the top level of their folder.
 
+`getFolder` returns the id, name, documentation, properties and features of a top-level folder, and `updateFolder` changes them. A detail set to `undefined`, `""` or an empty map is removed:
+
+```typescript
+const { name, documentation } = model.getFolder("business");
+model.updateFolder("business", { documentation: "Business layer", properties: new Map([["Owner", "EA"]]) });
+```
+
 #### Relationship Management
 
 Relationships can be created and queried directly:

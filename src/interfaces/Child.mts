@@ -50,4 +50,9 @@ export interface Child {
    * take precedence over the entries of the same name here.
    */
   features?: Map<string, string>;
+  /**
+   * Attributes and child elements that tsarchi does not map, in their parsed XML form. They are written back
+   * unchanged.
+   */
+  unrecognized?: Record<string, unknown>;
 }

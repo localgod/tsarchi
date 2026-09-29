@@ -1,5 +1,5 @@
 import type { Schema as ArchimateSchema } from "./interfaces/schema/Schema.mjs";
-import type { Model as SchemaModel } from "./interfaces/schema/Model.mjs";
+import type { ModelAttributes } from "./interfaces/schema/Model.mjs";
 import type { XmlMetadata } from "./interfaces/schema/XmlMetadata.mjs";
 import type { Folder as SchemaFolder } from "./interfaces/schema/Folder.mjs";
 import type { Element as SchemaElement } from "./interfaces/schema/Element.mjs";
@@ -11,11 +11,11 @@ import type { Folder } from './interfaces/Folder.mjs';
 import type { Child } from './interfaces/Child.mjs';
 import { BoundsMapper } from './BoundMapper.mjs';
 import { SourceConnectionMapper } from './SourceConnectionMapper.mjs';
-import { folderType } from './constants/archimate-mappings.mjs';
+import { folderType, toXsiType } from './constants/archimate-mappings.mjs';
 
 export class Serializer {
   private model: Model
-  private modelMetadata: Omit<SchemaModel, 'folder'>
+  private modelMetadata: ModelAttributes
   private xmlMetadata: XmlMetadata
 
   constructor(model: Model) {
@@ -30,7 +30,7 @@ export class Serializer {
     };
   }
 
-  public serialize(modelMetadata: Omit<SchemaModel, 'folder'> | string, xmlMetadata?: XmlMetadata): ArchimateSchema {
+  public serialize(modelMetadata: ModelAttributes | string, xmlMetadata?: XmlMetadata): ArchimateSchema {
     this.modelMetadata = typeof modelMetadata === 'string'
       ? { ...this.modelMetadata, '@_name': modelMetadata }
       : modelMetadata
@@ -116,7 +116,7 @@ export class Serializer {
 
   private serializeElement(el: Element): SchemaElement {
     const element: SchemaElement = {
-      '@_xsi:type': `archimate:${el.type}`,
+      '@_xsi:type': toXsiType(el.type),
       '@_name': el.name,
       '@_id': el.id,
     };
@@ -163,7 +163,7 @@ export class Serializer {
    */
   private serializeChild(child: Child): SchemaChild {
     const schemaChild: SchemaChild = {
-      '@_xsi:type': `archimate:${child.type}`,
+      '@_xsi:type': toXsiType(child.type),
       '@_id': child.id,
       bounds: BoundsMapper.boundsToSchemaBounds(child.bounds)
     }

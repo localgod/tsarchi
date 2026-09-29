@@ -1,5 +1,6 @@
 import type { SourceConnection as SchemaSourceConnection } from "./interfaces/schema/SourceConnection.mjs";
 import type { SourceConnection } from './interfaces/SourceConnection.mjs';
+import { toXsiType } from './constants/archimate-mappings.mjs';
 
 /**
  * Archi omits xsi:type on plain connections in sketch and canvas models; Archi itself assumes this type.
@@ -32,7 +33,7 @@ export class SourceConnectionMapper {
     if (b.implicitType && b.type === DEFAULT_CONNECTION_TYPE) {
       return connection;
     }
-    return { '@_xsi:type': `archimate:${b.type}`, ...connection };
+    return { '@_xsi:type': toXsiType(b.type), ...connection };
   }
 
   public static schemaToSourceConnections(

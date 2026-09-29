@@ -1,6 +1,6 @@
 import type { Model, FolderKey } from './interfaces/Model.mjs';
 import type { Schema as ArchimateSchema } from './interfaces/schema/Schema.mjs';
-import type { Model as SchemaModel } from './interfaces/schema/Model.mjs';
+import type { ModelAttributes } from './interfaces/schema/Model.mjs';
 import type { XmlMetadata } from './interfaces/schema/XmlMetadata.mjs';
 import type { Element } from './interfaces/Element.mjs';
 import type { Folder } from './interfaces/Folder.mjs';
@@ -30,7 +30,7 @@ export class Archimate {
 
   private xmlMetadata: XmlMetadata
 
-  private modelMetadata: Omit<SchemaModel, 'folder'>
+  private modelMetadata: ModelAttributes
 
   private model: Model
 
@@ -48,7 +48,7 @@ export class Archimate {
     return { '@_version': '1.0', '@_encoding': 'UTF-8' };
   }
 
-  private defaultModelMetadata(): Omit<SchemaModel, 'folder'> {
+  private defaultModelMetadata(): ModelAttributes {
     return {
       '@_xmlns:xsi': 'http://www.w3.org/2001/XMLSchema-instance',
       '@_xmlns:archimate': 'http://www.archimatetool.com/archimate',
@@ -412,10 +412,12 @@ export class Archimate {
     this.name = input['archimate:model']?.['@_name'] || 'Unnamed Model';
     const defaultModelMetadata = this.defaultModelMetadata();
     this.xmlMetadata = input['?xml'] || this.defaultXmlMetadata();
+    const namespaces = Object.fromEntries(
+      Object.entries(input['archimate:model'] ?? {}).filter(([key, value]) => key.startsWith('@_xmlns:') && value)
+    );
     this.modelMetadata = {
       ...defaultModelMetadata,
-      '@_xmlns:xsi': input['archimate:model']?.['@_xmlns:xsi'] || defaultModelMetadata['@_xmlns:xsi'],
-      '@_xmlns:archimate': input['archimate:model']?.['@_xmlns:archimate'] || defaultModelMetadata['@_xmlns:archimate'],
+      ...namespaces,
       '@_name': this.name,
       '@_id': input['archimate:model']?.['@_id'] || defaultModelMetadata['@_id'],
       '@_version': input['archimate:model']?.['@_version'] || defaultModelMetadata['@_version'],

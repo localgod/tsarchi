@@ -197,3 +197,11 @@ const elementTypeFolderEntries = [
 ] satisfies ReadonlyArray<readonly [ArchimateModelType, FolderKey]>;
 
 export const elementTypeToFolderKey: Map<ArchimateModelType, FolderKey> = new Map(elementTypeFolderEntries);
+
+/**
+ * Builds an xsi:type value from a model type. Types loaded with a prefix other
+ * than `archimate:` (for example `canvas:CanvasModelBlock`) keep that prefix.
+ */
+export function toXsiType(type: string): string {
+  return type.includes(':') ? type : `archimate:${type}`;
+}

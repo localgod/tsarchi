@@ -4,5 +4,5 @@ export interface SourceConnection {
   '@_id': string;
   '@_source': string;
   '@_target': string;
-  '@_archimateRelationship': string;
+  '@_archimateRelationship'?: string;
 }

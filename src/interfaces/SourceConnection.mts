@@ -11,7 +11,7 @@ export interface SourceConnection {
   textPosition?: number
   source: string;
   target: string;
-  archimateRelationship: string;
+  archimateRelationship?: string;
   properties?: Map<string, string>;
 }
 

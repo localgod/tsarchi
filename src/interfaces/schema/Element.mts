@@ -17,6 +17,8 @@ export interface Element {
   '@_background'?: string;
   '@_connectionRouterType'?: string;
   '@_accessType'?: string;
+  /** Junction type ('or'); only on Junction elements. */
+  '@_type'?: string;
   documentation?:string;
   property?: Array<Property> | Property;
   child?: Child | Child[];

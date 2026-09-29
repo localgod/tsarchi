@@ -154,6 +154,10 @@ export class Serializer {
       element['@_accessType'] = String(el.accessType);
     }
 
+    if (el.junctionType !== undefined) {
+      element['@_type'] = el.junctionType;
+    }
+
     if (el.child) {
       const children = Array.isArray(el.child) ? el.child : [el.child];
       element.child = this.saveChildren(children);

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<archimate:model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:archimate="http://www.archimatetool.com/archimate" name="junctions" id="id-jn-model" version="5.0.0">
+  <folder name="Strategy" id="id-jn-strategy" type="strategy"/>
+  <folder name="Business" id="id-jn-business" type="business">
+    <element xsi:type="archimate:BusinessProcess" name="Receive Claim" id="id-jn-receive"/>
+    <element xsi:type="archimate:BusinessProcess" name="Assess Claim" id="id-jn-assess"/>
+    <element xsi:type="archimate:BusinessProcess" name="Pay Claim" id="id-jn-pay"/>
+  </folder>
+  <folder name="Application" id="id-jn-application" type="application"/>
+  <folder name="Technology &amp; Physical" id="id-jn-technology" type="technology"/>
+  <folder name="Motivation" id="id-jn-motivation" type="motivation"/>
+  <folder name="Implementation &amp; Migration" id="id-jn-implementation" type="implementation_migration"/>
+  <folder name="Other" id="id-jn-other" type="other">
+    <element xsi:type="archimate:Junction" id="id-jn-and"/>
+    <element xsi:type="archimate:Junction" id="id-jn-or" type="or"/>
+  </folder>
+  <folder name="Relations" id="id-jn-relations" type="relations">
+    <element xsi:type="archimate:TriggeringRelationship" id="id-jn-r1" source="id-jn-receive" target="id-jn-or"/>
+    <element xsi:type="archimate:TriggeringRelationship" id="id-jn-r2" source="id-jn-or" target="id-jn-assess"/>
+    <element xsi:type="archimate:TriggeringRelationship" id="id-jn-r3" source="id-jn-or" target="id-jn-and"/>
+    <element xsi:type="archimate:TriggeringRelationship" id="id-jn-r4" source="id-jn-and" target="id-jn-pay"/>
+  </folder>
+  <folder name="Views" id="id-jn-views" type="diagrams"/>
+</archimate:model>

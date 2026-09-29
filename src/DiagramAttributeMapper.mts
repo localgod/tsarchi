@@ -41,6 +41,7 @@ export const childAttributes: readonly AttributeSpec[] = [
  */
 export const connectionAttributes: readonly AttributeSpec[] = [
   ['name', 'name', 'string'],
+  ['targetConnections', 'targetConnections', 'string'],
   ['lineStyle', 'type', 'number'],
   ['font', 'font', 'string'],
   ['fontColor', 'fontColor', 'string'],

@@ -24,6 +24,11 @@ type StoredViewChild = Omit<Child, 'child' | 'targetConnections'> & {
   targetConnections?: string | string[];
 };
 
+type StoredViewConnection = ViewConnection & {
+  targetConnections?: string;
+  sourceConnection?: StoredViewConnection | StoredViewConnection[];
+};
+
 export class Archimate {
 
   private name: string
@@ -923,7 +928,9 @@ export class Archimate {
       const connectionIds = new Set<string>();
 
       this.collectViewIds(children, viewPath, childIds, connectionIds, seenIds, issues);
-      this.validateViewChildren(children, viewPath, modelElementIds, relationshipIds, childIds, connectionIds, issues);
+      // Connections can start or end on other connections, e.g. a relationship drawn onto a relationship.
+      const endpointIds = new Set([...childIds, ...connectionIds]);
+      this.validateViewChildren(children, viewPath, modelElementIds, relationshipIds, endpointIds, connectionIds, issues);
     }
   }
 
@@ -942,7 +949,7 @@ export class Archimate {
         this.recordId(child.id, childPath, seenIds, issues);
       }
 
-      for (const connection of this.getSourceConnections(child)) {
+      for (const connection of this.getAllSourceConnections(child)) {
         if (connection.id) {
           connectionIds.add(connection.id);
           this.recordId(connection.id, `${childPath}.sourceConnections`, seenIds, issues);
@@ -958,7 +965,7 @@ export class Archimate {
     path: string,
     modelElementIds: Set<string>,
     relationshipIds: Set<string>,
-    childIds: Set<string>,
+    endpointIds: Set<string>,
     connectionIds: Set<string>,
     issues: ValidationIssue[]
   ): void {
@@ -974,30 +981,41 @@ export class Archimate {
         });
       }
 
-      for (const connection of this.getSourceConnections(child)) {
-        this.validateViewConnection(connection, childPath, relationshipIds, childIds, issues);
+      for (const connection of this.getAllSourceConnections(child)) {
+        this.validateViewConnection(connection, childPath, relationshipIds, endpointIds, issues);
+        this.validateTargetConnections(connection, 'View connection', childPath, connectionIds, issues);
       }
 
-      for (const targetConnectionId of this.getTargetConnectionIds(child)) {
-        if (!connectionIds.has(targetConnectionId)) {
-          issues.push({
-            code: 'view-target-connection-missing-source',
-            message: `Diagram object "${child.id}" references missing target connection "${targetConnectionId}".`,
-            path: childPath,
-            id: child.id,
-          });
-        }
-      }
+      this.validateTargetConnections(child, 'Diagram object', childPath, connectionIds, issues);
 
       this.validateViewChildren(
         this.getNestedChildren(child),
         childPath,
         modelElementIds,
         relationshipIds,
-        childIds,
+        endpointIds,
         connectionIds,
         issues
       );
+    }
+  }
+
+  private validateTargetConnections(
+    owner: { id: string; targetConnections?: string | string[] },
+    label: string,
+    path: string,
+    connectionIds: Set<string>,
+    issues: ValidationIssue[]
+  ): void {
+    for (const targetConnectionId of this.getTargetConnectionIds(owner)) {
+      if (!connectionIds.has(targetConnectionId)) {
+        issues.push({
+          code: 'view-target-connection-missing-source',
+          message: `${label} "${owner.id}" references missing target connection "${targetConnectionId}".`,
+          path,
+          id: owner.id,
+        });
+      }
     }
   }
 
@@ -1005,7 +1023,7 @@ export class Archimate {
     connection: ViewConnection,
     path: string,
     relationshipIds: Set<string>,
-    childIds: Set<string>,
+    endpointIds: Set<string>,
     issues: ValidationIssue[]
   ): void {
     if (connection.archimateRelationship && !relationshipIds.has(connection.archimateRelationship)) {
@@ -1017,7 +1035,7 @@ export class Archimate {
       });
     }
 
-    if (connection.source && !childIds.has(connection.source)) {
+    if (connection.source && !endpointIds.has(connection.source)) {
       issues.push({
         code: 'view-connection-missing-source',
         message: `View connection "${connection.id}" references missing source object "${connection.source}".`,
@@ -1026,7 +1044,7 @@ export class Archimate {
       });
     }
 
-    if (connection.target && !childIds.has(connection.target)) {
+    if (connection.target && !endpointIds.has(connection.target)) {
       issues.push({
         code: 'view-connection-missing-target',
         message: `View connection "${connection.id}" references missing target object "${connection.target}".`,
@@ -1036,19 +1054,32 @@ export class Archimate {
     }
   }
 
-  private getSourceConnections(child: StoredViewChild): ViewConnection[] {
+  private getSourceConnections(child: StoredViewChild): StoredViewConnection[] {
     const sourceConnections = child.sourceConnections || [];
     const sourceConnection = (child as Child).sourceConnection;
     if (!sourceConnection) return sourceConnections;
     const parsed = Array.isArray(sourceConnection) ? sourceConnection : [sourceConnection];
-    return [...sourceConnections, ...(parsed as ViewConnection[])];
+    return [...sourceConnections, ...(parsed as StoredViewConnection[])];
   }
 
-  private getTargetConnectionIds(child: StoredViewChild): string[] {
-    if (!child.targetConnections) return [];
+  /**
+   * The child's connections, including connections nested in them (connection-to-connection).
+   */
+  private getAllSourceConnections(child: StoredViewChild): StoredViewConnection[] {
+    const collect = (connections: StoredViewConnection[]): StoredViewConnection[] =>
+      connections.flatMap(connection => {
+        const nested = connection.sourceConnection;
+        if (!nested) return [connection];
+        return [connection, ...collect(Array.isArray(nested) ? nested : [nested])];
+      });
+    return collect(this.getSourceConnections(child));
+  }
+
+  private getTargetConnectionIds(owner: { targetConnections?: string | string[] }): string[] {
+    if (!owner.targetConnections) return [];
     // Archi stores multiple target connections as a single space-separated attribute.
-    return Array.isArray(child.targetConnections)
-      ? child.targetConnections
-      : child.targetConnections.split(/\s+/).filter(Boolean);
+    return Array.isArray(owner.targetConnections)
+      ? owner.targetConnections
+      : owner.targetConnections.split(/\s+/).filter(Boolean);
   }
 }

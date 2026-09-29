@@ -113,6 +113,8 @@ export class Parser {
     if (connectionRouterType !== undefined) element.connectionRouterType = Number(connectionRouterType);
     const accessType = schemaElement['@_accessType'];
     if (accessType !== undefined) element.accessType = Number(accessType);
+    const junctionType = schemaElement['@_type'];
+    if (junctionType !== undefined) element.junctionType = junctionType;
 
     return element;
   }

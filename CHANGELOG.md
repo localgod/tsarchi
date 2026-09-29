@@ -25,6 +25,7 @@ This project adheres to [Keep a CHANGELOG](http://keepachangelog.com/)
 
 ### Fixed
 
+- `Location` and `Grouping` are recognised element types in the `other` folder, so models using them no longer fail validation with `unknown-type`. They are exported as `archimateOtherElementTypes` / `ArchimateOtherElementType` and included in `ArchimateElementType` ([#381](https://github.com/localgod/tsarchi/issues/381)).
 - Nested folders are no longer dropped. Their elements are loaded into the top-level folder's `elements` list, and the folders are saved back in place with their name, id, documentation and properties ([#376](https://github.com/localgod/tsarchi/issues/376)).
 - Top-level folders keep their name and documentation on save instead of being reset to the default name.
 - `validateModel()` no longer reports `missing-name` for relationships and junctions, which Archi saves without a name by default, so models with unnamed relationships can be saved ([#377](https://github.com/localgod/tsarchi/issues/377)).

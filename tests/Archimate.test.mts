@@ -538,6 +538,27 @@ describe('Archimate', () => {
       expect(() => archimate.assertValidModel()).not.toThrow();
     });
 
+    it('should not require names on relationships or junctions', () => {
+      archimate.upsertElement({ id: 'unnamed-app-a', name: 'App A', type: 'ApplicationComponent' });
+      archimate.upsertElement({ id: 'unnamed-app-b', name: 'App B', type: 'ApplicationComponent' });
+      const model = (archimate as any).model as Model;
+      model.relations.elements = [
+        { id: 'unnamed-junction', type: 'Junction' } as any,
+        { id: 'unnamed-rel', type: 'FlowRelationship', source: 'unnamed-app-a', target: 'unnamed-app-b' } as any
+      ];
+
+      expect(archimate.validateModel()).toEqual([]);
+    });
+
+    it('should report missing-name for unnamed elements', () => {
+      const model = (archimate as any).model as Model;
+      model.application.elements = [{ id: 'unnamed-app', type: 'ApplicationComponent' } as any];
+
+      expect(archimate.validateModel()).toEqual([
+        expect.objectContaining({ code: 'missing-name', id: 'unnamed-app' })
+      ]);
+    });
+
     it('should report duplicate IDs, unknown types, and broken references', () => {
       const model = (archimate as any).model as Model;
       model.application.elements = [

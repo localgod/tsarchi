@@ -824,7 +824,8 @@ export class Archimate {
       });
     }
 
-    if (!element.name) {
+    // Archi writes relationships and junctions without a name by default.
+    if (!element.name && elementTypeToFolderKey.get(element.type) !== 'relations') {
       issues.push({
         code: 'missing-name',
         message: `Element "${element.id || path}" is missing a name.`,

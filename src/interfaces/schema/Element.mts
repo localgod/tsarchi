@@ -13,6 +13,9 @@ export interface Element {
   '@_archimateElement'?: string;
   '@_fillColor'?: string;
   '@_targetConnections'?: string;
+  '@_viewpoint'?: string;
+  '@_background'?: string;
+  '@_connectionRouterType'?: string;
   documentation?:string;
   property?: Array<Property> | Property;
   child?: Child | Child[];

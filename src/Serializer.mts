@@ -12,6 +12,7 @@ import type { Child } from './interfaces/Child.mjs';
 import { BoundsMapper } from './BoundMapper.mjs';
 import { SourceConnectionMapper } from './SourceConnectionMapper.mjs';
 import { folderType, toXsiType } from './constants/archimate-mappings.mjs';
+import { DiagramAttributeMapper, childAttributes, childTextElements } from './DiagramAttributeMapper.mjs';
 
 export class Serializer {
   private model: Model
@@ -121,6 +122,16 @@ export class Serializer {
       '@_id': el.id,
     };
 
+    if (el.viewpoint !== undefined) {
+      element['@_viewpoint'] = el.viewpoint;
+    }
+    if (el.background !== undefined) {
+      element['@_background'] = String(el.background);
+    }
+    if (el.connectionRouterType !== undefined) {
+      element['@_connectionRouterType'] = String(el.connectionRouterType);
+    }
+
     if (el.documentation) {
       element.documentation = el.documentation;
     }
@@ -165,6 +176,7 @@ export class Serializer {
     const schemaChild: SchemaChild = {
       '@_xsi:type': toXsiType(child.type),
       '@_id': child.id,
+      ...DiagramAttributeMapper.writeAttributes(child, childAttributes),
       bounds: BoundsMapper.boundsToSchemaBounds(child.bounds)
     }
 
@@ -172,31 +184,24 @@ export class Serializer {
       schemaChild.sourceConnection = SourceConnectionMapper.toSchemaSourceConnections(child.sourceConnection)
     }
 
-    if (child.name) {
-      schemaChild['@_name'] = child.name
-    }
-
-    if (child.targetConnections) {
-      schemaChild['@_targetConnections'] = child.targetConnections
-    }
-
-    if (child.textAlignment) {
-      schemaChild['@_textAlignment'] = String(child.textAlignment)
-    }
-    if (child.fillColor) {
-      schemaChild['@_fillColor'] = child.fillColor
-    }
-
-    if(child.archimateElement) {
-      schemaChild['@_archimateElement'] = child.archimateElement
-    }
-
     if (child.child && Array.isArray(child.child)) {
       schemaChild.child = this.saveChildren(child.child);
     }
 
-    if (child.documentation) {
-      schemaChild.documentation = child.documentation;
+    for (const key of childTextElements) {
+      if (child[key]) {
+        schemaChild[key] = child[key];
+      }
+    }
+
+    const property = DiagramAttributeMapper.propertiesToSchema(child.properties);
+    if (property) {
+      schemaChild.property = property;
+    }
+
+    const feature = DiagramAttributeMapper.featuresToSchema(child.features);
+    if (feature) {
+      schemaChild.feature = feature;
     }
 
     return schemaChild;

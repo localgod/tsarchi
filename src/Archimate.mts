@@ -13,7 +13,7 @@ import type { ValidationIssue } from './interfaces/ValidationIssue.mjs';
 import { Parser } from './Parser.mjs'
 import { Serializer } from './Serializer.mjs'
 import { ViewManager } from './ViewManager.mjs'
-import { folderType, elementTypeToFolderKey, isArchimateModelType } from './constants/archimate-mappings.mjs';
+import { folderType, elementTypeToFolderKey, isArchimateModelType, canvasModelTypes, canvasNamespace } from './constants/archimate-mappings.mjs';
 import type { ArchimateModelType, ArchimateRelationshipAliasType, ArchimateRelationshipType } from './constants/archimate-mappings.mjs';
 
 type StoredViewChild = Omit<Child, 'child' | 'targetConnections'> & {
@@ -426,7 +426,26 @@ export class Archimate {
 
   public serialize(): ArchimateSchema {
     const serializer = new Serializer(this.model)
-    return serializer.serialize(this.modelMetadata, this.xmlMetadata)
+    return serializer.serialize(this.withRequiredNamespaces(this.modelMetadata), this.xmlMetadata)
+  }
+
+  /**
+   * Declares the canvas namespace when the model contains canvas views, as their xsi:type values depend on it.
+   */
+  private withRequiredNamespaces(metadata: ModelAttributes): ModelAttributes {
+    if (metadata['@_xmlns:canvas'] || !this.usesCanvasTypes()) {
+      return metadata;
+    }
+    const { '@_xmlns:xsi': xsi, '@_xmlns:archimate': archimate, ...rest } = metadata;
+    return { '@_xmlns:xsi': xsi, '@_xmlns:archimate': archimate, '@_xmlns:canvas': canvasNamespace, ...rest };
+  }
+
+  private usesCanvasTypes(): boolean {
+    const canvasTypes: readonly string[] = canvasModelTypes;
+    const hasCanvasType = (children: Child[] | Child | undefined): boolean =>
+      (Array.isArray(children) ? children : children ? [children] : []).some(child =>
+        canvasTypes.includes(child.type) || hasCanvasType(child.child));
+    return (this.model.diagrams.elements || []).some(view => canvasTypes.includes(view.type) || hasCanvasType(view.child));
   }
 
   // View Management API

@@ -198,4 +198,11 @@ describe('Archi-produced models', () => {
     expect(findChild(archimate, viewId, '1f1e1d12-f53a-4be5-bf16-07103923aa77')?.lineStyle).toBe(2);
     expect(findChild(archimate, viewId, 'e5a21845-8bbe-4cdb-a3f1-b75fe7b6eb2f')?.deriveElementLineColor).toBe(false);
   });
+
+  it('should load connection features written by Archi into typed properties', async () => {
+    const archimate = await parseFixture('modelimporter-test.archimate');
+    const connection = findChild(archimate, 'c6443ba3-18a6-4695-94ec-0e6845d0f42f', '6182a68e-5c80-48ac-9486-9fdf53f793c0')?.sourceConnection;
+
+    expect(Array.isArray(connection) ? connection[0] : connection).toMatchObject({ nameVisible: false });
+  });
 });

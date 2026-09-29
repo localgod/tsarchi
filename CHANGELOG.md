@@ -16,6 +16,7 @@ This project adheres to [Keep a CHANGELOG](http://keepachangelog.com/)
 - View connections now keep `name`, the line style (`type` attribute, exposed as `lineStyle`), font, line and text attributes, `locked`, documentation, bendpoints, properties and features.
 - Views keep their `viewpoint`, `background` and `connectionRouterType` attributes.
 - Load and save keep the remaining content Archi writes in its test models ([#386](https://github.com/localgod/tsarchi/issues/386)): the model `<purpose>` (new `getPurpose()` / `setPurpose()`), `accessType` on access relationships (`Element.accessType`, also accepted by `upsertRelationship`), the alternate figure of a diagram object (`type` attribute, exposed as `Child.figure`), and the view a `DiagramModelReference` points to (`Child.model`).
+- View connections expose the label settings Archi stores as `<feature>` entries as typed properties: `SourceConnection.nameVisible` and `SourceConnection.textRelativePosition`. They are read from a connection's features, and saved back as features in place, with `SourceConnection.features` keeping every feature in file order ([#419](https://github.com/localgod/tsarchi/issues/419)).
 
 ### Changed
 

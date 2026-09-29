@@ -8,6 +8,15 @@ import { toXsiType, typeFromXsiType } from './constants/archimate-mappings.mjs';
  */
 const DEFAULT_CONNECTION_TYPE = 'Connection';
 
+/**
+ * Keys of a `<sourceConnection>` that are mapped to `SourceConnection`.
+ */
+const mappedConnectionKeys = new Set([
+  '@_xsi:type', '@_id', '@_source', '@_target', '@_archimateRelationship',
+  ...connectionAttributes.map(([, attribute]) => `@_${attribute}`),
+  'documentation', 'bendpoint', 'property', 'feature', 'sourceConnection',
+]);
+
 export class SourceConnectionMapper {
   public static schemaToSourceConnection(b: SchemaSourceConnection): SourceConnection {
     const xsiType = b['@_xsi:type'];
@@ -37,6 +46,8 @@ export class SourceConnectionMapper {
     if (b.sourceConnection) {
       connection.sourceConnection = SourceConnectionMapper.schemaToSourceConnections(b.sourceConnection);
     }
+    const unrecognized = DiagramAttributeMapper.readUnrecognized(b, mappedConnectionKeys);
+    if (unrecognized) connection.unrecognized = unrecognized;
     return connection;
   }
 
@@ -60,6 +71,7 @@ export class SourceConnectionMapper {
     if (b.sourceConnection) {
       connection.sourceConnection = SourceConnectionMapper.toSchemaSourceConnections(b.sourceConnection);
     }
+    Object.assign(connection, b.unrecognized);
     if (b.implicitType && b.type === DEFAULT_CONNECTION_TYPE) {
       return connection;
     }

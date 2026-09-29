@@ -6,7 +6,7 @@ import type { Element as SchemaElement } from "./interfaces/schema/Element.mjs";
 import type { Element } from "./interfaces/Element.mjs";
 import type { Child as SchemaChild } from "./interfaces/schema/Child.mjs";
 import type { Property as SchemaProperty } from "./interfaces/schema/Property.mjs";
-import type { Model, ModelContent } from './interfaces/Model.mjs';
+import type { Model, ModelContent, ModelFolder } from './interfaces/Model.mjs';
 import type { Profile } from './interfaces/Profile.mjs';
 import type { Profile as SchemaProfile } from "./interfaces/schema/Profile.mjs";
 import type { Folder } from './interfaces/Folder.mjs';
@@ -110,7 +110,7 @@ export class Serializer {
       '@_id': folderModel.id,
       '@_type': folderKey,
     };
-    this.addFolderDetails(folder, folderModel.documentation, folderModel.properties);
+    this.addFolderDetails(folder, folderModel);
 
     const elements = Array.isArray(folderModel.elements) ? folderModel.elements : [];
     const elementsById = new Map(elements.map((el) => [el.id, el]));
@@ -124,6 +124,7 @@ export class Serializer {
     folder.element = elements
       .filter((el) => !placedIds.has(el.id))
       .map((el) => this.serializeElement(el));
+    Object.assign(folder, folderModel.unrecognized);
 
     schema['archimate:model'].folder.push(folder);
   }
@@ -133,7 +134,7 @@ export class Serializer {
       '@_name': folderModel.name,
       '@_id': folderModel.id,
     };
-    this.addFolderDetails(folder, folderModel.documentation, folderModel.properties);
+    this.addFolderDetails(folder, folderModel);
 
     if (folderModel.folders && folderModel.folders.length > 0) {
       folder.folder = folderModel.folders.map((subfolder) => this.serializeFolder(subfolder, elementsById, placedIds));
@@ -150,11 +151,17 @@ export class Serializer {
     if (elements.length > 0) {
       folder.element = elements;
     }
+    Object.assign(folder, folderModel.unrecognized);
 
     return folder;
   }
 
-  private addFolderDetails(folder: SchemaFolder, documentation?: string, properties?: Map<string, string>): void {
+  private addFolderDetails(folder: SchemaFolder, { documentation, properties, features }: ModelFolder | Folder): void {
+    const feature = DiagramAttributeMapper.featuresToSchema(features);
+    if (feature) {
+      folder.feature = feature;
+    }
+
     if (documentation) {
       folder.documentation = documentation;
     }
@@ -185,6 +192,11 @@ export class Serializer {
       element['@_connectionRouterType'] = String(el.connectionRouterType);
     }
 
+    const feature = DiagramAttributeMapper.featuresToSchema(el.features);
+    if (feature) {
+      element.feature = feature;
+    }
+
     if (el.documentation) {
       element.documentation = el.documentation;
     }
@@ -211,6 +223,7 @@ export class Serializer {
       element.child = this.saveChildren(children);
     }
 
+    Object.assign(element, el.unrecognized);
     return element;
   }
 
@@ -267,6 +280,7 @@ export class Serializer {
       schemaChild.feature = feature;
     }
 
+    Object.assign(schemaChild, child.unrecognized);
     return schemaChild;
   }
 }

@@ -12,6 +12,13 @@ export interface View {
   connectionRouterType?: number;
   children?: ViewChild[];
   properties?: Map<string, string>;
+  /** `<feature>` entries (Archi's `IFeatures`), in file order. */
+  features?: Map<string, string>;
+  /**
+   * Attributes and child elements that tsarchi does not map, in their parsed XML form. They are written back
+   * unchanged.
+   */
+  unrecognized?: Record<string, unknown>;
 }
 
 export interface ViewGroup extends ViewChild {

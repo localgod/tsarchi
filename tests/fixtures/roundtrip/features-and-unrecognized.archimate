@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<archimate:model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:archimate="http://www.archimatetool.com/archimate" name="features and unrecognized" id="id-fu-model" version="5.0.0">
+  <folder name="Strategy" id="id-fu-strategy" type="strategy"/>
+  <folder name="Business" id="id-fu-business" type="business" futureFolderAttribute="top">
+    <feature name="folderFeature" value="top"/>
+    <documentation>Top-level folder with features.</documentation>
+    <folder name="Actors" id="id-fu-actors" futureFolderAttribute="nested">
+      <feature name="folderFeature" value="nested"/>
+      <feature name="secondFeature" value="2"/>
+      <element xsi:type="archimate:BusinessActor" name="Customer" id="id-customer" futureElementAttribute="actor">
+        <feature name="elementFeature" value="actor"/>
+        <documentation>An actor with features.</documentation>
+        <property key="owner" value="sales"/>
+        <futureElement key="value"/>
+      </element>
+    </folder>
+    <element xsi:type="archimate:BusinessRole" name="Insurant" id="id-insurant">
+      <feature name="elementFeature" value="role"/>
+    </element>
+    <futureFolderChild>kept</futureFolderChild>
+  </folder>
+  <folder name="Application" id="id-fu-application" type="application"/>
+  <folder name="Technology &amp; Physical" id="id-fu-technology" type="technology"/>
+  <folder name="Motivation" id="id-fu-motivation" type="motivation"/>
+  <folder name="Implementation &amp; Migration" id="id-fu-implementation" type="implementation_migration"/>
+  <folder name="Other" id="id-fu-other" type="other"/>
+  <folder name="Relations" id="id-fu-relations" type="relations">
+    <element xsi:type="archimate:AssignmentRelationship" id="id-assignment" source="id-customer" target="id-insurant" futureRelationshipAttribute="yes">
+      <feature name="relationshipFeature" value="assignment"/>
+      <futureRelationshipChild/>
+    </element>
+  </folder>
+  <folder name="Views" id="id-fu-views" type="diagrams">
+    <element xsi:type="archimate:ArchimateDiagramModel" name="Default View" id="id-view" futureViewAttribute="view">
+      <feature name="viewFeature" value="view"/>
+      <child xsi:type="archimate:DiagramObject" id="id-customer-object" archimateElement="id-customer" futureChildAttribute="child">
+        <bounds x="12" y="12" width="120" height="55"/>
+        <sourceConnection xsi:type="archimate:Connection" id="id-assignment-connection" source="id-customer-object" target="id-insurant-object" archimateRelationship="id-assignment" futureConnectionAttribute="connection">
+          <futureConnectionChild key="value"/>
+        </sourceConnection>
+        <futureChildElement key="value"/>
+      </child>
+      <child xsi:type="archimate:DiagramObject" id="id-insurant-object" targetConnections="id-assignment-connection" archimateElement="id-insurant">
+        <bounds x="240" y="12" width="120" height="55"/>
+      </child>
+    </element>
+  </folder>
+</archimate:model>

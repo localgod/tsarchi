@@ -7,10 +7,17 @@ export interface ModelFolder {
   id: string;
   documentation?: string;
   properties?: Map<string, string>;
+  /** `<feature>` entries (Archi's `IFeatures`), in file order. */
+  features?: Map<string, string>;
   /** All elements in this folder, including those placed in nested folders. */
   elements?: Element[];
   /** Nested folders, in document order. */
   folders?: Folder[];
+  /**
+   * Attributes and child elements that tsarchi does not map, in their parsed XML form. They are written back
+   * unchanged.
+   */
+  unrecognized?: Record<string, unknown>;
 }
 
 export interface Model {

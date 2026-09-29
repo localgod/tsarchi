@@ -58,6 +58,70 @@ describe('features on folders, elements and relationships', () => {
   });
 });
 
+describe('top-level folder details', () => {
+  it('should return the details of a top-level folder', async () => {
+    const archimate = await parseFixture();
+
+    expect(archimate.getFolder('business')).toEqual({
+      id: 'id-fu-business',
+      name: 'Business',
+      documentation: 'Top-level folder with features.',
+      features: new Map([['folderFeature', 'top']]),
+    });
+  });
+
+  it('should return copies of the folder maps', async () => {
+    const archimate = await parseFixture();
+
+    archimate.getFolder('business').features?.set('changed', 'no');
+
+    expect(archimate.getFolder('business').features).toEqual(new Map([['folderFeature', 'top']]));
+  });
+
+  it('should write folder details set in code and keep unrecognised content', async () => {
+    const archimate = await parseFixture();
+
+    const details = archimate.updateFolder('business', {
+      name: 'Business Layer',
+      documentation: 'Changed.',
+      properties: new Map([['Owner', 'EA']]),
+      features: new Map([['folderFeature', 'changed'], ['added', 'yes']]),
+    });
+
+    expect(details).toEqual(archimate.getFolder('business'));
+    const folder = businessFolder(archimate) as unknown as Record<string, unknown>;
+    expect(folder['@_name']).toBe('Business Layer');
+    expect(folder.documentation).toBe('Changed.');
+    expect(folder.property).toEqual([{ '@_key': 'Owner', '@_value': 'EA' }]);
+    expect(folder.feature).toEqual([
+      { '@_name': 'folderFeature', '@_value': 'changed' },
+      { '@_name': 'added', '@_value': 'yes' },
+    ]);
+    expect(folder['@_futureFolderAttribute']).toBe('top');
+    expect(folder.futureFolderChild).toBe('kept');
+    expect(archimate.getFolders('business')).toHaveLength(1);
+    expect(archimate.getElement('id-customer')).not.toBeNull();
+    expect(archimate.validateModel()).toEqual([]);
+  });
+
+  it('should remove folder details that are cleared and leave the others unchanged', async () => {
+    const archimate = await parseFixture();
+
+    archimate.updateFolder('business', { documentation: '', features: new Map() });
+
+    expect(archimate.getFolder('business')).toEqual({ id: 'id-fu-business', name: 'Business' });
+    const folder = businessFolder(archimate) as unknown as Record<string, unknown>;
+    expect(folder.documentation).toBeUndefined();
+    expect(folder.feature).toBeUndefined();
+  });
+
+  it('should reject an empty folder name', async () => {
+    const archimate = await parseFixture();
+
+    expect(() => archimate.updateFolder('business', { name: '' })).toThrow('A folder name cannot be empty.');
+  });
+});
+
 describe('unrecognised content', () => {
   it('should keep unrecognised attributes and child elements of folders and elements', async () => {
     const archimate = await parseFixture();

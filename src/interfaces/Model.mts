@@ -20,6 +20,11 @@ export interface ModelFolder {
   unrecognized?: Record<string, unknown>;
 }
 
+/**
+ * The details of a top-level folder, without its elements, nested folders and unrecognised content.
+ */
+export type ModelFolderDetails = Pick<ModelFolder, 'id' | 'name' | 'documentation' | 'properties' | 'features'>;
+
 export interface Model {
   strategy: ModelFolder;
   business: ModelFolder;

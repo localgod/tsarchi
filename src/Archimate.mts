@@ -1,4 +1,4 @@
-import type { Model, FolderKey, ModelContent } from './interfaces/Model.mjs';
+import type { Model, FolderKey, ModelContent, ModelFolder, ModelFolderDetails } from './interfaces/Model.mjs';
 import type { Profile } from './interfaces/Profile.mjs';
 import type { Schema as ArchimateSchema } from './interfaces/schema/Schema.mjs';
 import type { ModelAttributes } from './interfaces/schema/Model.mjs';
@@ -699,6 +699,40 @@ export class Archimate {
    */
   public getFolders(folderKey: FolderKey): Folder[] {
     return this.model[folderKey].folders || [];
+  }
+
+  /**
+   * Returns the id, name, documentation, properties and features of a top-level folder. Maps are copies;
+   * use `updateFolder` to change them.
+   */
+  public getFolder(folderKey: FolderKey): ModelFolderDetails {
+    return Archimate.folderDetails(this.model[folderKey]);
+  }
+
+  /**
+   * Updates the name, documentation, properties or features of a top-level folder and returns its new details.
+   * A key set to undefined, an empty string or an empty map removes that detail; keys left out are unchanged.
+   */
+  public updateFolder(folderKey: FolderKey, patch: Partial<Omit<ModelFolderDetails, 'id'>>): ModelFolderDetails {
+    const folder = this.model[folderKey];
+    if ('name' in patch) {
+      if (!patch.name) throw new Error('A folder name cannot be empty.');
+      folder.name = patch.name;
+    }
+    if ('documentation' in patch) folder.documentation = patch.documentation || undefined;
+    if ('properties' in patch) folder.properties = patch.properties?.size ? new Map(patch.properties) : undefined;
+    if ('features' in patch) folder.features = patch.features?.size ? new Map(patch.features) : undefined;
+    return Archimate.folderDetails(folder);
+  }
+
+  private static folderDetails({ id, name, documentation, properties, features }: ModelFolder): ModelFolderDetails {
+    return {
+      id,
+      name,
+      ...(documentation !== undefined && { documentation }),
+      ...(properties && { properties: new Map(properties) }),
+      ...(features && { features: new Map(features) }),
+    };
   }
 
   /**

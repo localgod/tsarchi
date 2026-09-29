@@ -48,13 +48,13 @@ export class ViewManager {
   }
 
   /**
-   * Lists all views in the model
+   * Lists all views in the model (ArchiMate, sketch and canvas), optionally only those of one type
    */
-  listViews(): View[] {
+  listViews(options?: { type?: View['type'] }): View[] {
     if (!this.model.diagrams.elements) return [];
-    
+
     return this.model.diagrams.elements
-      .filter(el => el.type === 'ArchimateDiagramModel')
+      .filter(el => options?.type === undefined || el.type === options.type)
       .map(el => this.elementToView(el));
   }
 

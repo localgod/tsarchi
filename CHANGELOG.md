@@ -28,6 +28,7 @@ This project adheres to [Keep a CHANGELOG](http://keepachangelog.com/)
 
 ### Fixed
 
+- `listViews()` returns sketch and canvas views too, matching `getView()`. Pass `{ type: 'ArchimateDiagramModel' }` to list only ArchiMate views, as before ([#416](https://github.com/localgod/tsarchi/issues/416)).
 - `getView()` and `listViews()` return a view's `viewpoint`, `background` and `connectionRouterType` ([#393](https://github.com/localgod/tsarchi/issues/393)).
 - `createView()` and `generateViewFromElements()` store the `viewpoint` and `background` they are given, so they are saved. Adding diagram objects, groups or connections to a view, or restyling them, no longer drops these attributes from the view ([#392](https://github.com/localgod/tsarchi/issues/392)).
 - OR junctions stay OR junctions: the junction `type` attribute (`type="or"`) is kept on load and save, exposed as `Element.junctionType`. Junctions without it are AND junctions, Archi's default, and are still saved without the attribute ([#402](https://github.com/localgod/tsarchi/issues/402)).

@@ -11,9 +11,14 @@ This project adheres to [Keep a CHANGELOG](http://keepachangelog.com/)
 ### Added
 
 - `Archimate.getFolders(folderKey)` returns the nested folders of a top-level folder, and the new `Folder` interface describes them. Top-level folders in `Model` now share the `ModelFolder` interface, which adds optional `documentation`, `properties` and `folders`.
+- Sketch (`SketchModel`) and canvas (`CanvasModel`) views are recognised as view types, so models containing them validate and can be saved ([#382](https://github.com/localgod/tsarchi/issues/382)). Canvas types are stored without their `canvas:` prefix (`CanvasModel`, `CanvasModelBlock`, ...) and get it back on save, and `xmlns:canvas` is declared when canvas views are added to a model that lacks it.
+- Diagram children now keep the style and content Archi writes for ArchiMate, sketch and canvas views: `lineColor`, `lineWidth`, `lineAlpha`, `font`, `fontColor`, `alpha`, `gradient`, `textPosition`, `borderType`, `borderColor`, `iconColor`, `imagePath`, `imagePosition`, `locked`, `hintTitle`, `hintContent`, `content`, `notes`, properties and features.
+- View connections now keep `name`, the line style (`type` attribute, exposed as `lineStyle`), font, line and text attributes, `locked`, documentation, bendpoints, properties and features.
+- Views keep their `viewpoint`, `background` and `connectionRouterType` attributes.
 
 ### Changed
 
+- `View.type` now also allows `'SketchModel'` and `'CanvasModel'`, and `getView()` reports the actual view type.
 - `Child.sourceConnection` is now typed `SourceConnection | SourceConnection[]`, matching the XML when a diagram child has several connections. Code that reads it as a single object must handle the array case.
 - `SourceConnection.archimateRelationship` is now optional, since note and sketch connections have no underlying relationship.
 - The schema `Model` interface now extends a new `ModelAttributes` interface, which accepts any `@_xmlns:*` namespace attribute.

@@ -114,7 +114,43 @@ export const archimateRelationshipAliasTypes = [
 export const archimateViewTypes = [
   'Diagram',
   'ArchimateDiagramModel',
+  'SketchModel',
+  'CanvasModel',
 ] as const;
+
+/**
+ * Diagram child types used in sketch views, in addition to the shared Group type.
+ */
+export const sketchModelChildTypes = [
+  'SketchModelSticky',
+  'SketchModelActor',
+] as const;
+
+/**
+ * Types that Archi writes in the canvas namespace (xsi:type="canvas:...") rather than the archimate namespace.
+ */
+export const canvasModelTypes = [
+  'CanvasModel',
+  'CanvasModelBlock',
+  'CanvasModelImage',
+  'CanvasModelSticky',
+  'CanvasModelConnection',
+] as const;
+
+export const archimateNamespace = 'http://www.archimatetool.com/archimate';
+export const canvasNamespace = 'http://www.archimatetool.com/archimate/canvas';
+
+/**
+ * Extracts the model type from an xsi:type value. The archimate: prefix is dropped, as is canvas: on known
+ * canvas types (e.g. "canvas:CanvasModelBlock" -> "CanvasModelBlock"); any other prefix is kept.
+ */
+export function typeFromXsiType(xsiType: string): string {
+  if (xsiType.startsWith('archimate:')) {
+    return xsiType.slice('archimate:'.length);
+  }
+  const type = xsiType.slice('canvas:'.length);
+  return xsiType.startsWith('canvas:') && (canvasModelTypes as readonly string[]).includes(type) ? type : xsiType;
+}
 
 export const archimateModelTypes = [
   ...archimateStrategyElementTypes,
@@ -137,6 +173,8 @@ export type ArchimateImplementationMigrationElementType = typeof archimateImplem
 export type ArchimateRelationshipType = typeof archimateRelationshipTypes[number];
 export type ArchimateRelationshipAliasType = typeof archimateRelationshipAliasTypes[number];
 export type ArchimateViewType = typeof archimateViewTypes[number];
+export type SketchModelChildType = typeof sketchModelChildTypes[number];
+export type CanvasModelType = typeof canvasModelTypes[number];
 export type ArchimateElementType =
   | ArchimateStrategyElementType
   | ArchimateBusinessElementType
@@ -199,9 +237,10 @@ const elementTypeFolderEntries = [
 export const elementTypeToFolderKey: Map<ArchimateModelType, FolderKey> = new Map(elementTypeFolderEntries);
 
 /**
- * Builds an xsi:type value from a model type. Types loaded with a prefix other
- * than `archimate:` (for example `canvas:CanvasModelBlock`) keep that prefix.
+ * Builds an xsi:type value from a model type. Canvas types get the `canvas:` prefix, and types
+ * that already carry a prefix keep it.
  */
 export function toXsiType(type: string): string {
-  return type.includes(':') ? type : `archimate:${type}`;
+  if (type.includes(':')) return type;
+  return (canvasModelTypes as readonly string[]).includes(type) ? `canvas:${type}` : `archimate:${type}`;
 }

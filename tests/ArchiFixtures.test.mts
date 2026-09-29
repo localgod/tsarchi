@@ -48,6 +48,33 @@ describe('Archi-produced models', () => {
       .toEqual(expect.arrayContaining(['01707f8e', '807d8f49', 'b0b06ebb', '80ce8eea', 'b5266c15', '8faa57ef']));
   });
 
+  it('should keep all namespace declarations on the model root', async () => {
+    const archimate = await parseFixture('test.archimate');
+    const model = archimate.serialize()['archimate:model'];
+
+    expect(Object.keys(model).filter(key => key.startsWith('@_xmlns:'))).toEqual([
+      '@_xmlns:xsi',
+      '@_xmlns:archimate',
+      '@_xmlns:canvas',
+    ]);
+    expect(model['@_xmlns:canvas']).toBe('http://www.archimatetool.com/archimate/canvas');
+  });
+
+  it('should keep the xsi:type prefix a type was loaded with', async () => {
+    const archimate = await parseFixture('test.archimate');
+    const diagrams = archimate.serialize()['archimate:model'].folder.find(folder => folder['@_type'] === 'diagrams');
+    const canvas = diagrams?.element.find(element => element['@_id'] === '25d4e8d4-f410-4a1a-bc28-f184d66ea408');
+    const childTypes = (Array.isArray(canvas?.child) ? canvas.child : [canvas?.child]).map(child => child?.['@_xsi:type']);
+
+    expect(canvas?.['@_xsi:type']).toBe('canvas:CanvasModel');
+    expect(childTypes).toEqual([
+      'canvas:CanvasModelBlock',
+      'canvas:CanvasModelImage',
+      'canvas:CanvasModelSticky',
+      'canvas:CanvasModelSticky',
+    ]);
+  });
+
   it('should default a missing connection xsi:type to Connection', () => {
     const connection = SourceConnectionMapper.schemaToSourceConnection({
       '@_id': 'c1',

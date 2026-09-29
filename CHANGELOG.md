@@ -18,6 +18,7 @@ This project adheres to [Keep a CHANGELOG](http://keepachangelog.com/)
 
 ### Changed
 
+- ⚠️ `Junction` moved from `archimateRelationshipTypes` / `ArchimateRelationshipType` to the new `archimateConnectorTypes` / `ArchimateConnectorType`, which is part of `ArchimateElementType`. New junctions are placed in the `other` folder, as Archi does, and `upsertRelationship` no longer accepts `Junction` as a relationship type ([#397](https://github.com/localgod/tsarchi/issues/397)).
 - `View.type` now also allows `'SketchModel'` and `'CanvasModel'`, and `getView()` reports the actual view type.
 - `Child.sourceConnection` is now typed `SourceConnection | SourceConnection[]`, matching the XML when a diagram child has several connections. Code that reads it as a single object must handle the array case.
 - `SourceConnection.archimateRelationship` is now optional, since note and sketch connections have no underlying relationship.
@@ -25,6 +26,7 @@ This project adheres to [Keep a CHANGELOG](http://keepachangelog.com/)
 
 ### Fixed
 
+- Relationships can use a junction as their source or target: `upsertRelationship` no longer throws `Relationship target element ... not found` for junction endpoints ([#397](https://github.com/localgod/tsarchi/issues/397)).
 - `Location` and `Grouping` are recognised element types in the `other` folder, so models using them no longer fail validation with `unknown-type`. They are exported as `archimateOtherElementTypes` / `ArchimateOtherElementType` and included in `ArchimateElementType` ([#381](https://github.com/localgod/tsarchi/issues/381)).
 - Nested folders are no longer dropped. Their elements are loaded into the top-level folder's `elements` list, and the folders are saved back in place with their name, id, documentation and properties ([#376](https://github.com/localgod/tsarchi/issues/376)).
 - Top-level folders keep their name and documentation on save instead of being reset to the default name.

@@ -21,6 +21,7 @@ This project adheres to [Keep a CHANGELOG](http://keepachangelog.com/)
 
 - ⚠️ `Junction` moved from `archimateRelationshipTypes` / `ArchimateRelationshipType` to the new `archimateConnectorTypes` / `ArchimateConnectorType`, which is part of `ArchimateElementType`. New junctions are placed in the `other` folder, as Archi does, and `upsertRelationship` no longer accepts `Junction` as a relationship type ([#397](https://github.com/localgod/tsarchi/issues/397)).
 - ⚠️ `View.background` is now a `number`, matching `Element.background` and the integer Archi writes; `createView()` takes `background` as a number too ([#393](https://github.com/localgod/tsarchi/issues/393)).
+- ⚠️ `upsertElement` matches on `id` when one is given, like `upsertRelationship`, instead of on `name` + `type`. Without an `id`, only named elements are matched by `name` + `type`, so unnamed elements such as junctions are always added instead of being merged into the first one. It throws when the given `id` is already used by something other than an element in the target folder ([#414](https://github.com/localgod/tsarchi/issues/414)).
 - `View.type` now also allows `'SketchModel'` and `'CanvasModel'`, and `getView()` reports the actual view type.
 - `Child.sourceConnection` is now typed `SourceConnection | SourceConnection[]`, matching the XML when a diagram child has several connections. Code that reads it as a single object must handle the array case.
 - `SourceConnection.archimateRelationship` is now optional, since note and sketch connections have no underlying relationship.

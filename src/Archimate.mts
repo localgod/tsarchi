@@ -142,8 +142,11 @@ export class Archimate {
 
   /**
    * Inserts or updates an element in the appropriate folder.
-   * Updates are matched on `name` + `type`, not `id`.
-   * When updating, existing `id` is preserved.
+   * Updates are matched on `id` when one is given. Without an `id`, a named
+   * element matches an existing element with the same `name` + `type`;
+   * unnamed elements (such as junctions) are always added.
+   * Throws when the given `id` is already used by something other than an
+   * element in the target folder.
    * Only provided properties are overwritten; others remain unchanged.
    * @param element Partial or full element data to insert or update.
    */
@@ -160,9 +163,15 @@ export class Archimate {
       folder.elements = [];
     }
 
-    const existingIndex = folder.elements.findIndex(
-      e => e.name === element.name && e.type === element.type
-    );
+    const existingIndex = element.id
+      ? folder.elements.findIndex(e => e.id === element.id)
+      : element.name
+        ? folder.elements.findIndex(e => e.name === element.name && e.type === element.type)
+        : -1;
+
+    if (existingIndex < 0 && element.id && this.hasId(element.id)) {
+      throw new Error(`ID "${element.id}" is already in use.`);
+    }
 
     if (existingIndex >= 0) {
       const existingElement = folder.elements[existingIndex];

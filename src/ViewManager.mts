@@ -299,6 +299,8 @@ export class ViewManager {
     if (element.viewpoint !== undefined) view.viewpoint = element.viewpoint;
     if (element.background !== undefined) view.background = element.background;
     if (element.connectionRouterType !== undefined) view.connectionRouterType = element.connectionRouterType;
+    if (element.features !== undefined) view.features = element.features;
+    if (element.unrecognized !== undefined) view.unrecognized = element.unrecognized;
     return view;
   }
 
@@ -317,6 +319,8 @@ export class ViewManager {
     if (view.viewpoint !== undefined) element.viewpoint = view.viewpoint;
     if (view.background !== undefined) element.background = view.background;
     if (view.connectionRouterType !== undefined) element.connectionRouterType = view.connectionRouterType;
+    if (view.features !== undefined) element.features = view.features;
+    if (view.unrecognized !== undefined) element.unrecognized = view.unrecognized;
     return element;
   }
 

@@ -183,7 +183,13 @@ model.setProfiles([{ id: "profile-id", name: "Premium", conceptType: "BusinessAc
 model.updateElement("element-id", { profiles: "profile-id" });
 ```
 
-Anything else on the model that TSArchi does not recognise, such as model features, is kept and written back unchanged.
+Folders, elements, relationships and views keep their `<feature>` entries as a `features` map, in file order:
+
+```typescript
+model.updateElement("element-id", { features: new Map([["myFeature", "value"]]) });
+```
+
+Anything else that TSArchi does not recognise, on the model, its folders, elements, relationships, views, diagram objects and view connections, is kept in an `unrecognized` field and written back unchanged, so content from newer Archi versions survives a round trip.
 
 #### Available Element Types
 

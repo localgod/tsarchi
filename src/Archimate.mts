@@ -348,6 +348,7 @@ export class Archimate {
     };
     if (relationship.accessType !== undefined) newRelationship.accessType = relationship.accessType;
     if (relationship.profiles !== undefined) newRelationship.profiles = relationship.profiles;
+    if (relationship.features !== undefined) newRelationship.features = relationship.features;
     folder.elements.push(newRelationship);
     return newRelationship;
   }

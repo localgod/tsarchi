@@ -34,6 +34,28 @@ export class Parser {
   private static readonly mappedModelKeys = new Set(['@_name', '@_id', '@_version', 'folder', 'purpose', 'property', 'metadata', 'profile']);
 
   /**
+   * Keys of a top-level `<folder>` that are mapped to `ModelFolder`. Nested folders have no mapped `type`.
+   */
+  private static readonly mappedFolderKeys = new Set(['@_name', '@_id', '@_type', 'documentation', 'property', 'feature', 'folder', 'element']);
+  private static readonly mappedSubfolderKeys = new Set([...Parser.mappedFolderKeys].filter((key) => key !== '@_type'));
+
+  /**
+   * Keys of an `<element>` (element, relationship or view) that are mapped to `Element`.
+   */
+  private static readonly mappedElementKeys = new Set([
+    '@_xsi:type', '@_name', '@_id', '@_profiles', '@_source', '@_target', '@_viewpoint', '@_background',
+    '@_connectionRouterType', '@_accessType', '@_type', 'documentation', 'property', 'feature', 'child',
+  ]);
+
+  /**
+   * Keys of a diagram `<child>` that are mapped to `Child`.
+   */
+  private static readonly mappedChildKeys = new Set([
+    '@_xsi:type', '@_id', ...childAttributes.map(([, attribute]) => `@_${attribute}`), ...childTextElements,
+    'bounds', 'sourceConnection', 'property', 'feature', 'child',
+  ]);
+
+  /**
    * Reads the model-level content of `<archimate:model>` besides its folders.
    */
   public parseModelContent(input: object): ModelContent {
@@ -92,6 +114,8 @@ export class Parser {
     folderModel.name = folder['@_name'] || '';
     folderModel.documentation = folder.documentation;
     folderModel.properties = this.createOptionalPropertiesMap(folder);
+    folderModel.features = DiagramAttributeMapper.schemaToFeatures(folder.feature);
+    folderModel.unrecognized = DiagramAttributeMapper.readUnrecognized(folder, Parser.mappedFolderKeys);
   }
 
   private processFolderElements(folderKey: keyof Model, folder: SchemaFolder): void {
@@ -118,8 +142,10 @@ export class Parser {
         name: schemaFolder['@_name'] || '',
         documentation: schemaFolder.documentation,
         properties: this.createOptionalPropertiesMap(schemaFolder),
+        features: DiagramAttributeMapper.schemaToFeatures(schemaFolder.feature),
         elementIds: folderElements.length > 0 ? folderElements.map((element) => element.id) : undefined,
         folders: folders.length > 0 ? folders : undefined,
+        unrecognized: DiagramAttributeMapper.readUnrecognized(schemaFolder, Parser.mappedSubfolderKeys),
       } as Folder);
     });
   }
@@ -158,6 +184,10 @@ export class Parser {
     if (accessType !== undefined) element.accessType = Number(accessType);
     const junctionType = schemaElement['@_type'];
     if (junctionType !== undefined) element.junctionType = junctionType;
+    const features = DiagramAttributeMapper.schemaToFeatures(schemaElement.feature);
+    if (features) element.features = features;
+    const unrecognized = DiagramAttributeMapper.readUnrecognized(schemaElement, Parser.mappedElementKeys);
+    if (unrecognized) element.unrecognized = unrecognized;
 
     return element;
   }
@@ -202,6 +232,7 @@ export class Parser {
       sourceConnection: sourceConnection ? SourceConnectionMapper.schemaToSourceConnections(sourceConnection) : undefined,
       properties: DiagramAttributeMapper.schemaToProperties(schemaChild.property),
       features,
+      unrecognized: DiagramAttributeMapper.readUnrecognized(schemaChild, Parser.mappedChildKeys),
     }
 
     for (const key of childTextElements) {

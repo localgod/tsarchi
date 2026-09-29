@@ -18,7 +18,7 @@ export class ViewManager {
    */
   createView(name: string, options?: {
     viewpoint?: string;
-    background?: string;
+    background?: number;
     documentation?: string;
   }): View {
     const view: View = {
@@ -29,20 +29,10 @@ export class ViewManager {
       ...options
     };
 
-    // Convert to Element format for storage in diagrams folder
-    const viewElement: Element = {
-      id: view.id,
-      name: view.name,
-      type: view.type,
-      documentation: view.documentation,
-      child: view.children,
-      properties: view.properties
-    };
-
     if (!this.model.diagrams.elements) {
       this.model.diagrams.elements = [];
     }
-    this.model.diagrams.elements.push(viewElement);
+    this.model.diagrams.elements.push(this.viewToElement(view));
 
     return view;
   }
@@ -298,7 +288,7 @@ export class ViewManager {
   }
 
   private elementToView(element: Element): View {
-    return {
+    const view: View = {
       id: element.id,
       name: element.name,
       type: element.type as View['type'],
@@ -306,6 +296,28 @@ export class ViewManager {
       children: Array.isArray(element.child) ? element.child as ViewChild[] : element.child ? [element.child as ViewChild] : [],
       properties: element.properties
     };
+    if (element.viewpoint !== undefined) view.viewpoint = element.viewpoint;
+    if (element.background !== undefined) view.background = element.background;
+    if (element.connectionRouterType !== undefined) view.connectionRouterType = element.connectionRouterType;
+    return view;
+  }
+
+  /**
+   * Converts a view to the Element stored in the diagrams folder
+   */
+  private viewToElement(view: View): Element {
+    const element: Element = {
+      id: view.id,
+      name: view.name,
+      type: view.type,
+      documentation: view.documentation,
+      child: view.children,
+      properties: view.properties
+    };
+    if (view.viewpoint !== undefined) element.viewpoint = view.viewpoint;
+    if (view.background !== undefined) element.background = view.background;
+    if (view.connectionRouterType !== undefined) element.connectionRouterType = view.connectionRouterType;
+    return element;
   }
 
   private updateViewInModel(view: View): void {
@@ -313,14 +325,7 @@ export class ViewManager {
 
     const index = this.model.diagrams.elements.findIndex(el => el.id === view.id);
     if (index !== -1) {
-      this.model.diagrams.elements[index] = {
-        id: view.id,
-        name: view.name,
-        type: view.type,
-        documentation: view.documentation,
-        child: view.children,
-        properties: view.properties
-      };
+      this.model.diagrams.elements[index] = this.viewToElement(view);
     }
   }
 

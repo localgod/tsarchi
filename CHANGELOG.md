@@ -20,6 +20,7 @@ This project adheres to [Keep a CHANGELOG](http://keepachangelog.com/)
 ### Changed
 
 - ⚠️ `Junction` moved from `archimateRelationshipTypes` / `ArchimateRelationshipType` to the new `archimateConnectorTypes` / `ArchimateConnectorType`, which is part of `ArchimateElementType`. New junctions are placed in the `other` folder, as Archi does, and `upsertRelationship` no longer accepts `Junction` as a relationship type ([#397](https://github.com/localgod/tsarchi/issues/397)).
+- ⚠️ `View.background` is now a `number`, matching `Element.background` and the integer Archi writes; `createView()` takes `background` as a number too ([#393](https://github.com/localgod/tsarchi/issues/393)).
 - `View.type` now also allows `'SketchModel'` and `'CanvasModel'`, and `getView()` reports the actual view type.
 - `Child.sourceConnection` is now typed `SourceConnection | SourceConnection[]`, matching the XML when a diagram child has several connections. Code that reads it as a single object must handle the array case.
 - `SourceConnection.archimateRelationship` is now optional, since note and sketch connections have no underlying relationship.
@@ -27,6 +28,8 @@ This project adheres to [Keep a CHANGELOG](http://keepachangelog.com/)
 
 ### Fixed
 
+- `getView()` and `listViews()` return a view's `viewpoint`, `background` and `connectionRouterType` ([#393](https://github.com/localgod/tsarchi/issues/393)).
+- `createView()` and `generateViewFromElements()` store the `viewpoint` and `background` they are given, so they are saved. Adding diagram objects, groups or connections to a view, or restyling them, no longer drops these attributes from the view ([#392](https://github.com/localgod/tsarchi/issues/392)).
 - OR junctions stay OR junctions: the junction `type` attribute (`type="or"`) is kept on load and save, exposed as `Element.junctionType`. Junctions without it are AND junctions, Archi's default, and are still saved without the attribute ([#402](https://github.com/localgod/tsarchi/issues/402)).
 - Deleting an element now removes its diagram objects at any nesting depth, including objects nested in other diagram objects, together with the objects nested in them, every connection from or to anything removed, and every `targetConnections` reference to those connections. Before, only objects at the top level or in a `Group` were removed, and `validateModel()` reported `diagram-object-missing-element` for the rest ([#407](https://github.com/localgod/tsarchi/issues/407)).
 - Deleting a view now also removes the diagram model references to it in other views, at any nesting depth, together with the connections attached to them and every `targetConnections` reference to those connections, as Archi does. `validateModel()` reports a reference to a view that does not exist with the new `diagram-reference-missing-view` code ([#409](https://github.com/localgod/tsarchi/issues/409)).

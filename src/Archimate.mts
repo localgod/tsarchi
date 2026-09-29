@@ -492,7 +492,7 @@ export class Archimate {
    */
   public createView(name: string, options?: {
     viewpoint?: string;
-    background?: string;
+    background?: number;
     documentation?: string;
   }): View {
     return this.viewManager.createView(name, options);

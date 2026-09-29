@@ -1,6 +1,11 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { Archimate } from '../src/Archimate.mjs';
 import type { Element } from '../src/interfaces/Element.mjs';
+import { readFile } from 'fs/promises';
+import { XMLParser } from 'fast-xml-parser';
+import type { Schema } from '../src/interfaces/schema/Schema.mjs';
+import type { Folder as SchemaFolder } from '../src/interfaces/schema/Folder.mjs';
+import type { Element as SchemaElement } from '../src/interfaces/schema/Element.mjs';
 
 describe('ViewManager', () => {
   let archimate: Archimate;
@@ -305,5 +310,63 @@ describe('ViewManager', () => {
       const success = archimate.deleteView('non-existent');
       expect(success).toBe(false);
     });
+  });
+});
+
+function savedView(archimate: Archimate, viewId: string): SchemaElement | undefined {
+  const folders = archimate.serialize()['archimate:model'].folder as SchemaFolder | SchemaFolder[];
+  const diagrams = (Array.isArray(folders) ? folders : [folders]).find(folder => folder['@_type'] === 'diagrams');
+  const elements = diagrams?.element;
+  return (Array.isArray(elements) ? elements : elements ? [elements] : []).find(el => el['@_id'] === viewId);
+}
+
+describe('view attributes', () => {
+  it('should save the viewpoint and background passed to createView', () => {
+    const archimate = new Archimate();
+    const view = archimate.createView('Layered', { viewpoint: 'layered', background: 1 });
+
+    const saved = savedView(archimate, view.id);
+    expect(saved?.['@_viewpoint']).toBe('layered');
+    expect(saved?.['@_background']).toBe('1');
+  });
+
+  it('should return the viewpoint and background passed to createView from getView and listViews', () => {
+    const archimate = new Archimate();
+    const view = archimate.createView('Layered', { viewpoint: 'layered', background: 1 });
+
+    expect(archimate.getView(view.id)).toMatchObject({ viewpoint: 'layered', background: 1 });
+    expect(archimate.listViews()[0]).toMatchObject({ viewpoint: 'layered', background: 1 });
+  });
+
+  it('should save the viewpoint of a generated view', () => {
+    const archimate = new Archimate();
+    archimate.upsertElement({ id: 'app-1', type: 'ApplicationComponent', name: 'App' });
+    const view = archimate.generateViewFromElements('Generated', ['app-1'], { viewpoint: 'application_structure' });
+
+    expect(view?.viewpoint).toBe('application_structure');
+    expect(savedView(archimate, view!.id)?.['@_viewpoint']).toBe('application_structure');
+  });
+
+  it('should return loaded view attributes from getView', async () => {
+    const xml = await readFile('tests/fixtures/roundtrip/sketch-and-canvas.archimate', 'utf8');
+    const archimate = new Archimate();
+    archimate.parse(new XMLParser({ ignoreAttributes: false }).parse(xml) as Schema);
+
+    expect(archimate.getView('id-sketch')?.background).toBe(1);
+    expect(archimate.getView('id-canvas')?.connectionRouterType).toBe(2);
+  });
+
+  it('should keep loaded view attributes when the view is edited', async () => {
+    const xml = await readFile('tests/fixtures/roundtrip/sketch-and-canvas.archimate', 'utf8');
+    const archimate = new Archimate();
+    archimate.parse(new XMLParser({ ignoreAttributes: false }).parse(xml) as Schema);
+    archimate.upsertElement({ id: 'app-1', type: 'ApplicationComponent', name: 'App' });
+
+    for (const viewId of ['id-sketch', 'id-canvas']) {
+      archimate.addDiagramObject(viewId, 'app-1', { x: 0, y: 0, width: 120, height: 55 });
+    }
+
+    expect(savedView(archimate, 'id-sketch')?.['@_background']).toBe('1');
+    expect(savedView(archimate, 'id-canvas')?.['@_connectionRouterType']).toBe('2');
   });
 });

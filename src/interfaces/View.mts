@@ -6,7 +6,9 @@ export interface View {
   type: 'ArchimateDiagramModel' | 'SketchModel' | 'CanvasModel';
   documentation?: string;
   viewpoint?: string;
-  background?: string;
+  /** Sketch views: the background (integer code), as Archi writes it. */
+  background?: number;
+  /** Connection router: 0 manual (Archi's default, not written), 2 manhattan. */
   connectionRouterType?: number;
   children?: ViewChild[];
   properties?: Map<string, string>;

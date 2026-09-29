@@ -5,3 +5,4 @@ Unmodified models from the [Archi](https://github.com/archimatetool/archi) test 
 - `Archisurance.archimate` — `tests/com.archimatetool.testsupport/testdata/models/Archisurance.archimate`
 - `test.archimate` — `tests/com.archimatetool.reports.tests/testdata/test.archimate`
 - `testCopySnapshot.archimate` — `tests/com.archimatetool.editor.tests/testdata/models/testCopySnapshot.archimate`
+- `testDeleteHandler.archimate` — `tests/com.archimatetool.editor.tests/testdata/models/testDeleteHandler.archimate`

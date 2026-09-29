@@ -7,6 +7,7 @@ import type { Element } from "./interfaces/Element.mjs";
 import type { Child as SchemaChild } from "./interfaces/schema/Child.mjs";
 import type { Property as SchemaProperty } from "./interfaces/schema/Property.mjs";
 import type { Model } from './interfaces/Model.mjs';
+import type { Folder } from './interfaces/Folder.mjs';
 import type { Child } from './interfaces/Child.mjs';
 import { BoundsMapper } from './BoundMapper.mjs';
 import { SourceConnectionMapper } from './SourceConnectionMapper.mjs';
@@ -55,17 +56,62 @@ export class Serializer {
     const folderModel = this.model[folderKey];
 
     const folder: SchemaFolder = {
-      '@_name': folderType.get(folderKey) ?? 'Unknown Folder',
+      '@_name': folderModel.name || folderType.get(folderKey) || 'Unknown Folder',
       '@_id': folderModel.id,
       '@_type': folderKey,
-      element: [],
     };
+    this.addFolderDetails(folder, folderModel.documentation, folderModel.properties);
 
-    if (Array.isArray(folderModel.elements)) {
-      folder.element = folderModel.elements.map((el) => this.serializeElement(el))
+    const elements = Array.isArray(folderModel.elements) ? folderModel.elements : [];
+    const elementsById = new Map(elements.map((el) => [el.id, el]));
+    const placedIds = new Set<string>();
+
+    if (folderModel.folders && folderModel.folders.length > 0) {
+      folder.folder = folderModel.folders.map((subfolder) => this.serializeFolder(subfolder, elementsById, placedIds));
     }
 
+    // Elements not claimed by a nested folder stay at the top level.
+    folder.element = elements
+      .filter((el) => !placedIds.has(el.id))
+      .map((el) => this.serializeElement(el));
+
     schema['archimate:model'].folder.push(folder);
+  }
+
+  private serializeFolder(folderModel: Folder, elementsById: Map<string, Element>, placedIds: Set<string>): SchemaFolder {
+    const folder: SchemaFolder = {
+      '@_name': folderModel.name,
+      '@_id': folderModel.id,
+    };
+    this.addFolderDetails(folder, folderModel.documentation, folderModel.properties);
+
+    if (folderModel.folders && folderModel.folders.length > 0) {
+      folder.folder = folderModel.folders.map((subfolder) => this.serializeFolder(subfolder, elementsById, placedIds));
+    }
+
+    // Ids of elements that were deleted, moved to another top-level folder, or already placed are skipped.
+    const elements: SchemaElement[] = [];
+    for (const id of folderModel.elementIds || []) {
+      const element = elementsById.get(id);
+      if (!element || placedIds.has(id)) continue;
+      placedIds.add(id);
+      elements.push(this.serializeElement(element));
+    }
+    if (elements.length > 0) {
+      folder.element = elements;
+    }
+
+    return folder;
+  }
+
+  private addFolderDetails(folder: SchemaFolder, documentation?: string, properties?: Map<string, string>): void {
+    if (documentation) {
+      folder.documentation = documentation;
+    }
+
+    if (properties && properties.size > 0) {
+      folder.property = this.serializeProperties(properties);
+    }
   }
 
   private serializeElement(el: Element): SchemaElement {

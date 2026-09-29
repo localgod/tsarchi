@@ -6,7 +6,9 @@ import type { Element as SchemaElement } from "./interfaces/schema/Element.mjs";
 import type { Element } from "./interfaces/Element.mjs";
 import type { Child as SchemaChild } from "./interfaces/schema/Child.mjs";
 import type { Property as SchemaProperty } from "./interfaces/schema/Property.mjs";
-import type { Model } from './interfaces/Model.mjs';
+import type { Model, ModelContent } from './interfaces/Model.mjs';
+import type { Profile } from './interfaces/Profile.mjs';
+import type { Profile as SchemaProfile } from "./interfaces/schema/Profile.mjs";
 import type { Folder } from './interfaces/Folder.mjs';
 import type { Child } from './interfaces/Child.mjs';
 import { BoundsMapper } from './BoundMapper.mjs';
@@ -31,7 +33,10 @@ export class Serializer {
     };
   }
 
-  public serialize(modelMetadata: ModelAttributes | string, xmlMetadata?: XmlMetadata, purpose?: string): ArchimateSchema {
+  /**
+   * @param content Model-level content besides the folders, or just the model's purpose.
+   */
+  public serialize(modelMetadata: ModelAttributes | string, xmlMetadata?: XmlMetadata, content?: ModelContent | string): ArchimateSchema {
     this.modelMetadata = typeof modelMetadata === 'string'
       ? { ...this.modelMetadata, '@_name': modelMetadata }
       : modelMetadata
@@ -39,13 +44,52 @@ export class Serializer {
     const schema: ArchimateSchema = this.createSchemaModel();
 
     Object.keys(this.model).forEach((key) => this.storeFolder(schema, key as keyof Model));
-
-    // Archi writes <purpose> after the folders.
-    if (purpose) {
-      schema['archimate:model'].purpose = purpose;
-    }
+    this.storeModelContent(schema, typeof content === 'string' ? { purpose: content } : content ?? {});
 
     return schema;
+  }
+
+  /**
+   * Writes the model-level content in the order Archi does: after the folders (and any unrecognised content such
+   * as model features), `<property>`, `<purpose>`, `<metadata>` and `<profile>`.
+   */
+  private storeModelContent(schema: ArchimateSchema, content: ModelContent): void {
+    const model = schema['archimate:model'];
+    Object.assign(model, content.unrecognized);
+
+    if (content.properties && content.properties.size > 0) {
+      model.property = this.serializeProperties(content.properties);
+    }
+    if (content.purpose) {
+      model.purpose = content.purpose;
+    }
+    if (content.metadata) {
+      model.metadata = content.metadata.size > 0 ? { entry: this.serializeProperties(content.metadata) } : '';
+    }
+    if (content.profiles && content.profiles.length > 0) {
+      model.profile = content.profiles.map((profile) => this.serializeProfile(profile));
+    }
+  }
+
+  private serializeProfile(profile: Profile): SchemaProfile {
+    const schemaProfile: SchemaProfile = {
+      '@_name': profile.name,
+      '@_id': profile.id,
+    };
+    if (profile.imagePath !== undefined) {
+      schemaProfile['@_imagePath'] = profile.imagePath;
+    }
+    if (profile.specialization !== undefined) {
+      schemaProfile['@_specialization'] = String(profile.specialization);
+    }
+    if (profile.conceptType !== undefined) {
+      schemaProfile['@_conceptType'] = profile.conceptType;
+    }
+    const feature = DiagramAttributeMapper.featuresToSchema(profile.features);
+    if (feature) {
+      schemaProfile.feature = feature;
+    }
+    return schemaProfile;
   }
 
   private createSchemaModel(): ArchimateSchema {
@@ -126,6 +170,10 @@ export class Serializer {
       '@_name': el.name,
       '@_id': el.id,
     };
+
+    if (el.profiles) {
+      element['@_profiles'] = el.profiles;
+    }
 
     if (el.viewpoint !== undefined) {
       element['@_viewpoint'] = el.viewpoint;

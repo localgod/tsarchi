@@ -7,6 +7,7 @@ export type ValidationIssueCode =
   | 'relationship-missing-target'
   | 'diagram-object-missing-element'
   | 'diagram-reference-missing-view'
+  | 'element-missing-profile'
   | 'view-connection-missing-relationship'
   | 'view-connection-missing-source'
   | 'view-connection-missing-target'

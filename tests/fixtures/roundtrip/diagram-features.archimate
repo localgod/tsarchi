@@ -10,10 +10,13 @@
   <folder name="Motivation" id="id-feat-motivation" type="motivation"/>
   <folder name="Implementation &amp; Migration" id="id-feat-implementation" type="implementation_migration"/>
   <folder name="Other" id="id-feat-other" type="other"/>
-  <folder name="Relations" id="id-feat-relations" type="relations"/>
+  <folder name="Relations" id="id-feat-relations" type="relations">
+    <element xsi:type="archimate:AssignmentRelationship" id="id-rel-assignment" source="id-customer" target="id-insurant"/>
+    <element xsi:type="archimate:AssociationRelationship" id="id-rel-association" source="id-insurant" target="id-customer"/>
+  </folder>
   <folder name="Views" id="id-feat-views" type="diagrams">
     <element xsi:type="archimate:ArchimateDiagramModel" name="Styled" id="id-view-styled">
-      <child xsi:type="archimate:DiagramObject" id="id-dmo-customer" fillColor="#ffffb5" archimateElement="id-customer">
+      <child xsi:type="archimate:DiagramObject" id="id-dmo-customer" targetConnections="id-conn-association" fillColor="#ffffb5" archimateElement="id-customer">
         <bounds x="24" y="24" width="120" height="55"/>
         <feature name="iconColor" value="#ff0000"/>
         <feature name="custom" value="kept"/>
@@ -22,9 +25,15 @@
         <feature name="iconVisible" value="2"/>
         <feature name="deriveElementLineColor" value="false"/>
         <feature name="lineStyle" value="1"/>
+        <sourceConnection xsi:type="archimate:Connection" id="id-conn-assignment" source="id-dmo-customer" target="id-dmo-insurant" archimateRelationship="id-rel-assignment">
+          <feature name="textRelativePosition" value="4"/>
+          <feature name="custom" value="kept"/>
+          <feature name="nameVisible" value="false"/>
+        </sourceConnection>
       </child>
-      <child xsi:type="archimate:DiagramObject" id="id-dmo-insurant" archimateElement="id-insurant">
+      <child xsi:type="archimate:DiagramObject" id="id-dmo-insurant" targetConnections="id-conn-assignment" archimateElement="id-insurant">
         <bounds x="204" y="24" width="120" height="55"/>
+        <sourceConnection xsi:type="archimate:Connection" id="id-conn-association" source="id-dmo-insurant" target="id-dmo-customer" archimateRelationship="id-rel-association"/>
       </child>
     </element>
   </folder>

@@ -23,6 +23,17 @@ export interface SourceConnection {
   documentation?: string;
   bendpoints?: ViewBendpoint[];
   properties?: Map<string, string>;
+  /** Whether the name label is shown (feature `nameVisible`); Archi's default is `true`. */
+  nameVisible?: boolean;
+  /**
+   * Position of the name label relative to the line (feature `textRelativePosition`), using draw2d's
+   * `PositionConstants`: 1 north, 2 centre (Archi's default), 4 south, 8 west, 16 east, or a combination.
+   */
+  textRelativePosition?: number;
+  /**
+   * All `<feature>` entries in file order, including the features above. On save, those typed properties
+   * take precedence over the entries of the same name here.
+   */
   features?: Map<string, string>;
   /** Connections that start on this connection, e.g. a relationship drawn onto a relationship. */
   sourceConnection?: SourceConnection | SourceConnection[];

@@ -1,4 +1,6 @@
-import type { Model } from "./interfaces/Model.mjs";
+import type { Model, ModelContent } from "./interfaces/Model.mjs";
+import type { Profile } from "./interfaces/Profile.mjs";
+import type { Profile as SchemaProfile } from "./interfaces/schema/Profile.mjs";
 import type { Schema as ArchimateSchema } from "./interfaces/schema/Schema.mjs";
 import type { Folder as SchemaFolder } from "./interfaces/schema/Folder.mjs";
 import type { Element as SchemaElement } from "./interfaces/schema/Element.mjs";
@@ -24,6 +26,45 @@ export class Parser {
     const data = this.validateInput(input);
     Object.keys(this.model).forEach((key) => this.loadFolder(data, key as keyof Model));
     return this.model;
+  }
+
+  /**
+   * Keys of `<archimate:model>` that are mapped elsewhere: the model attributes, folders and the content below.
+   */
+  private static readonly mappedModelKeys = new Set(['@_name', '@_id', '@_version', 'folder', 'purpose', 'property', 'metadata', 'profile']);
+
+  /**
+   * Reads the model-level content of `<archimate:model>` besides its folders.
+   */
+  public parseModelContent(input: object): ModelContent {
+    const model = this.validateInput(input)['archimate:model'];
+    if (!model) return {};
+
+    const unrecognized = Object.fromEntries(Object.entries(model).filter(([key]) =>
+      !Parser.mappedModelKeys.has(key) && !key.startsWith('@_xmlns:')));
+    const metadata = model.metadata;
+    const content: ModelContent = {
+      purpose: model.purpose !== undefined ? String(model.purpose) : undefined,
+      properties: this.createOptionalPropertiesMap(model),
+      metadata: metadata !== undefined
+        ? this.createPropertiesMap({ property: metadata === '' ? undefined : metadata.entry })
+        : undefined,
+      profiles: model.profile !== undefined ? this.ensureArray(model.profile).map((profile) => this.createProfile(profile)) : undefined,
+      unrecognized: Object.keys(unrecognized).length > 0 ? unrecognized : undefined,
+    };
+    return this.cleanUndefinedProperties(content);
+  }
+
+  private createProfile(schemaProfile: SchemaProfile): Profile {
+    const specialization = schemaProfile['@_specialization'];
+    return this.cleanUndefinedProperties({
+      id: schemaProfile['@_id'],
+      name: schemaProfile['@_name'] ?? '',
+      conceptType: schemaProfile['@_conceptType'],
+      imagePath: schemaProfile['@_imagePath'],
+      specialization: specialization !== undefined ? String(specialization) === 'true' : undefined,
+      features: DiagramAttributeMapper.schemaToFeatures(schemaProfile.feature),
+    } as Profile);
   }
 
   private validateInput(input: object): ArchimateSchema {
@@ -105,6 +146,8 @@ export class Parser {
       child: schemaElement.child ? this.loadChildren(schemaElement.child) : undefined
     };
 
+    const profiles = schemaElement['@_profiles'];
+    if (profiles !== undefined) element.profiles = profiles;
     const viewpoint = schemaElement['@_viewpoint'];
     const background = schemaElement['@_background'];
     const connectionRouterType = schemaElement['@_connectionRouterType'];

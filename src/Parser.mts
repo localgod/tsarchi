@@ -111,6 +111,8 @@ export class Parser {
     if (viewpoint !== undefined) element.viewpoint = viewpoint;
     if (background !== undefined) element.background = Number(background);
     if (connectionRouterType !== undefined) element.connectionRouterType = Number(connectionRouterType);
+    const accessType = schemaElement['@_accessType'];
+    if (accessType !== undefined) element.accessType = Number(accessType);
 
     return element;
   }

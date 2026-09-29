@@ -5,6 +5,7 @@ import { Archimate } from '../src/Archimate.mjs';
 import type { Schema } from '../src/interfaces/schema/Schema.mjs';
 import type { SourceConnection as SchemaSourceConnection } from '../src/interfaces/schema/SourceConnection.mjs';
 import { SourceConnectionMapper } from '../src/SourceConnectionMapper.mjs';
+import type { Child } from '../src/interfaces/Child.mjs';
 
 const fixturesDir = 'tests/fixtures/archi';
 
@@ -28,6 +29,17 @@ function collectSourceConnections(node: unknown, found: Record<string, unknown>[
     }
   }
   return found;
+}
+
+function findChild(archimate: Archimate, viewId: string, id: string): Child | undefined {
+  const search = (children: Child | Child[] | undefined): Child | undefined => {
+    for (const child of Array.isArray(children) ? children : children ? [children] : []) {
+      const found = child.id === id ? child : search(child.child);
+      if (found) return found;
+    }
+    return undefined;
+  };
+  return search(archimate.getElement(viewId)?.child);
 }
 
 describe('Archi-produced models', () => {
@@ -136,5 +148,24 @@ describe('Archi-produced models', () => {
 
     expect(archimate.serialize()['archimate:model']['@_xmlns:canvas']).toBe('http://www.archimatetool.com/archimate/canvas');
     expect(new Archimate().serialize()['archimate:model']).not.toHaveProperty('@_xmlns:canvas');
+  });
+
+  it('should load alternate figures, view references and access types', async () => {
+    const archimate = await parseFixture('Archisurance.archimate');
+
+    expect(findChild(archimate, '3761', '3786')?.figure).toBe(1);
+    expect(findChild(archimate, '3641', '3657')?.model).toBe('3944');
+    expect(archimate.getRelationship('695')?.accessType).toBe(1);
+  });
+
+  it('should load and save the model purpose', async () => {
+    const archimate = await parseFixture('testDeleteHandler.archimate');
+    expect(archimate.getPurpose()).toBe('A variety of testing scenarios');
+
+    archimate.setPurpose('Changed');
+    expect(archimate.serialize()['archimate:model'].purpose).toBe('Changed');
+
+    archimate.setPurpose(undefined);
+    expect(archimate.serialize()['archimate:model']).not.toHaveProperty('purpose');
   });
 });

@@ -14,4 +14,6 @@ export interface Element {
   viewpoint?: string;
   background?: number;
   connectionRouterType?: number;
+  /** AccessRelationship: 0 write (Archi's default, not written), 1 read, 2 unspecified, 3 read/write. */
+  accessType?: number;
 }

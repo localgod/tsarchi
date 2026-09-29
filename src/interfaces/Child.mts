@@ -24,6 +24,10 @@ export interface Child {
   imagePosition?: number;
   locked?: boolean;
   hintTitle?: string
+  /** Alternate figure of an ArchiMate diagram object (XML attribute `type`). */
+  figure?: number;
+  /** Id of the view a DiagramModelReference points to. */
+  model?: string;
   hintContent?: string
   content?: string
   notes?: string

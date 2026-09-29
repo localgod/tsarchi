@@ -27,6 +27,8 @@ export interface Child {
   '@_imagePosition'?: string;
   '@_locked'?: string;
   '@_hintTitle'?: string;
+  '@_type'?: string;
+  '@_model'?: string;
   bounds: Bounds;
   documentation?: string;
   content?: string;

@@ -346,6 +346,14 @@ describe('Archimate', () => {
       expect(archimate.getRelationship('missing')).toBeNull();
     });
 
+    it('should create and update the access type of access relationships', () => {
+      archimate.upsertRelationship({ id: 'access-a-b', name: 'reads', type: 'AccessRelationship', source: 'rel-app-a', target: 'rel-app-b', accessType: 1 });
+      expect(archimate.getRelationship('access-a-b')?.accessType).toBe(1);
+
+      archimate.upsertRelationship({ id: 'access-a-b', name: 'reads', type: 'AccessRelationship', source: 'rel-app-a', target: 'rel-app-b', accessType: 3 });
+      expect(archimate.getRelationship('access-a-b')?.accessType).toBe(3);
+    });
+
     it('should accept junctions as relationship endpoints', () => {
       archimate.upsertElement({ id: 'rel-junction', name: 'Junction', type: 'Junction' });
       archimate.upsertRelationship({ id: 'rel-a-j', name: 'A to J', type: 'FlowRelationship', source: 'rel-app-a', target: 'rel-junction' });

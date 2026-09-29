@@ -15,6 +15,7 @@ This project adheres to [Keep a CHANGELOG](http://keepachangelog.com/)
 - Diagram children now keep the style and content Archi writes for ArchiMate, sketch and canvas views: `lineColor`, `lineWidth`, `lineAlpha`, `font`, `fontColor`, `alpha`, `gradient`, `textPosition`, `borderType`, `borderColor`, `iconColor`, `imagePath`, `imagePosition`, `locked`, `hintTitle`, `hintContent`, `content`, `notes`, properties and features.
 - View connections now keep `name`, the line style (`type` attribute, exposed as `lineStyle`), font, line and text attributes, `locked`, documentation, bendpoints, properties and features.
 - Views keep their `viewpoint`, `background` and `connectionRouterType` attributes.
+- Load and save keep the remaining content Archi writes in its test models ([#386](https://github.com/localgod/tsarchi/issues/386)): the model `<purpose>` (new `getPurpose()` / `setPurpose()`), `accessType` on access relationships (`Element.accessType`, also accepted by `upsertRelationship`), the alternate figure of a diagram object (`type` attribute, exposed as `Child.figure`), and the view a `DiagramModelReference` points to (`Child.model`).
 
 ### Changed
 

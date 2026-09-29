@@ -301,7 +301,7 @@ export class ViewManager {
     return {
       id: element.id,
       name: element.name,
-      type: 'ArchimateDiagramModel',
+      type: element.type as View['type'],
       documentation: element.documentation,
       children: Array.isArray(element.child) ? element.child as ViewChild[] : element.child ? [element.child as ViewChild] : [],
       properties: element.properties

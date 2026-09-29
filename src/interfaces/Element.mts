@@ -10,4 +10,8 @@ export interface Element {
   target?: string;
   child?: Child | Child[];
   properties?: Map<string, string>;
+  /** View attributes */
+  viewpoint?: string;
+  background?: number;
+  connectionRouterType?: number;
 }

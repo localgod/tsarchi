@@ -3,7 +3,7 @@ import type { ViewChild } from './ViewChild.mjs';
 export interface View {
   id: string;
   name: string;
-  type: 'ArchimateDiagramModel';
+  type: 'ArchimateDiagramModel' | 'SketchModel' | 'CanvasModel';
   documentation?: string;
   viewpoint?: string;
   background?: string;

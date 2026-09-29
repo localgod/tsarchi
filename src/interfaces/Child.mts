@@ -7,15 +7,30 @@ export interface Child {
   name?: string;
   targetConnections?: string;
   archimateElement?:string;
+  font?: string
   fontColor?: string
   lineWidth?: number;
+  lineColor?: string
+  lineAlpha?: number;
   textAlignment?: number;
   fillColor?: string
   alpha?: number;
+  gradient?: number;
   textPosition?: number;
   borderType?: number;
+  borderColor?: string
+  iconColor?: string
+  imagePath?: string
+  imagePosition?: number;
+  locked?: boolean;
+  hintTitle?: string
+  hintContent?: string
+  content?: string
+  notes?: string
   bounds: Bounds
   child?:Child[]
   sourceConnection?: SourceConnection | SourceConnection[]
   documentation?:string
+  properties?: Map<string, string>;
+  features?: Map<string, string>;
 }

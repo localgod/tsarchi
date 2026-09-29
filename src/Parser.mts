@@ -8,8 +8,10 @@ import type { Element } from './interfaces/Element.mjs';
 import type { Child } from './interfaces/Child.mjs';
 import type { Folder } from './interfaces/Folder.mjs';
 import type { ArchimateModelType } from './constants/archimate-mappings.mjs';
+import { typeFromXsiType } from './constants/archimate-mappings.mjs';
 import { BoundsMapper } from './BoundMapper.mjs';
 import { SourceConnectionMapper } from './SourceConnectionMapper.mjs';
+import { DiagramAttributeMapper, childAttributes, childTextElements } from './DiagramAttributeMapper.mjs';
 
 export class Parser {
   private model: Model;
@@ -103,11 +105,18 @@ export class Parser {
       child: schemaElement.child ? this.loadChildren(schemaElement.child) : undefined
     };
 
+    const viewpoint = schemaElement['@_viewpoint'];
+    const background = schemaElement['@_background'];
+    const connectionRouterType = schemaElement['@_connectionRouterType'];
+    if (viewpoint !== undefined) element.viewpoint = viewpoint;
+    if (background !== undefined) element.background = Number(background);
+    if (connectionRouterType !== undefined) element.connectionRouterType = Number(connectionRouterType);
+
     return element;
   }
 
   private extractElementType(typeString: string | undefined): string {
-    return typeString ? typeString.replace(/^archimate:/, '') : 'Unknown'
+    return typeString ? typeFromXsiType(typeString) : 'Unknown'
   }
 
   private createOptionalPropertiesMap(source: { property?: SchemaProperty | SchemaProperty[] }): Map<string, string> | undefined {
@@ -134,30 +143,21 @@ export class Parser {
   }
 
   private convertChildElementToChild(schemaChild: SchemaChild): Child {
-    const {
-      '@_id': id,
-      '@_xsi:type': xsiType,
-      '@_name': name,
-      '@_archimateElement': archimateElement,
-      '@_targetConnections': targetConnections,
-      '@_fillColor': fillColor,
-      '@_textAlignment': textAlignment,
-      sourceConnection,
-      bounds,
-      documentation
-    } = schemaChild;
+    const { sourceConnection, bounds } = schemaChild;
 
     const child: Child = {
-      id,
-      type: this.extractElementType(xsiType),
-      name,
-      archimateElement,
-      targetConnections,
-      fillColor,
-      textAlignment: textAlignment ? Number(textAlignment) : undefined,
+      id: schemaChild['@_id'],
+      type: this.extractElementType(schemaChild['@_xsi:type']),
+      ...DiagramAttributeMapper.readAttributes(schemaChild, childAttributes),
       bounds: BoundsMapper.schemaBoundsToBounds(bounds),
       sourceConnection: sourceConnection ? SourceConnectionMapper.schemaToSourceConnections(sourceConnection) : undefined,
-      documentation
+      properties: DiagramAttributeMapper.schemaToProperties(schemaChild.property),
+      features: DiagramAttributeMapper.schemaToFeatures(schemaChild.feature),
+    }
+
+    for (const key of childTextElements) {
+      const value = schemaChild[key];
+      if (value !== undefined) child[key] = String(value);
     }
 
     child.child = schemaChild.child ? this.loadChildren(schemaChild.child) : undefined;

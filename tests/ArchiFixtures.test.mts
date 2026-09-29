@@ -87,4 +87,21 @@ describe('Archi-produced models', () => {
     expect(SourceConnectionMapper.toSchemaSourceConnection({ ...connection, type: 'DiagramModelReference' }))
       .toHaveProperty('@_xsi:type', 'archimate:DiagramModelReference');
   });
+
+  it('should validate sketch and canvas views', async () => {
+    const archimate = await parseFixture('test.archimate');
+    const viewIds = ['ef92f44c-4a53-42d8-86f1-02b43da4f95b', '25d4e8d4-f410-4a1a-bc28-f184d66ea408'];
+
+    expect(archimate.getElement(viewIds[0])?.type).toBe('SketchModel');
+    expect(archimate.getElement(viewIds[1])?.type).toBe('CanvasModel');
+    expect(archimate.validateModel().filter(issue => issue.path.startsWith('folder.diagrams'))).toEqual([]);
+  });
+
+  it('should declare the canvas namespace when a canvas view is added to a model without it', () => {
+    const archimate = new Archimate();
+    archimate.upsertElement({ name: 'Canvas', type: 'CanvasModel' });
+
+    expect(archimate.serialize()['archimate:model']['@_xmlns:canvas']).toBe('http://www.archimatetool.com/archimate/canvas');
+    expect(new Archimate().serialize()['archimate:model']).not.toHaveProperty('@_xmlns:canvas');
+  });
 });

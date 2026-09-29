@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<archimate:model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:archimate="http://www.archimatetool.com/archimate" name="connection to connection" id="id-c2c-model" version="5.0.0">
+  <folder name="Strategy" id="id-c2c-strategy" type="strategy"/>
+  <folder name="Business" id="id-c2c-business" type="business">
+    <element xsi:type="archimate:BusinessActor" name="Clerk" id="id-clerk"/>
+    <element xsi:type="archimate:BusinessRole" name="Cashier" id="id-cashier"/>
+    <element xsi:type="archimate:BusinessObject" name="Contract" id="id-contract"/>
+  </folder>
+  <folder name="Application" id="id-c2c-application" type="application"/>
+  <folder name="Technology &amp; Physical" id="id-c2c-technology" type="technology"/>
+  <folder name="Motivation" id="id-c2c-motivation" type="motivation"/>
+  <folder name="Implementation &amp; Migration" id="id-c2c-implementation" type="implementation_migration"/>
+  <folder name="Other" id="id-c2c-other" type="other"/>
+  <folder name="Relations" id="id-c2c-relations" type="relations">
+    <element xsi:type="archimate:AssignmentRelationship" name="assigned" id="id-assignment" source="id-clerk" target="id-cashier"/>
+    <element xsi:type="archimate:AssociationRelationship" name="from contract" id="id-contract-association" source="id-contract" target="id-assignment"/>
+    <element xsi:type="archimate:AssociationRelationship" name="to contract" id="id-assignment-association" source="id-assignment" target="id-contract"/>
+  </folder>
+  <folder name="Views" id="id-c2c-views" type="diagrams">
+    <element xsi:type="archimate:ArchimateDiagramModel" name="Connection View" id="id-c2c-view">
+      <child xsi:type="archimate:DiagramObject" id="id-clerk-object" archimateElement="id-clerk">
+        <bounds x="40" y="40" width="120" height="55"/>
+        <sourceConnection xsi:type="archimate:Connection" id="id-assignment-connection" targetConnections="id-contract-connection" source="id-clerk-object" target="id-cashier-object" archimateRelationship="id-assignment">
+          <sourceConnection xsi:type="archimate:Connection" id="id-assignment-association-connection" source="id-assignment-connection" target="id-contract-object" archimateRelationship="id-assignment-association"/>
+          <bendpoint startX="10" startY="20" endX="-10" endY="20"/>
+        </sourceConnection>
+      </child>
+      <child xsi:type="archimate:DiagramObject" id="id-cashier-object" targetConnections="id-assignment-connection" archimateElement="id-cashier">
+        <bounds x="280" y="40" width="120" height="55"/>
+      </child>
+      <child xsi:type="archimate:DiagramObject" id="id-contract-object" targetConnections="id-assignment-association-connection" archimateElement="id-contract">
+        <bounds x="160" y="160" width="120" height="55"/>
+        <sourceConnection xsi:type="archimate:Connection" id="id-contract-connection" source="id-contract-object" target="id-assignment-connection" archimateRelationship="id-contract-association"/>
+      </child>
+    </element>
+  </folder>
+</archimate:model>

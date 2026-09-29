@@ -18,8 +18,12 @@ export interface SourceConnection {
   source: string;
   target: string;
   archimateRelationship?: string;
+  /** Space-separated ids of connections that end on this connection. */
+  targetConnections?: string;
   documentation?: string;
   bendpoints?: ViewBendpoint[];
   properties?: Map<string, string>;
   features?: Map<string, string>;
+  /** Connections that start on this connection, e.g. a relationship drawn onto a relationship. */
+  sourceConnection?: SourceConnection | SourceConnection[];
 }

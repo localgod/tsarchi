@@ -370,3 +370,31 @@ describe('view attributes', () => {
     expect(savedView(archimate, 'id-canvas')?.['@_connectionRouterType']).toBe('2');
   });
 });
+
+describe('listViews', () => {
+  async function loadSketchAndCanvas(): Promise<Archimate> {
+    const xml = await readFile('tests/fixtures/roundtrip/sketch-and-canvas.archimate', 'utf8');
+    const archimate = new Archimate();
+    archimate.parse(new XMLParser({ ignoreAttributes: false }).parse(xml) as Schema);
+    return archimate;
+  }
+
+  it('should list sketch and canvas views as well as ArchiMate views', async () => {
+    const archimate = await loadSketchAndCanvas();
+    const view = archimate.createView('ArchiMate');
+
+    expect(archimate.listViews().map(v => [v.id, v.type])).toEqual([
+      ['id-sketch', 'SketchModel'],
+      ['id-canvas', 'CanvasModel'],
+      [view.id, 'ArchimateDiagramModel']
+    ]);
+  });
+
+  it('should filter views by type', async () => {
+    const archimate = await loadSketchAndCanvas();
+    const view = archimate.createView('ArchiMate');
+
+    expect(archimate.listViews({ type: 'ArchimateDiagramModel' }).map(v => v.id)).toEqual([view.id]);
+    expect(archimate.listViews({ type: 'CanvasModel' }).map(v => v.id)).toEqual(['id-canvas']);
+  });
+});

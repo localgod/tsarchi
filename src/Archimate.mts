@@ -506,10 +506,10 @@ export class Archimate {
   }
 
   /**
-   * Lists all views in the model
+   * Lists all views in the model (ArchiMate, sketch and canvas), optionally only those of one type
    */
-  public listViews(): View[] {
-    return this.viewManager.listViews();
+  public listViews(options?: { type?: View['type'] }): View[] {
+    return this.viewManager.listViews(options);
   }
 
   /**

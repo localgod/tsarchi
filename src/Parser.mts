@@ -3,8 +3,10 @@ import type { Schema as ArchimateSchema } from "./interfaces/schema/Schema.mjs";
 import type { Folder as SchemaFolder } from "./interfaces/schema/Folder.mjs";
 import type { Element as SchemaElement } from "./interfaces/schema/Element.mjs";
 import type { Child as SchemaChild } from "./interfaces/schema/Child.mjs";
+import type { Property as SchemaProperty } from "./interfaces/schema/Property.mjs";
 import type { Element } from './interfaces/Element.mjs';
 import type { Child } from './interfaces/Child.mjs';
+import type { Folder } from './interfaces/Folder.mjs';
 import type { ArchimateModelType } from './constants/archimate-mappings.mjs';
 import { BoundsMapper } from './BoundMapper.mjs';
 import { SourceConnectionMapper } from './SourceConnectionMapper.mjs';
@@ -45,16 +47,47 @@ export class Parser {
     const folderModel = this.model[folderKey];
     folderModel.id = folder['@_id'] || '';
     folderModel.name = folder['@_name'] || '';
+    folderModel.documentation = folder.documentation;
+    folderModel.properties = this.createOptionalPropertiesMap(folder);
   }
 
   private processFolderElements(folderKey: keyof Model, folder: SchemaFolder): void {
-    const elements = this.ensureArray(folder.element);
-    this.model[folderKey].elements = elements.map((element: SchemaElement | undefined) => 
+    const elements: Element[] = [];
+    const folders = this.loadSubfolders(folder.folder, elements);
+    elements.push(...this.createElements(folder.element));
+
+    this.model[folderKey].elements = elements;
+    this.model[folderKey].folders = folders.length > 0 ? folders : undefined;
+  }
+
+  /**
+   * Loads nested folders depth-first, collecting their elements into the
+   * top-level folder's flat element list.
+   */
+  private loadSubfolders(schemaFolders: SchemaFolder | SchemaFolder[] | undefined, elements: Element[]): Folder[] {
+    return this.ensureArray(schemaFolders).map((schemaFolder) => {
+      const folders = this.loadSubfolders(schemaFolder.folder, elements);
+      const folderElements = this.createElements(schemaFolder.element);
+      elements.push(...folderElements);
+
+      return this.cleanUndefinedProperties({
+        id: schemaFolder['@_id'] || '',
+        name: schemaFolder['@_name'] || '',
+        documentation: schemaFolder.documentation,
+        properties: this.createOptionalPropertiesMap(schemaFolder),
+        elementIds: folderElements.length > 0 ? folderElements.map((element) => element.id) : undefined,
+        folders: folders.length > 0 ? folders : undefined,
+      } as Folder);
+    });
+  }
+
+  private createElements(schemaElements: SchemaElement | SchemaElement[] | undefined): Element[] {
+    return this.ensureArray(schemaElements).map((element: SchemaElement | undefined) =>
       element ? this.createElement(element) : undefined
     ).filter((el): el is Element => el !== undefined)
   }
 
-  private ensureArray<T>(element: T | T[]): T[] {
+  private ensureArray<T>(element: T | T[] | undefined): T[] {
     return Array.isArray(element) ? element : element ? [element] : [];
   }
 
@@ -77,7 +110,12 @@ export class Parser {
     return typeString ? typeString.replace(/^archimate:/, '') : 'Unknown'
   }
 
-  private createPropertiesMap(element: SchemaElement): Map<string, string> {
+  private createOptionalPropertiesMap(source: { property?: SchemaProperty | SchemaProperty[] }): Map<string, string> | undefined {
+    const properties = this.createPropertiesMap(source);
+    return properties.size > 0 ? properties : undefined;
+  }
+
+  private createPropertiesMap(element: { property?: SchemaProperty | SchemaProperty[] }): Map<string, string> {
     const properties = new Map<string, string>();
     const propsArray = this.ensureArray(element.property);
 

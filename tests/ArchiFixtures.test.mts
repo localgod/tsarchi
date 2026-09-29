@@ -44,6 +44,14 @@ describe('Archi-produced models', () => {
     expect(archimate.validateModel()).toEqual([]);
   });
 
+  it('should accept relationships as relationship endpoints', async () => {
+    const archimate = await parseFixture('testCopySnapshot.archimate');
+    const codes = archimate.validateModel().map(issue => issue.code);
+
+    expect(codes).not.toContain('relationship-missing-source');
+    expect(codes).not.toContain('relationship-missing-target');
+  });
+
   it.each(['Archisurance.archimate', 'test.archimate', 'testCopySnapshot.archimate'])(
     'should parse %s',
     async (name) => {

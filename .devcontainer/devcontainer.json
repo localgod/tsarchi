@@ -3,7 +3,7 @@
 //
 // See https://aka.ms/devcontainer.json for more information.
 {
-	"name": "Gitpod",
+	"name": "tsarchi",
 	// This universal image (~10GB) includes many development tools and languages,
 	// providing a convenient all-in-one development environment.
 	//
@@ -22,7 +22,15 @@
 	"features": {
 		"ghcr.io/devcontainers/features/github-cli:1": {}
 	},
-	"postCreateCommand": "npm install --global @anthropic-ai/claude-code"
+	"postCreateCommand": "npm install --global @anthropic-ai/claude-code && npm install && git config --global alias.st status",
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"usernamehw.errorlens",
+				"oxc.oxc-vscode"
+			]
+		}
+	}
 	// Use "build":
 	// instead of the image to use a Dockerfile to build an image.
 	// "build": {

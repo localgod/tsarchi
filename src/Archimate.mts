@@ -958,11 +958,16 @@ export class Archimate {
   private getSourceConnections(child: StoredViewChild): ViewConnection[] {
     const sourceConnections = child.sourceConnections || [];
     const sourceConnection = (child as Child).sourceConnection;
-    return sourceConnection ? [...sourceConnections, sourceConnection as ViewConnection] : sourceConnections;
+    if (!sourceConnection) return sourceConnections;
+    const parsed = Array.isArray(sourceConnection) ? sourceConnection : [sourceConnection];
+    return [...sourceConnections, ...(parsed as ViewConnection[])];
   }
 
   private getTargetConnectionIds(child: StoredViewChild): string[] {
     if (!child.targetConnections) return [];
-    return Array.isArray(child.targetConnections) ? child.targetConnections : [child.targetConnections];
+    // Archi stores multiple target connections as a single space-separated attribute.
+    return Array.isArray(child.targetConnections)
+      ? child.targetConnections
+      : child.targetConnections.split(/\s+/).filter(Boolean);
   }
 }

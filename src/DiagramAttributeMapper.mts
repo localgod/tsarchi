@@ -34,6 +34,8 @@ export const childAttributes: readonly AttributeSpec[] = [
   ['imagePosition', 'imagePosition', 'number'],
   ['locked', 'locked', 'boolean'],
   ['hintTitle', 'hintTitle', 'string'],
+  ['figure', 'type', 'number'],
+  ['model', 'model', 'string'],
 ];
 
 /**

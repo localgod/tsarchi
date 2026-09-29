@@ -12,4 +12,5 @@ export interface ModelAttributes {
 
 export interface Model extends ModelAttributes {
   folder: Array<Folder>;
+  purpose?: string;
 }

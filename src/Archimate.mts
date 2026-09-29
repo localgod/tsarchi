@@ -33,6 +33,8 @@ export class Archimate {
 
   private name: string
 
+  private purpose?: string
+
   private xmlMetadata: XmlMetadata
 
   private modelMetadata: ModelAttributes
@@ -319,6 +321,7 @@ export class Archimate {
       documentation: relationship.documentation,
       properties: relationship.properties,
     };
+    if (relationship.accessType !== undefined) newRelationship.accessType = relationship.accessType;
     folder.elements.push(newRelationship);
     return newRelationship;
   }
@@ -416,6 +419,8 @@ export class Archimate {
     const parser = new Parser(this.model);
     this.model = parser.parse(input);
     this.name = input['archimate:model']?.['@_name'] || 'Unnamed Model';
+    const purpose = input['archimate:model']?.purpose;
+    this.purpose = purpose !== undefined ? String(purpose) : undefined;
     const defaultModelMetadata = this.defaultModelMetadata();
     this.xmlMetadata = input['?xml'] || this.defaultXmlMetadata();
     const namespaces = Object.fromEntries(
@@ -432,7 +437,21 @@ export class Archimate {
 
   public serialize(): ArchimateSchema {
     const serializer = new Serializer(this.model)
-    return serializer.serialize(this.withRequiredNamespaces(this.modelMetadata), this.xmlMetadata)
+    return serializer.serialize(this.withRequiredNamespaces(this.modelMetadata), this.xmlMetadata, this.purpose)
+  }
+
+  /**
+   * Returns the model's purpose text, if any.
+   */
+  public getPurpose(): string | undefined {
+    return this.purpose;
+  }
+
+  /**
+   * Sets the model's purpose text. Pass undefined or an empty string to remove it.
+   */
+  public setPurpose(purpose: string | undefined): void {
+    this.purpose = purpose || undefined;
   }
 
   /**

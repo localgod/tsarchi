@@ -31,7 +31,7 @@ export class Serializer {
     };
   }
 
-  public serialize(modelMetadata: ModelAttributes | string, xmlMetadata?: XmlMetadata): ArchimateSchema {
+  public serialize(modelMetadata: ModelAttributes | string, xmlMetadata?: XmlMetadata, purpose?: string): ArchimateSchema {
     this.modelMetadata = typeof modelMetadata === 'string'
       ? { ...this.modelMetadata, '@_name': modelMetadata }
       : modelMetadata
@@ -39,6 +39,11 @@ export class Serializer {
     const schema: ArchimateSchema = this.createSchemaModel();
 
     Object.keys(this.model).forEach((key) => this.storeFolder(schema, key as keyof Model));
+
+    // Archi writes <purpose> after the folders.
+    if (purpose) {
+      schema['archimate:model'].purpose = purpose;
+    }
 
     return schema;
   }
@@ -143,6 +148,10 @@ export class Serializer {
     if (el.source && el.target) {
       element['@_source'] = el.source;
       element['@_target'] = el.target;
+    }
+
+    if (el.accessType !== undefined) {
+      element['@_accessType'] = String(el.accessType);
     }
 
     if (el.child) {

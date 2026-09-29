@@ -16,6 +16,7 @@ export interface Element {
   '@_viewpoint'?: string;
   '@_background'?: string;
   '@_connectionRouterType'?: string;
+  '@_accessType'?: string;
   documentation?:string;
   property?: Array<Property> | Property;
   child?: Child | Child[];

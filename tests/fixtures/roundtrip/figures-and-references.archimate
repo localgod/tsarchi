@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<archimate:model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:archimate="http://www.archimatetool.com/archimate" name="figures and references" id="id-fig-model" version="5.0.0">
+  <folder name="Strategy" id="id-fig-strategy" type="strategy"/>
+  <folder name="Business" id="id-fig-business" type="business">
+    <element xsi:type="archimate:BusinessProcess" name="Handle Claim" id="id-process"/>
+    <element xsi:type="archimate:BusinessObject" name="Claim" id="id-claim"/>
+  </folder>
+  <folder name="Application" id="id-fig-application" type="application"/>
+  <folder name="Technology &amp; Physical" id="id-fig-technology" type="technology"/>
+  <folder name="Motivation" id="id-fig-motivation" type="motivation"/>
+  <folder name="Implementation &amp; Migration" id="id-fig-implementation" type="implementation_migration"/>
+  <folder name="Other" id="id-fig-other" type="other"/>
+  <folder name="Relations" id="id-fig-relations" type="relations">
+    <element xsi:type="archimate:AccessRelationship" name="reads" id="id-access-read" source="id-process" target="id-claim" accessType="1"/>
+    <element xsi:type="archimate:AccessRelationship" name="writes" id="id-access-write" source="id-process" target="id-claim"/>
+  </folder>
+  <folder name="Views" id="id-fig-views" type="diagrams">
+    <element xsi:type="archimate:ArchimateDiagramModel" name="Overview" id="id-view-overview">
+      <child xsi:type="archimate:DiagramModelReference" id="id-ref-detail" fillColor="#80ffff" model="id-view-detail">
+        <bounds x="12" y="12" width="120" height="55"/>
+      </child>
+    </element>
+    <element xsi:type="archimate:ArchimateDiagramModel" name="Detail" id="id-view-detail">
+      <child xsi:type="archimate:DiagramObject" id="id-dmo-process" type="1" archimateElement="id-process">
+        <bounds x="24" y="24" width="120" height="55"/>
+      </child>
+    </element>
+  </folder>
+  <purpose>Alternate figures, view references, access types and a model purpose</purpose>
+</archimate:model>

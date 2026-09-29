@@ -246,7 +246,8 @@ export class Archimate {
    *
    * Deleting a model element also removes relationships pointing at it and
    * diagram objects that reference it. Deleting a relationship removes view
-   * connections that reference it.
+   * connections that reference it. Relationships attached to a removed
+   * relationship are removed as well.
    */
   public deleteElement(elementId: string): boolean {
     const location = this.findElementLocationById(elementId);
@@ -257,17 +258,17 @@ export class Archimate {
     this.removeFromNestedFolders(location.folder.folders || [], elementId);
 
     const removedRelationshipIds = new Set<string>();
-    if (location.folderKey !== 'relations') {
-      for (const relationship of this.removeRelationshipsForElement(elementId)) {
-        removedRelationshipIds.add(relationship.id);
-      }
-      for (const relationshipId of removedRelationshipIds) {
-        this.removeViewConnectionsForRelationship(relationshipId);
-      }
-      this.removeDiagramObjectsForElement(elementId);
-    } else {
+    if (location.folderKey === 'relations') {
       removedRelationshipIds.add(deletedElement.id);
-      this.removeViewConnectionsForRelationship(deletedElement.id);
+    }
+    for (const relationship of this.removeRelationshipsForElement(elementId)) {
+      removedRelationshipIds.add(relationship.id);
+    }
+    for (const relationshipId of removedRelationshipIds) {
+      this.removeViewConnectionsForRelationship(relationshipId);
+    }
+    if (location.folderKey !== 'relations') {
+      this.removeDiagramObjectsForElement(elementId);
     }
 
     return true;
@@ -390,7 +391,7 @@ export class Archimate {
       }
     }
 
-    this.validateRelationships(modelElementIds, issues);
+    this.validateRelationships(new Set([...modelElementIds, ...relationshipIds]), issues);
     this.validateViews(modelElementIds, relationshipIds, seenIds, issues);
 
     return issues;
@@ -659,16 +660,30 @@ export class Archimate {
     return updatedElement;
   }
 
+  /**
+   * Removes relationships attached to the element, and transitively any
+   * relationships attached to those relationships.
+   */
   private removeRelationshipsForElement(elementId: string): Element[] {
-    const relationships = this.model.relations.elements || [];
+    const removedIds = new Set([elementId]);
     const removedRelationships: Element[] = [];
+    let remaining = this.model.relations.elements || [];
 
-    this.model.relations.elements = relationships.filter(relationship => {
-      const shouldRemove = relationship.source === elementId || relationship.target === elementId;
-      if (shouldRemove) removedRelationships.push(relationship);
-      return !shouldRemove;
-    });
+    let removedAny = true;
+    while (removedAny) {
+      removedAny = false;
+      remaining = remaining.filter(relationship => {
+        const shouldRemove = [relationship.source, relationship.target].some(id => id !== undefined && removedIds.has(id));
+        if (shouldRemove) {
+          removedIds.add(relationship.id);
+          removedRelationships.push(relationship);
+          removedAny = true;
+        }
+        return !shouldRemove;
+      });
+    }
 
+    this.model.relations.elements = remaining;
     return removedRelationships;
   }
 
@@ -810,7 +825,7 @@ export class Archimate {
 
   private assertRelationshipEndpointExists(elementId: string, endpoint: 'source' | 'target'): void {
     const element = this.getElement(elementId);
-    if (!element || elementTypeToFolderKey.get(element.type) === 'relations') {
+    if (!element || elementTypeToFolderKey.get(element.type) === 'diagrams') {
       throw new Error(`Relationship ${endpoint} element "${elementId}" not found in model.`);
     }
   }
@@ -866,11 +881,14 @@ export class Archimate {
     seenIds.set(id, path);
   }
 
-  private validateRelationships(modelElementIds: Set<string>, issues: ValidationIssue[]): void {
+  /**
+   * Relationship endpoints may be model elements or other relationships (ArchiMate 3).
+   */
+  private validateRelationships(endpointIds: Set<string>, issues: ValidationIssue[]): void {
     for (const [index, relationship] of (this.model.relations.elements || []).entries()) {
       const path = `folder.relations.elements[${index}]`;
 
-      if (relationship.source && !modelElementIds.has(relationship.source)) {
+      if (relationship.source && !endpointIds.has(relationship.source)) {
         issues.push({
           code: 'relationship-missing-source',
           message: `Relationship "${relationship.id}" references missing source element "${relationship.source}".`,
@@ -879,7 +897,7 @@ export class Archimate {
         });
       }
 
-      if (relationship.target && !modelElementIds.has(relationship.target)) {
+      if (relationship.target && !endpointIds.has(relationship.target)) {
         issues.push({
           code: 'relationship-missing-target',
           message: `Relationship "${relationship.id}" references missing target element "${relationship.target}".`,

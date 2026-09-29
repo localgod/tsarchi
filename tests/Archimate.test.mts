@@ -356,6 +356,51 @@ describe('Archimate', () => {
       expect(archimate.validateModel()).toEqual([]);
     });
 
+    it('should accept relationships as relationship endpoints', () => {
+      archimate.upsertRelationship({ id: 'rel-a-b', type: 'AssignmentRelationship', source: 'rel-app-a', target: 'rel-app-b' });
+      archimate.upsertRelationship({ id: 'rel-c-ab', type: 'AssociationRelationship', source: 'rel-app-c', target: 'rel-a-b' });
+      archimate.upsertRelationship({ id: 'rel-cab-a', type: 'AssociationRelationship', source: 'rel-c-ab', target: 'rel-app-a' });
+
+      expect(archimate.getRelationship('rel-c-ab')?.target).toBe('rel-a-b');
+      expect(archimate.getRelationship('rel-cab-a')?.source).toBe('rel-c-ab');
+      expect(archimate.validateModel()).toEqual([]);
+    });
+
+    it('should reject views as relationship endpoints', () => {
+      const view = archimate.createView('Endpoint View');
+
+      expect(() => archimate.upsertRelationship({
+        type: 'AssociationRelationship',
+        source: 'rel-app-a',
+        target: view.id
+      })).toThrowError(`Relationship target element "${view.id}" not found in model.`);
+    });
+
+    it('should delete relationships connected to a deleted relationship', () => {
+      archimate.upsertRelationship({ id: 'rel-a-b', type: 'AssignmentRelationship', source: 'rel-app-a', target: 'rel-app-b' });
+      archimate.upsertRelationship({ id: 'rel-c-ab', type: 'AssociationRelationship', source: 'rel-app-c', target: 'rel-a-b' });
+      archimate.upsertRelationship({ id: 'rel-cab-a', type: 'AssociationRelationship', source: 'rel-c-ab', target: 'rel-app-a' });
+      archimate.upsertRelationship({ id: 'rel-b-c', type: 'FlowRelationship', source: 'rel-app-b', target: 'rel-app-c' });
+
+      expect(archimate.deleteRelationship('rel-a-b')).toBe(true);
+
+      expect(archimate.getRelationship('rel-c-ab')).toBeNull();
+      expect(archimate.getRelationship('rel-cab-a')).toBeNull();
+      expect(archimate.getRelationship('rel-b-c')).not.toBeNull();
+      expect(archimate.validateModel()).toEqual([]);
+    });
+
+    it('should delete relationships attached to relationships of a deleted element', () => {
+      archimate.upsertRelationship({ id: 'rel-a-b', type: 'AssignmentRelationship', source: 'rel-app-a', target: 'rel-app-b' });
+      archimate.upsertRelationship({ id: 'rel-c-ab', type: 'AssociationRelationship', source: 'rel-app-c', target: 'rel-a-b' });
+
+      expect(archimate.deleteElement('rel-app-a')).toBe(true);
+
+      expect(archimate.getRelationship('rel-a-b')).toBeNull();
+      expect(archimate.getRelationship('rel-c-ab')).toBeNull();
+      expect(archimate.validateModel()).toEqual([]);
+    });
+
     it('should generate collision-safe IDs when adding relationships without an ID', () => {
       archimate.upsertRelationship({
         id: 'id-existing-relationship',

@@ -71,6 +71,17 @@ describe('Archimate', () => {
   });
 
   describe('Archimate model type exports', () => {
+    it.each(['Location', 'Grouping'] as const)('should place %s in the other folder', (type) => {
+      archimate.upsertElement({ id: `other-${type}`, name: type, type });
+
+      expect(archimateModelTypes).toContain(type);
+      expect(isArchimateModelType(type)).toBe(true);
+      expect(((archimate as any).model as Model).other.elements).toEqual([
+        expect.objectContaining({ id: `other-${type}`, type })
+      ]);
+      expect(archimate.validateModel()).toEqual([]);
+    });
+
     it('should expose supported model types and a type guard', () => {
       const elementType: ArchimateElementType = 'BusinessActor';
       const relationshipType: ArchimateRelationshipType = 'FlowRelationship';

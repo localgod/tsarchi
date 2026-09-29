@@ -39,6 +39,11 @@ describe('Archi-produced models', () => {
     }
   );
 
+  it('should recognise Location as an element type', async () => {
+    const archimate = await parseFixture('test.archimate');
+    expect(archimate.validateModel()).toEqual([]);
+  });
+
   it.each(['Archisurance.archimate', 'test.archimate', 'testCopySnapshot.archimate'])(
     'should parse %s',
     async (name) => {

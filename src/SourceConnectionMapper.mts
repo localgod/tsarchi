@@ -1,6 +1,6 @@
 import type { SourceConnection as SchemaSourceConnection } from "./interfaces/schema/SourceConnection.mjs";
 import type { SourceConnection } from './interfaces/SourceConnection.mjs';
-import { DiagramAttributeMapper, connectionAttributes } from './DiagramAttributeMapper.mjs';
+import { DiagramAttributeMapper, connectionAttributes, connectionFeatures } from './DiagramAttributeMapper.mjs';
 import { toXsiType, typeFromXsiType } from './constants/archimate-mappings.mjs';
 
 /**
@@ -30,7 +30,10 @@ export class SourceConnectionMapper {
     const properties = DiagramAttributeMapper.schemaToProperties(b.property);
     if (properties) connection.properties = properties;
     const features = DiagramAttributeMapper.schemaToFeatures(b.feature);
-    if (features) connection.features = features;
+    if (features) {
+      Object.assign(connection, DiagramAttributeMapper.readFeatures(features, connectionFeatures));
+      connection.features = features;
+    }
     if (b.sourceConnection) {
       connection.sourceConnection = SourceConnectionMapper.schemaToSourceConnections(b.sourceConnection);
     }
@@ -50,7 +53,9 @@ export class SourceConnectionMapper {
     if (bendpoint) connection.bendpoint = bendpoint;
     const property = DiagramAttributeMapper.propertiesToSchema(b.properties);
     if (property) connection.property = property;
-    const feature = DiagramAttributeMapper.featuresToSchema(b.features);
+    const feature = DiagramAttributeMapper.featuresToSchema(
+      DiagramAttributeMapper.writeFeatures(b, b.features, connectionFeatures),
+    );
     if (feature) connection.feature = feature;
     if (b.sourceConnection) {
       connection.sourceConnection = SourceConnectionMapper.toSchemaSourceConnections(b.sourceConnection);

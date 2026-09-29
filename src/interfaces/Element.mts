@@ -10,6 +10,8 @@ export interface Element {
   target?: string;
   child?: Child | Child[];
   properties?: Map<string, string>;
+  /** Space-separated ids of the model profiles (specializations) applied to this element or relationship. */
+  profiles?: string;
   /** View attributes */
   viewpoint?: string;
   background?: number;

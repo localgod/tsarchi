@@ -7,3 +7,4 @@ Unmodified models from the [Archi](https://github.com/archimatetool/archi) test 
 - `testCopySnapshot.archimate` — `tests/com.archimatetool.editor.tests/testdata/models/testCopySnapshot.archimate`
 - `testDeleteHandler.archimate` — `tests/com.archimatetool.editor.tests/testdata/models/testDeleteHandler.archimate`
 - `Archisurance-xmlexchange.archimate` — `tests/org.opengroup.archimate.xmlexchange.tests/testdata/Archisurance.archimate`
+- `modelimporter-test.archimate` — `tests/com.archimatetool.modelimporter.tests/testdata/test.archimate`

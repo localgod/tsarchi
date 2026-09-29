@@ -65,6 +65,15 @@ export const connectionAttributes: readonly AttributeSpec[] = [
 ];
 
 /**
+ * Settings Archi stores on view connections as `<feature name="…" value="…"/>` (`FEATURE_*` constants in Archi's
+ * `IDiagramModelConnection.java`). The spec's second entry is the feature name.
+ */
+export const connectionFeatures: readonly AttributeSpec[] = [
+  ['nameVisible', 'nameVisible', 'boolean'],
+  ['textRelativePosition', 'textRelativePosition', 'number'],
+];
+
+/**
  * Text content Archi writes as child elements rather than attributes.
  */
 export const childTextElements = ['documentation', 'content', 'notes', 'hintContent'] as const;

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<archimate:model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:archimate="http://www.archimatetool.com/archimate" name="model content" id="id-content-model" version="5.0.0">
+  <folder name="Strategy" id="id-content-strategy" type="strategy"/>
+  <folder name="Business" id="id-content-business" type="business">
+    <element xsi:type="archimate:BusinessActor" name="Customer" id="id-customer" profiles="id-profile-premium"/>
+    <element xsi:type="archimate:BusinessRole" name="Insurant" id="id-insurant"/>
+  </folder>
+  <folder name="Application" id="id-content-application" type="application"/>
+  <folder name="Technology &amp; Physical" id="id-content-technology" type="technology"/>
+  <folder name="Motivation" id="id-content-motivation" type="motivation"/>
+  <folder name="Implementation &amp; Migration" id="id-content-implementation" type="implementation_migration"/>
+  <folder name="Other" id="id-content-other" type="other"/>
+  <folder name="Relations" id="id-content-relations" type="relations">
+    <element xsi:type="archimate:AssignmentRelationship" id="id-rel-assignment" profiles="id-profile-contract" source="id-customer" target="id-insurant"/>
+  </folder>
+  <folder name="Views" id="id-content-views" type="diagrams"/>
+  <feature name="modelFeature" value="kept"/>
+  <property key="Owner" value="Enterprise Architecture"/>
+  <property key="Status" value="Draft"/>
+  <purpose>Model-level content from archimate.ecore.</purpose>
+  <metadata>
+    <entry key="schema" value="Dublin Core"/>
+    <entry key="creator" value="tsarchi"/>
+  </metadata>
+  <profile name="Premium" id="id-profile-premium" imagePath="images/premium.png" conceptType="BusinessActor">
+    <feature name="profileFeature" value="kept"/>
+  </profile>
+  <profile name="Contract" id="id-profile-contract" conceptType="AssignmentRelationship"/>
+  <profile name="Draft" id="id-profile-draft" specialization="false" conceptType="BusinessRole"/>
+</archimate:model>

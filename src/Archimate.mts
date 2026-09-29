@@ -1,4 +1,5 @@
-import type { Model, FolderKey } from './interfaces/Model.mjs';
+import type { Model, FolderKey, ModelContent } from './interfaces/Model.mjs';
+import type { Profile } from './interfaces/Profile.mjs';
 import type { Schema as ArchimateSchema } from './interfaces/schema/Schema.mjs';
 import type { ModelAttributes } from './interfaces/schema/Model.mjs';
 import type { XmlMetadata } from './interfaces/schema/XmlMetadata.mjs';
@@ -45,7 +46,8 @@ export class Archimate {
 
   private name: string
 
-  private purpose?: string
+  /** Model-level content besides the folders: purpose, properties, metadata, profiles and unrecognised content. */
+  private content: ModelContent
 
   private xmlMetadata: XmlMetadata
 
@@ -57,6 +59,7 @@ export class Archimate {
 
   public constructor() {
     this.name = ''
+    this.content = {}
     this.xmlMetadata = this.defaultXmlMetadata()
     this.modelMetadata = this.defaultModelMetadata()
     this.model = this.init()
@@ -103,10 +106,11 @@ export class Archimate {
 
   /**
    * Returns true when an ID is already used by the model, folders, views,
-   * diagram children, or view connections.
+   * diagram children, view connections or profiles.
    */
   public hasId(id: string): boolean {
     if (!id) return false;
+    if (this.content.profiles?.some(profile => profile.id === id)) return true;
 
     for (const folderKey of Object.keys(this.model) as FolderKey[]) {
       const folder = this.model[folderKey];
@@ -343,6 +347,7 @@ export class Archimate {
       properties: relationship.properties,
     };
     if (relationship.accessType !== undefined) newRelationship.accessType = relationship.accessType;
+    if (relationship.profiles !== undefined) newRelationship.profiles = relationship.profiles;
     folder.elements.push(newRelationship);
     return newRelationship;
   }
@@ -402,6 +407,12 @@ export class Archimate {
     const modelElementIds = new Set<string>();
     const relationshipIds = new Set<string>();
 
+    const profileIds = new Set<string>();
+    for (const [index, profile] of (this.content.profiles || []).entries()) {
+      this.recordId(profile.id, `profiles[${index}]`, seenIds, issues);
+      profileIds.add(profile.id);
+    }
+
     for (const folderKey of Object.keys(this.model) as FolderKey[]) {
       const folder = this.model[folderKey];
       this.recordId(folder.id, `folder.${folderKey}`, seenIds, issues);
@@ -410,6 +421,7 @@ export class Archimate {
       for (const [index, element] of (folder.elements || []).entries()) {
         const path = `folder.${folderKey}.elements[${index}]`;
         this.validateElementFields(element, path, issues);
+        this.validateElementProfiles(element, path, profileIds, issues);
         this.recordId(element.id, path, seenIds, issues);
 
         if (folderKey === 'relations') {
@@ -440,8 +452,7 @@ export class Archimate {
     const parser = new Parser(this.model);
     this.model = parser.parse(input);
     this.name = input['archimate:model']?.['@_name'] || 'Unnamed Model';
-    const purpose = input['archimate:model']?.purpose;
-    this.purpose = purpose !== undefined ? String(purpose) : undefined;
+    this.content = parser.parseModelContent(input);
     const defaultModelMetadata = this.defaultModelMetadata();
     this.xmlMetadata = input['?xml'] || this.defaultXmlMetadata();
     const namespaces = Object.fromEntries(
@@ -458,21 +469,72 @@ export class Archimate {
 
   public serialize(): ArchimateSchema {
     const serializer = new Serializer(this.model)
-    return serializer.serialize(this.withRequiredNamespaces(this.modelMetadata), this.xmlMetadata, this.purpose)
+    return serializer.serialize(this.withRequiredNamespaces(this.modelMetadata), this.xmlMetadata, this.content)
   }
 
   /**
    * Returns the model's purpose text, if any.
    */
   public getPurpose(): string | undefined {
-    return this.purpose;
+    return this.content.purpose;
   }
 
   /**
    * Sets the model's purpose text. Pass undefined or an empty string to remove it.
    */
   public setPurpose(purpose: string | undefined): void {
-    this.purpose = purpose || undefined;
+    this.content.purpose = purpose || undefined;
+  }
+
+  /**
+   * Returns a copy of the model's own properties, in file order.
+   */
+  public getProperties(): Map<string, string> {
+    return new Map(this.content.properties);
+  }
+
+  /**
+   * Replaces the model's own properties. Pass undefined or an empty map to remove them.
+   */
+  public setProperties(properties: Map<string, string> | undefined): void {
+    this.content.properties = properties && properties.size > 0 ? new Map(properties) : undefined;
+  }
+
+  /**
+   * Returns a copy of the entries of the model's `<metadata>`, in file order.
+   */
+  public getMetadata(): Map<string, string> {
+    return new Map(this.content.metadata);
+  }
+
+  /**
+   * Replaces the entries of the model's `<metadata>`. Pass undefined to remove the element; an empty map
+   * writes an empty `<metadata/>`.
+   */
+  public setMetadata(metadata: Map<string, string> | undefined): void {
+    this.content.metadata = metadata ? new Map(metadata) : undefined;
+  }
+
+  /**
+   * Returns the specializations defined on the model, in file order.
+   */
+  public getProfiles(): Profile[] {
+    return [...(this.content.profiles ?? [])];
+  }
+
+  /**
+   * Returns the profile with the given id, or null.
+   */
+  public getProfile(profileId: string): Profile | null {
+    return this.content.profiles?.find(profile => profile.id === profileId) ?? null;
+  }
+
+  /**
+   * Replaces the specializations defined on the model. Elements and relationships refer to them by id through
+   * `Element.profiles`; validateModel() reports references to profiles that do not exist.
+   */
+  public setProfiles(profiles: Profile[] | undefined): void {
+    this.content.profiles = profiles && profiles.length > 0 ? [...profiles] : undefined;
   }
 
   /**
@@ -1024,6 +1086,19 @@ export class Archimate {
         path,
         id: element.id,
       });
+    }
+  }
+
+  private validateElementProfiles(element: Element, path: string, profileIds: Set<string>, issues: ValidationIssue[]): void {
+    for (const profileId of (element.profiles || '').split(' ').filter(Boolean)) {
+      if (!profileIds.has(profileId)) {
+        issues.push({
+          code: 'element-missing-profile',
+          message: `Element "${element.id || path}" references missing profile "${profileId}".`,
+          path,
+          id: element.id,
+        });
+      }
     }
   }
 

@@ -174,6 +174,17 @@ model.upsertRelationship({
 
 The model's purpose text is available through `model.getPurpose()` and `model.setPurpose(text)`.
 
+Model-level properties, metadata and specializations (profiles) are available the same way:
+
+```typescript
+model.setProperties(new Map([["Owner", "Enterprise Architecture"]]));
+model.setMetadata(new Map([["creator", "tsarchi"]]));
+model.setProfiles([{ id: "profile-id", name: "Premium", conceptType: "BusinessActor" }]);
+model.updateElement("element-id", { profiles: "profile-id" });
+```
+
+Anything else on the model that TSArchi does not recognise, such as model features, is kept and written back unchanged.
+
 #### Available Element Types
 
 TSArchi supports all standard ArchiMate element types organized by layers:
@@ -307,7 +318,7 @@ TSArchi includes robust error handling:
 - Missing or malformed bounds data defaults to zero values
 - Duplicate elements are handled gracefully with upsert operations
 - View operations validate element and relationship existence
-- Models are validated before saving to catch duplicate IDs, unknown types, broken relationships, and broken view references
+- Models are validated before saving to catch duplicate IDs, unknown types, broken relationships, broken view references, and references to missing profiles
 
 ```typescript
 const issues = model.validateModel();

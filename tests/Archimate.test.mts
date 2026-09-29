@@ -12,7 +12,8 @@ import type { Model } from '../src/interfaces/Model.mjs';
 vi.mock('../src/Parser.mjs', () => ({
   Parser: vi.fn().mockImplementation(function() {
     return {
-      parse: vi.fn().mockReturnValue({ mockFolder: { elements: [] } })
+      parse: vi.fn().mockReturnValue({ mockFolder: { elements: [] } }),
+      parseModelContent: vi.fn().mockReturnValue({})
     };
   })
 }));

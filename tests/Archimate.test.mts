@@ -346,6 +346,16 @@ describe('Archimate', () => {
       expect(archimate.getRelationship('missing')).toBeNull();
     });
 
+    it('should accept junctions as relationship endpoints', () => {
+      archimate.upsertElement({ id: 'rel-junction', name: 'Junction', type: 'Junction' });
+      archimate.upsertRelationship({ id: 'rel-a-j', name: 'A to J', type: 'FlowRelationship', source: 'rel-app-a', target: 'rel-junction' });
+      archimate.upsertRelationship({ id: 'rel-j-b', name: 'J to B', type: 'FlowRelationship', source: 'rel-junction', target: 'rel-app-b' });
+
+      expect(((archimate as any).model as Model).other.elements).toEqual([expect.objectContaining({ id: 'rel-junction' })]);
+      expect(archimate.getRelationship('rel-junction')).toBeNull();
+      expect(archimate.validateModel()).toEqual([]);
+    });
+
     it('should generate collision-safe IDs when adding relationships without an ID', () => {
       archimate.upsertRelationship({
         id: 'id-existing-relationship',
@@ -553,9 +563,10 @@ describe('Archimate', () => {
       archimate.upsertElement({ id: 'unnamed-app-a', name: 'App A', type: 'ApplicationComponent' });
       archimate.upsertElement({ id: 'unnamed-app-b', name: 'App B', type: 'ApplicationComponent' });
       const model = (archimate as any).model as Model;
+      model.other.elements = [{ id: 'unnamed-junction', type: 'Junction' } as any];
       model.relations.elements = [
-        { id: 'unnamed-junction', type: 'Junction' } as any,
-        { id: 'unnamed-rel', type: 'FlowRelationship', source: 'unnamed-app-a', target: 'unnamed-app-b' } as any
+        { id: 'unnamed-rel', type: 'FlowRelationship', source: 'unnamed-app-a', target: 'unnamed-junction' } as any,
+        { id: 'unnamed-rel-2', type: 'FlowRelationship', source: 'unnamed-junction', target: 'unnamed-app-b' } as any
       ];
 
       expect(archimate.validateModel()).toEqual([]);

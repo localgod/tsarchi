@@ -163,7 +163,13 @@ model.deleteRelationship(relationship.id);
 Access relationships keep Archi's `accessType` (0 write, 1 read, 2 unspecified, 3 read/write):
 
 ```typescript
-model.upsertRelationship({ name: "reads", type: "AccessRelationship", source: "process-id", target: "object-id", accessType: 1 });
+model.upsertRelationship({
+  name: "reads",
+  type: "AccessRelationship",
+  source: "process-id",
+  target: "object-id",
+  accessType: 1,
+});
 ```
 
 The model's purpose text is available through `model.getPurpose()` and `model.setPurpose(text)`.

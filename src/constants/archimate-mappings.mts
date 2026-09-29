@@ -84,6 +84,10 @@ export const archimateOtherElementTypes = [
   'Grouping',
 ] as const;
 
+export const archimateConnectorTypes = [
+  'Junction',
+] as const;
+
 export const archimateRelationshipTypes = [
   'AssignmentRelationship',
   'AssociationRelationship',
@@ -96,7 +100,6 @@ export const archimateRelationshipTypes = [
   'RealizationRelationship',
   'UsedByRelationship',
   'InfluenceRelationship',
-  'Junction',
   'SpecializationRelationship',
   'RepresentationRelationship',
   'MaterialRelationship',
@@ -165,6 +168,7 @@ export const archimateModelTypes = [
   ...archimateMotivationElementTypes,
   ...archimateImplementationMigrationElementTypes,
   ...archimateOtherElementTypes,
+  ...archimateConnectorTypes,
   ...archimateRelationshipTypes,
   ...archimateRelationshipAliasTypes,
   ...archimateViewTypes,
@@ -177,6 +181,7 @@ export type ArchimateTechnologyElementType = typeof archimateTechnologyElementTy
 export type ArchimateMotivationElementType = typeof archimateMotivationElementTypes[number];
 export type ArchimateImplementationMigrationElementType = typeof archimateImplementationMigrationElementTypes[number];
 export type ArchimateOtherElementType = typeof archimateOtherElementTypes[number];
+export type ArchimateConnectorType = typeof archimateConnectorTypes[number];
 export type ArchimateRelationshipType = typeof archimateRelationshipTypes[number];
 export type ArchimateRelationshipAliasType = typeof archimateRelationshipAliasTypes[number];
 export type ArchimateViewType = typeof archimateViewTypes[number];
@@ -189,7 +194,8 @@ export type ArchimateElementType =
   | ArchimateTechnologyElementType
   | ArchimateMotivationElementType
   | ArchimateImplementationMigrationElementType
-  | ArchimateOtherElementType;
+  | ArchimateOtherElementType
+  | ArchimateConnectorType;
 export type ArchimateModelType =
   | ArchimateElementType
   | ArchimateRelationshipType
@@ -236,6 +242,7 @@ const elementTypeFolderEntries = [
 
   // Other
   ...archimateOtherElementTypes.map(type => [type, 'other'] as const),
+  ...archimateConnectorTypes.map(type => [type, 'other'] as const),
 
   // Relationships
   ...archimateRelationshipTypes.map(type => [type, 'relations'] as const),

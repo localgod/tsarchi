@@ -52,6 +52,18 @@ describe('Archi-produced models', () => {
     expect(codes).not.toContain('relationship-missing-target');
   });
 
+  it('should keep connections nested in connections', async () => {
+    const archimate = await parseFixture('testCopySnapshot.archimate');
+    const codes = archimate.validateModel().map(issue => issue.code);
+    const connections = collectSourceConnections(archimate.serialize());
+
+    expect(codes).not.toContain('view-connection-missing-source');
+    expect(codes).not.toContain('view-connection-missing-target');
+    expect(codes).not.toContain('view-target-connection-missing-source');
+    expect(connections.map(connection => connection['@_id'])).toEqual(expect.arrayContaining(['49ca207a', '095aa391']));
+    expect(connections.find(connection => connection['@_id'] === '9f83beb6')?.['@_targetConnections']).toBe('70635c80');
+  });
+
   it.each(['Archisurance.archimate', 'test.archimate', 'testCopySnapshot.archimate'])(
     'should parse %s',
     async (name) => {

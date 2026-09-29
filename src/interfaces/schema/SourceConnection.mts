@@ -9,6 +9,7 @@ export interface SourceConnection {
   '@_source': string;
   '@_target': string;
   '@_archimateRelationship'?: string;
+  '@_targetConnections'?: string;
   '@_type'?: string;
   '@_font'?: string;
   '@_fontColor'?: string;
@@ -21,4 +22,5 @@ export interface SourceConnection {
   bendpoint?: Bendpoint | Bendpoint[];
   property?: Property | Property[];
   feature?: Feature | Feature[];
+  sourceConnection?: SourceConnection | SourceConnection[];
 }

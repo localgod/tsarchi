@@ -31,6 +31,9 @@ export class SourceConnectionMapper {
     if (properties) connection.properties = properties;
     const features = DiagramAttributeMapper.schemaToFeatures(b.feature);
     if (features) connection.features = features;
+    if (b.sourceConnection) {
+      connection.sourceConnection = SourceConnectionMapper.schemaToSourceConnections(b.sourceConnection);
+    }
     return connection;
   }
 
@@ -49,6 +52,9 @@ export class SourceConnectionMapper {
     if (property) connection.property = property;
     const feature = DiagramAttributeMapper.featuresToSchema(b.features);
     if (feature) connection.feature = feature;
+    if (b.sourceConnection) {
+      connection.sourceConnection = SourceConnectionMapper.toSchemaSourceConnections(b.sourceConnection);
+    }
     if (b.implicitType && b.type === DEFAULT_CONNECTION_TYPE) {
       return connection;
     }

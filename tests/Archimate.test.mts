@@ -168,6 +168,39 @@ describe('Archimate', () => {
       randomSpy.mockRestore();
     });
 
+    it('should add unnamed junctions with different ids as separate elements', () => {
+      archimate.upsertElement({ id: 'j1', name: '', type: 'Junction', junctionType: 'or' });
+      archimate.upsertElement({ id: 'j2', name: '', type: 'Junction' });
+
+      expect(archimate.getElement('j1')?.junctionType).toBe('or');
+      expect(archimate.getElement('j2')).not.toBeNull();
+      expect(archimate.getElement('j2')?.junctionType).toBeUndefined();
+    });
+
+    it('should add unnamed elements without an id as separate elements', () => {
+      archimate.upsertElement({ name: '', type: 'Junction' });
+      archimate.upsertElement({ name: '', type: 'Junction' });
+
+      expect(archimate.findElementsByType('Junction')).toHaveLength(2);
+    });
+
+    it('should match on id when one is given', () => {
+      archimate.upsertElement({ id: 'app-1', name: 'App', type: 'ApplicationComponent' });
+      archimate.upsertElement({ id: 'app-2', name: 'App', type: 'ApplicationComponent' });
+      archimate.upsertElement({ id: 'app-1', name: 'Renamed', type: 'ApplicationComponent' });
+
+      expect(archimate.getElement('app-1')?.name).toBe('Renamed');
+      expect(archimate.getElement('app-2')?.name).toBe('App');
+      expect(archimate.findElementsByType('ApplicationComponent')).toHaveLength(2);
+    });
+
+    it('should throw when the id is used by something else', () => {
+      archimate.upsertElement({ id: 'shared-id', name: 'Actor', type: 'BusinessActor' });
+
+      expect(() => archimate.upsertElement({ id: 'shared-id', name: 'App', type: 'ApplicationComponent' }))
+        .toThrowError('ID "shared-id" is already in use.');
+    });
+
   });
 
   describe('findElementInFolderByName()', () => {

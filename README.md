@@ -286,7 +286,7 @@ model.updateDiagramObjectStyle("view-id", "object-id", {
   textAlignment: 2,
 });
 
-// Delete a view
+// Delete a view, and the references to it in other views
 model.deleteView("view-id");
 ```
 

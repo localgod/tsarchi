@@ -29,6 +29,18 @@ type StoredViewConnection = ViewConnection & {
   sourceConnection?: StoredViewConnection | StoredViewConnection[];
 };
 
+/**
+ * Ids a view's children and connections are checked against in validateModel.
+ */
+type ViewValidationIds = {
+  modelElementIds: Set<string>;
+  relationshipIds: Set<string>;
+  viewIds: Set<string>;
+  /** Diagram objects and connections in the view, which connections can start or end on. */
+  endpointIds: Set<string>;
+  connectionIds: Set<string>;
+};
+
 export class Archimate {
 
   private name: string
@@ -573,10 +585,13 @@ export class Archimate {
   }
 
   /**
-   * Removes a view from the model
+   * Removes a view from the model, together with the diagram model references to it in other views
+   * and the connections attached to those references, as Archi does.
    */
   public deleteView(viewId: string): boolean {
-    return this.viewManager.deleteView(viewId);
+    if (!this.viewManager.deleteView(viewId)) return false;
+    this.removeDiagramModelReferences(viewId);
+    return true;
   }
 
   /**
@@ -718,6 +733,57 @@ export class Archimate {
       const children = (Array.isArray(viewElement.child) ? viewElement.child : [viewElement.child]) as StoredViewChild[];
       viewElement.child = this.removeDiagramObjectsFromChildren(children, elementId) as Child[];
     }
+  }
+
+  private removeDiagramModelReferences(viewId: string): void {
+    for (const viewElement of this.model.diagrams.elements || []) {
+      if (!viewElement.child) continue;
+
+      const children = (Array.isArray(viewElement.child) ? viewElement.child : [viewElement.child]) as StoredViewChild[];
+      const removedIds = new Set<string>();
+      const keptChildren = this.removeDiagramModelReferencesFromChildren(children, viewId, removedIds);
+      if (removedIds.size === 0) continue;
+
+      viewElement.child = keptChildren as Child[];
+      // Connections from other objects to a removed reference go with it, as do connections attached to those.
+      while (this.removeViewConnectionsFromChildren(keptChildren, new Set(), removedIds));
+      this.removeTargetConnectionReferences(keptChildren, removedIds);
+    }
+  }
+
+  /**
+   * Removes references to the view at any depth, collecting the ids of the removed references and their connections.
+   */
+  private removeDiagramModelReferencesFromChildren(
+    children: StoredViewChild[],
+    viewId: string,
+    removedIds: Set<string>,
+  ): StoredViewChild[] {
+    const keptChildren: StoredViewChild[] = [];
+
+    for (const child of children) {
+      if (child.type === 'DiagramModelReference' && child.model === viewId) {
+        removedIds.add(child.id);
+        for (const connection of this.getAllSourceConnections(child)) {
+          removedIds.add(connection.id);
+        }
+        continue;
+      }
+
+      const nested = this.getNestedChildren(child);
+      if (nested.length > 0) {
+        const keptNested = this.removeDiagramModelReferencesFromChildren(nested, viewId, removedIds);
+        if (keptNested.length === 0 && Array.isArray(child.child)) {
+          delete child.child;
+        } else if (keptNested.length !== nested.length) {
+          this.updateNestedChildren(child, keptNested);
+        }
+      }
+
+      keptChildren.push(child);
+    }
+
+    return keptChildren;
   }
 
   private removeDiagramObjectsFromChildren(children: StoredViewChild[], elementId: string): StoredViewChild[] {
@@ -1017,6 +1083,8 @@ export class Archimate {
     seenIds: Map<string, string>,
     issues: ValidationIssue[]
   ): void {
+    const viewIds = new Set((this.model.diagrams.elements || []).map(view => view.id));
+
     for (const [viewIndex, viewElement] of (this.model.diagrams.elements || []).entries()) {
       const viewPath = `folder.diagrams.elements[${viewIndex}]`;
       if (!viewElement.child) continue;
@@ -1028,7 +1096,7 @@ export class Archimate {
       this.collectViewIds(children, viewPath, childIds, connectionIds, seenIds, issues);
       // Connections can start or end on other connections, e.g. a relationship drawn onto a relationship.
       const endpointIds = new Set([...childIds, ...connectionIds]);
-      this.validateViewChildren(children, viewPath, modelElementIds, relationshipIds, endpointIds, connectionIds, issues);
+      this.validateViewChildren(children, viewPath, { modelElementIds, relationshipIds, viewIds, endpointIds, connectionIds }, issues);
     }
   }
 
@@ -1061,12 +1129,10 @@ export class Archimate {
   private validateViewChildren(
     children: StoredViewChild[],
     path: string,
-    modelElementIds: Set<string>,
-    relationshipIds: Set<string>,
-    endpointIds: Set<string>,
-    connectionIds: Set<string>,
+    ids: ViewValidationIds,
     issues: ValidationIssue[]
   ): void {
+    const { modelElementIds, relationshipIds, viewIds, endpointIds, connectionIds } = ids;
     for (const [index, child] of children.entries()) {
       const childPath = `${path}.children[${index}]`;
 
@@ -1079,6 +1145,15 @@ export class Archimate {
         });
       }
 
+      if (child.type === 'DiagramModelReference' && child.model && !viewIds.has(child.model)) {
+        issues.push({
+          code: 'diagram-reference-missing-view',
+          message: `Diagram model reference "${child.id}" references missing view "${child.model}".`,
+          path: childPath,
+          id: child.id,
+        });
+      }
+
       for (const connection of this.getAllSourceConnections(child)) {
         this.validateViewConnection(connection, childPath, relationshipIds, endpointIds, issues);
         this.validateTargetConnections(connection, 'View connection', childPath, connectionIds, issues);
@@ -1086,15 +1161,7 @@ export class Archimate {
 
       this.validateTargetConnections(child, 'Diagram object', childPath, connectionIds, issues);
 
-      this.validateViewChildren(
-        this.getNestedChildren(child),
-        childPath,
-        modelElementIds,
-        relationshipIds,
-        endpointIds,
-        connectionIds,
-        issues
-      );
+      this.validateViewChildren(this.getNestedChildren(child), childPath, ids, issues);
     }
   }
 

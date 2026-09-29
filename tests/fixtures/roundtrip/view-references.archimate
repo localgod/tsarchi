@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<archimate:model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:archimate="http://www.archimatetool.com/archimate" name="view references" id="id-ref-model" version="5.0.0">
+  <folder name="Strategy" id="id-ref-strategy" type="strategy"/>
+  <folder name="Business" id="id-ref-business" type="business"/>
+  <folder name="Application" id="id-ref-application" type="application">
+    <element xsi:type="archimate:ApplicationComponent" name="Portal" id="id-portal"/>
+  </folder>
+  <folder name="Technology &amp; Physical" id="id-ref-technology" type="technology"/>
+  <folder name="Motivation" id="id-ref-motivation" type="motivation"/>
+  <folder name="Implementation &amp; Migration" id="id-ref-implementation" type="implementation_migration"/>
+  <folder name="Other" id="id-ref-other" type="other"/>
+  <folder name="Relations" id="id-ref-relations" type="relations"/>
+  <folder name="Views" id="id-ref-views" type="diagrams">
+    <element xsi:type="archimate:ArchimateDiagramModel" name="Overview" id="id-overview">
+      <child xsi:type="archimate:Group" id="id-group" name="Details">
+        <bounds x="12" y="12" width="400" height="200"/>
+        <child xsi:type="archimate:DiagramModelReference" id="id-ref-detail" targetConnections="id-note-to-ref" model="id-detail">
+          <bounds x="24" y="36" width="120" height="55"/>
+          <sourceConnection xsi:type="archimate:Connection" id="id-ref-to-note" source="id-ref-detail" target="id-note"/>
+        </child>
+        <child xsi:type="archimate:DiagramModelReference" id="id-ref-other-view" model="id-other">
+          <bounds x="200" y="36" width="120" height="55"/>
+        </child>
+      </child>
+      <child xsi:type="archimate:DiagramObject" id="id-portal-object" archimateElement="id-portal">
+        <bounds x="12" y="240" width="400" height="120"/>
+        <child xsi:type="archimate:DiagramModelReference" id="id-nested-ref-detail" model="id-detail">
+          <bounds x="24" y="36" width="120" height="55"/>
+        </child>
+      </child>
+      <child xsi:type="archimate:Note" id="id-note" targetConnections="id-ref-to-note">
+        <bounds x="480" y="12" width="185" height="80"/>
+        <sourceConnection xsi:type="archimate:Connection" id="id-note-to-ref" source="id-note" target="id-ref-detail"/>
+        <content>Links to the detail view</content>
+      </child>
+    </element>
+    <element xsi:type="archimate:ArchimateDiagramModel" name="Detail" id="id-detail">
+      <child xsi:type="archimate:DiagramModelReference" id="id-ref-overview" model="id-overview">
+        <bounds x="12" y="12" width="120" height="55"/>
+      </child>
+    </element>
+    <element xsi:type="archimate:ArchimateDiagramModel" name="Other" id="id-other"/>
+  </folder>
+</archimate:model>

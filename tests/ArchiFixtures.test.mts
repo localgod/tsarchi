@@ -168,4 +168,14 @@ describe('Archi-produced models', () => {
     archimate.setPurpose(undefined);
     expect(archimate.serialize()['archimate:model']).not.toHaveProperty('purpose');
   });
+
+  it('should remove diagram model references when deleting the referenced view', async () => {
+    const archimate = await parseFixture('testDeleteHandler.archimate');
+    expect(findChild(archimate, '17cdf396', '99a52921')?.model).toBe('12917bec');
+
+    expect(archimate.deleteView('12917bec')).toBe(true);
+
+    expect(archimate.validateModel()).toEqual([]);
+    expect(findChild(archimate, '17cdf396', '99a52921')).toBeUndefined();
+  });
 });

@@ -11,7 +11,7 @@ import type { ArchimateModelType } from './constants/archimate-mappings.mjs';
 import { typeFromXsiType } from './constants/archimate-mappings.mjs';
 import { BoundsMapper } from './BoundMapper.mjs';
 import { SourceConnectionMapper } from './SourceConnectionMapper.mjs';
-import { DiagramAttributeMapper, childAttributes, childTextElements } from './DiagramAttributeMapper.mjs';
+import { DiagramAttributeMapper, childAttributes, childFeatures, childTextElements } from './DiagramAttributeMapper.mjs';
 
 export class Parser {
   private model: Model;
@@ -148,15 +148,17 @@ export class Parser {
 
   private convertChildElementToChild(schemaChild: SchemaChild): Child {
     const { sourceConnection, bounds } = schemaChild;
+    const features = DiagramAttributeMapper.schemaToFeatures(schemaChild.feature);
 
     const child: Child = {
       id: schemaChild['@_id'],
       type: this.extractElementType(schemaChild['@_xsi:type']),
       ...DiagramAttributeMapper.readAttributes(schemaChild, childAttributes),
+      ...DiagramAttributeMapper.readFeatures(features, childFeatures),
       bounds: BoundsMapper.schemaBoundsToBounds(bounds),
       sourceConnection: sourceConnection ? SourceConnectionMapper.schemaToSourceConnections(sourceConnection) : undefined,
       properties: DiagramAttributeMapper.schemaToProperties(schemaChild.property),
-      features: DiagramAttributeMapper.schemaToFeatures(schemaChild.feature),
+      features,
     }
 
     for (const key of childTextElements) {

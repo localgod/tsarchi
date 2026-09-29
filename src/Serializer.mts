@@ -12,7 +12,7 @@ import type { Child } from './interfaces/Child.mjs';
 import { BoundsMapper } from './BoundMapper.mjs';
 import { SourceConnectionMapper } from './SourceConnectionMapper.mjs';
 import { folderType, toXsiType } from './constants/archimate-mappings.mjs';
-import { DiagramAttributeMapper, childAttributes, childTextElements } from './DiagramAttributeMapper.mjs';
+import { DiagramAttributeMapper, childAttributes, childFeatures, childTextElements } from './DiagramAttributeMapper.mjs';
 
 export class Serializer {
   private model: Model
@@ -212,7 +212,9 @@ export class Serializer {
       schemaChild.property = property;
     }
 
-    const feature = DiagramAttributeMapper.featuresToSchema(child.features);
+    const feature = DiagramAttributeMapper.featuresToSchema(
+      DiagramAttributeMapper.writeFeatures(child, child.features, childFeatures),
+    );
     if (feature) {
       schemaChild.feature = feature;
     }

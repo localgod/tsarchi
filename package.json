@@ -22,6 +22,7 @@
     "pretest": "npm run build",
     "test": "vitest",
     "compare": "node ./dist/tests/roundtrip-compare.mjs",
+    "roundtrip:diff": "npm run build --silent && node ./dist/tests/roundtrip-diff.mjs",
     "dev": "tsc --watch",
     "lint": "oxlint --ignore-path .gitignore .",
     "lintfix": "oxlint --fix --ignore-path .gitignore .",

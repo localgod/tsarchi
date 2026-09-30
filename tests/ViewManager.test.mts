@@ -398,3 +398,31 @@ describe('listViews', () => {
     expect(archimate.listViews({ type: 'CanvasModel' }).map(v => v.id)).toEqual(['id-canvas']);
   });
 });
+
+describe('non-view elements in the Views folder', () => {
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<archimate:model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:archimate="http://www.archimatetool.com/archimate" name="M" id="id-model" version="5.0.0">
+  <folder name="Business" id="id-business" type="business"/>
+  <folder name="Views" id="id-views" type="diagrams">
+    <element xsi:type="archimate:BusinessActor" name="Actor" id="id-actor"/>
+    <element xsi:type="archimate:ArchimateDiagramModel" name="View" id="id-view"/>
+  </folder>
+</archimate:model>`;
+
+  function load(): Archimate {
+    const archimate = new Archimate();
+    archimate.parse(new XMLParser({ ignoreAttributes: false }).parse(xml) as Schema);
+    return archimate;
+  }
+
+  it('should not return a non-view element from getView', () => {
+    const archimate = load();
+
+    expect(archimate.getView('id-actor')).toBeNull();
+    expect(archimate.getView('id-view')?.type).toBe('ArchimateDiagramModel');
+  });
+
+  it('should leave non-view elements out of listViews', () => {
+    expect(load().listViews().map(v => v.id)).toEqual(['id-view']);
+  });
+});

@@ -28,7 +28,7 @@
       <documentation>Portal exposes the service.</documentation>
       <property key="protocol" value="https"/>
     </element>
-    <element xsi:type="archimate:AssignmentRelationship" name="assigned to" id="id-assignment" source="id-web-cluster" target="id-portal"/>
+    <element xsi:type="archimate:RealizationRelationship" name="realizes" id="id-realization" source="id-web-cluster" target="id-portal"/>
   </folder>
   <folder name="Views" id="id-rel-props-views" type="diagrams"/>
 </archimate:model>

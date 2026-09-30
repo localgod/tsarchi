@@ -10,12 +10,33 @@ import type { Child } from './interfaces/Child.mjs';
 import type { View, ViewConnection } from './interfaces/View.mjs';
 import type { Bounds } from './interfaces/Bounds.mjs';
 import { ArchimateValidationError } from './interfaces/ValidationIssue.mjs';
-import type { ValidationIssue } from './interfaces/ValidationIssue.mjs';
+import type { ValidationIssue, ValidationIssueCode } from './interfaces/ValidationIssue.mjs';
 import { Parser } from './Parser.mjs'
 import { Serializer } from './Serializer.mjs'
 import { ViewManager } from './ViewManager.mjs'
-import { folderType, elementTypeToFolderKey, isArchimateModelType, canvasModelTypes, canvasNamespace } from './constants/archimate-mappings.mjs';
+import { folderType, elementTypeToFolderKey, isArchimateModelType, canvasModelTypes, canvasNamespace, allowedRelationshipTypes } from './constants/archimate-mappings.mjs';
+import { relationshipMatrixKeys } from './constants/relationships-matrix.mjs';
 import type { ArchimateModelType, ArchimateRelationshipAliasType, ArchimateRelationshipType } from './constants/archimate-mappings.mjs';
+
+/**
+ * Full relationship type name for a short alias ("Association" -> "AssociationRelationship").
+ */
+function fullRelationshipType(type: string): string {
+  return type.endsWith('Relationship') ? type : `${type}Relationship`;
+}
+
+/**
+ * Codes for models Archi opens and saves, but that break a naming convention or an ArchiMate rule
+ * Archi only enforces when relationships are created. Every other code is an error.
+ */
+const warningIssueCodes = new Set<ValidationIssueCode>([
+  'missing-name',
+  'relationship-endpoint-not-allowed',
+  'relationship-type-not-allowed',
+  'junction-relationship-type-mismatch',
+]);
+
+type PendingIssue = Omit<ValidationIssue, 'severity'>;
 
 type StoredViewChild = Omit<Child, 'child' | 'targetConnections'> & {
   archimateElement?: string;
@@ -315,12 +336,14 @@ export class Archimate {
     this.assertRelationshipType(relationship.type);
     this.assertRelationshipEndpointExists(relationship.source, 'source');
     this.assertRelationshipEndpointExists(relationship.target, 'target');
-    const endpointError = this.relationshipEndpointError(
+    const typeIssue = this.relationshipTypeIssue(
       relationship,
       this.getElement(relationship.source)!,
-      this.getElement(relationship.target)!
+      this.getElement(relationship.target)!,
+      id => this.getElement(id) ?? undefined,
+      id => this.findRelationshipsForElement(id)
     );
-    if (endpointError) throw new Error(endpointError);
+    if (typeIssue) throw new Error(typeIssue.message);
 
     const folder = this.model.relations;
     if (!folder.elements) folder.elements = [];
@@ -409,7 +432,7 @@ export class Archimate {
    * Validates model references and required fields before serialization.
    */
   public validateModel(): ValidationIssue[] {
-    const issues: ValidationIssue[] = [];
+    const issues: PendingIssue[] = [];
     const seenIds = new Map<string, string>();
     const modelElementIds = new Set<string>();
     const relationshipIds = new Set<string>();
@@ -446,16 +469,19 @@ export class Archimate {
     this.validateRelationships(endpoints, issues);
     this.validateViews(modelElementIds, relationshipIds, seenIds, issues);
 
-    return issues;
+    return issues.map(issue => ({
+      ...issue,
+      severity: warningIssueCodes.has(issue.code) ? 'warning' : 'error',
+    }));
   }
 
   /**
-   * Throws an ArchimateValidationError if validateModel finds issues.
+   * Throws an ArchimateValidationError if validateModel finds errors. Warnings do not block saving.
    */
   public assertValidModel(): void {
-    const issues = this.validateModel();
-    if (issues.length > 0) {
-      throw new ArchimateValidationError(issues);
+    const errors = this.validateModel().filter(issue => issue.severity === 'error');
+    if (errors.length > 0) {
+      throw new ArchimateValidationError(errors);
     }
   }
 
@@ -1224,7 +1250,7 @@ export class Archimate {
     folders: Folder[],
     path: string,
     seenIds: Map<string, string>,
-    issues: ValidationIssue[]
+    issues: PendingIssue[]
   ): void {
     for (const [index, folder] of folders.entries()) {
       const folderPath = `${path}.folders[${index}]`;
@@ -1246,7 +1272,7 @@ export class Archimate {
     }
   }
 
-  private validateElementFields(element: Element, path: string, issues: ValidationIssue[]): void {
+  private validateElementFields(element: Element, path: string, issues: PendingIssue[]): void {
     if (!element.id) {
       issues.push({
         code: 'missing-id',
@@ -1275,7 +1301,7 @@ export class Archimate {
     }
   }
 
-  private validateElementProfiles(element: Element, path: string, profileIds: Set<string>, issues: ValidationIssue[]): void {
+  private validateElementProfiles(element: Element, path: string, profileIds: Set<string>, issues: PendingIssue[]): void {
     for (const profileId of (element.profiles || '').split(' ').filter(Boolean)) {
       if (!profileIds.has(profileId)) {
         issues.push({
@@ -1292,7 +1318,7 @@ export class Archimate {
     id: string | undefined,
     path: string,
     seenIds: Map<string, string>,
-    issues: ValidationIssue[]
+    issues: PendingIssue[]
   ): void {
     if (!id) return;
 
@@ -1313,8 +1339,18 @@ export class Archimate {
   /**
    * Relationship endpoints may be model elements or other relationships (ArchiMate 3).
    */
-  private validateRelationships(endpoints: Map<string, Element>, issues: ValidationIssue[]): void {
-    for (const [index, relationship] of (this.model.relations.elements || []).entries()) {
+  private validateRelationships(endpoints: Map<string, Element>, issues: PendingIssue[]): void {
+    const relationships = (this.model.relations.elements || []) as Relationship[];
+    const relationshipsByEndpoint = new Map<string, Relationship[]>();
+    for (const relationship of relationships) {
+      for (const endpoint of new Set([relationship.source, relationship.target])) {
+        if (!endpoint) continue;
+        if (!relationshipsByEndpoint.has(endpoint)) relationshipsByEndpoint.set(endpoint, []);
+        relationshipsByEndpoint.get(endpoint)!.push(relationship);
+      }
+    }
+
+    for (const [index, relationship] of relationships.entries()) {
       const path = `folder.relations.elements[${index}]`;
       const source = relationship.source ? endpoints.get(relationship.source) : undefined;
       const target = relationship.target ? endpoints.get(relationship.target) : undefined;
@@ -1337,58 +1373,110 @@ export class Archimate {
         });
       }
 
-      const endpointError = source && target ? this.relationshipEndpointError(relationship, source, target) : null;
-      if (endpointError) {
-        issues.push({
-          code: 'relationship-endpoint-not-allowed',
-          message: endpointError,
-          path,
-          id: relationship.id,
-        });
+      const typeIssue = source && target
+        ? this.relationshipTypeIssue(relationship, source, target, id => endpoints.get(id), id => relationshipsByEndpoint.get(id) || [])
+        : null;
+      if (typeIssue) {
+        issues.push({ ...typeIssue, path, id: relationship.id });
       }
     }
   }
 
   /**
-   * Checks a relationship that has another relationship as its source or target
-   * against Archi's relationships matrix (com.archimatetool.model/model/relationships.xml)
-   * and ArchimateModelUtils.hasDirectRelationship. Element-to-element combinations are not checked.
+   * Checks a relationship's type against Archi's rules, following ArchimateModelUtils.isValidRelationship
+   * (commit ccdac67) and the relationships matrix (com.archimatetool.model/model/relationships.xml, commit 6d23608):
+   * - a relationship may not connect to itself or to one of its own endpoints (hasDirectRelationship);
+   * - the type must be allowed by the matrix between the source and target types;
+   * - on a Junction, the relationships on either side must also be allowed between the concepts it links,
+   *   and every relationship on it must have the same type, except aggregation or composition from a
+   *   Grouping or Location.
+   * The relationship itself is left out of the Junction's relationships, so this works for new and stored ones.
    */
-  private relationshipEndpointError(
+  private relationshipTypeIssue(
     relationship: { id?: string; type: string },
     source: Element,
-    target: Element
-  ): string | null {
-    const sourceIsRelationship = elementTypeToFolderKey.get(source.type) === 'relations';
-    const targetIsRelationship = elementTypeToFolderKey.get(target.type) === 'relations';
-    if (!sourceIsRelationship && !targetIsRelationship) return null;
-
+    target: Element,
+    lookup: (id: string) => Element | undefined,
+    relationshipsOf: (id: string) => Relationship[]
+  ): Pick<PendingIssue, 'code' | 'message'> | null {
     const label = relationship.id ? `Relationship "${relationship.id}"` : 'Relationship';
+    const isRelationship = (element: Element) => elementTypeToFolderKey.get(element.type) === 'relations';
+    const type = fullRelationshipType(relationship.type);
+
     const connects = (endpoint: Element, other: Element) =>
       endpoint.id === relationship.id ||
       (endpoint as Relationship).source === other.id ||
       (endpoint as Relationship).target === other.id;
-    if ((targetIsRelationship && connects(target, source)) || (sourceIsRelationship && connects(source, target))) {
-      return `${label} cannot connect "${source.id}" to "${target.id}": a relationship cannot connect to itself or to one of its own endpoints.`;
+    if ((isRelationship(target) && connects(target, source)) || (isRelationship(source) && connects(source, target))) {
+      return {
+        code: 'relationship-endpoint-not-allowed',
+        message: `${label} cannot connect "${source.id}" to "${target.id}": a relationship cannot connect to itself or to one of its own endpoints.`,
+      };
     }
 
-    const allowed: string[] = sourceIsRelationship
-      ? (targetIsRelationship || target.type === 'Junction' ? [] : ['Association'])
-      : source.type === 'Junction'
-        ? []
-        : ['Grouping', 'Location', 'Plateau'].includes(source.type)
-          ? ['Association', 'Aggregation', 'Composition']
-          : ['Association'];
-    if (allowed.includes(relationship.type.replace(/Relationship$/, ''))) return null;
+    // Types Archi's matrix does not know (e.g. ArchiMate 2's UsedByRelationship) are not checked,
+    // nor are element types it does not know.
+    if (!(Object.values(relationshipMatrixKeys) as string[]).includes(type)) return null;
+    const isAllowed = (from: Element, to: Element) =>
+      allowedRelationshipTypes(from.type, to.type)?.includes(type as ArchimateRelationshipType) ?? true;
 
-    return `${label} of type ${relationship.type} is not allowed from ${source.type} "${source.id}" to ${target.type} "${target.id}".`;
+    if (!isAllowed(source, target)) {
+      return {
+        code: isRelationship(source) || isRelationship(target) ? 'relationship-endpoint-not-allowed' : 'relationship-type-not-allowed',
+        message: `${label} of type ${relationship.type} is not allowed from ${source.type} "${source.id}" to ${target.type} "${target.id}".`,
+      };
+    }
+
+    const isGroupingOrLocationStructural = (from: Element | undefined, relationshipType: string) =>
+      (from?.type === 'Grouping' || from?.type === 'Location') &&
+      ['AggregationRelationship', 'CompositionRelationship'].includes(fullRelationshipType(relationshipType));
+
+    const junctionIssue = (junction: Element, side: 'source' | 'target'): Pick<PendingIssue, 'code' | 'message'> | null => {
+      const others = relationshipsOf(junction.id).filter(other => other.id !== relationship.id);
+
+      // Relationships on the other side of the Junction must be valid between the concepts it links.
+      for (const other of others) {
+        const linked = side === 'source'
+          ? (other.target === junction.id ? lookup(other.source) : undefined)
+          : (other.source === junction.id ? lookup(other.target) : undefined);
+        if (!linked) continue;
+        const [from, to] = side === 'source' ? [linked, target] : [source, linked];
+        if (!isAllowed(from, to)) {
+          return {
+            code: 'relationship-type-not-allowed',
+            message: `${label} of type ${relationship.type} is not allowed from ${from.type} "${from.id}" to ${to.type} "${to.id}" through Junction "${junction.id}".`,
+          };
+        }
+      }
+
+      const mismatch = others.find(other =>
+        !isGroupingOrLocationStructural(lookup(other.source), other.type) && fullRelationshipType(other.type) !== type
+      );
+      if (mismatch) {
+        return {
+          code: 'junction-relationship-type-mismatch',
+          message: `${label} of type ${relationship.type} does not match relationship "${mismatch.id}" of type ${mismatch.type} on Junction "${junction.id}": all relationships on a Junction must have the same type.`,
+        };
+      }
+      return null;
+    };
+
+    if (source.type === 'Junction') {
+      const issue = junctionIssue(source, 'source');
+      if (issue) return issue;
+    }
+    // Grouping and Location may aggregate or compose a Junction whatever its other relationships are.
+    if (target.type === 'Junction' && !isGroupingOrLocationStructural(source, relationship.type)) {
+      return junctionIssue(target, 'target');
+    }
+    return null;
   }
 
   private validateViews(
     modelElementIds: Set<string>,
     relationshipIds: Set<string>,
     seenIds: Map<string, string>,
-    issues: ValidationIssue[]
+    issues: PendingIssue[]
   ): void {
     const viewIds = new Set((this.model.diagrams.elements || []).map(view => view.id));
 
@@ -1413,7 +1501,7 @@ export class Archimate {
     childIds: Set<string>,
     connectionIds: Set<string>,
     seenIds: Map<string, string>,
-    issues: ValidationIssue[]
+    issues: PendingIssue[]
   ): void {
     for (const [index, child] of children.entries()) {
       const childPath = `${path}.children[${index}]`;
@@ -1437,7 +1525,7 @@ export class Archimate {
     children: StoredViewChild[],
     path: string,
     ids: ViewValidationIds,
-    issues: ValidationIssue[]
+    issues: PendingIssue[]
   ): void {
     const { modelElementIds, relationshipIds, viewIds, endpointIds, connectionIds } = ids;
     for (const [index, child] of children.entries()) {
@@ -1477,7 +1565,7 @@ export class Archimate {
     label: string,
     path: string,
     connectionIds: Set<string>,
-    issues: ValidationIssue[]
+    issues: PendingIssue[]
   ): void {
     for (const targetConnectionId of this.getTargetConnectionIds(owner)) {
       if (!connectionIds.has(targetConnectionId)) {
@@ -1496,7 +1584,7 @@ export class Archimate {
     path: string,
     relationshipIds: Set<string>,
     endpointIds: Set<string>,
-    issues: ValidationIssue[]
+    issues: PendingIssue[]
   ): void {
     if (connection.archimateRelationship && !relationshipIds.has(connection.archimateRelationship)) {
       issues.push({

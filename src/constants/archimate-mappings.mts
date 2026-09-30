@@ -1,6 +1,7 @@
 // src/constants/archimate-mappings.mts
 
 import type { FolderKey } from '../interfaces/Model.mjs';
+import { relationshipMatrixKeys, relationshipsMatrix } from './relationships-matrix.mjs';
 
 export const archimateStrategyElementTypes = [
   'Capability',
@@ -264,4 +265,17 @@ export const elementTypeToFolderKey: Map<ArchimateModelType, FolderKey> = new Ma
 export function toXsiType(type: string): string {
   if (type.includes(':')) return type;
   return (canvasModelTypes as readonly string[]).includes(type) ? `canvas:${type}` : `archimate:${type}`;
+}
+
+/**
+ * Relationship types Archi allows from a source concept to a target concept, read from its relationships
+ * matrix (see relationships-matrix.mts). A relationship used as source or target counts as "Relationship".
+ * Returns null when either type is not in the matrix.
+ */
+export function allowedRelationshipTypes(sourceType: string, targetType: string): ArchimateRelationshipType[] | null {
+  const concept = (type: string) =>
+    elementTypeToFolderKey.get(type as ArchimateModelType) === 'relations' ? 'Relationship' : type;
+  const targets = relationshipsMatrix[concept(sourceType)];
+  if (!targets || !relationshipsMatrix[concept(targetType)]) return null;
+  return [...(targets[concept(targetType)] || '')].map(key => relationshipMatrixKeys[key] as ArchimateRelationshipType);
 }

@@ -315,6 +315,12 @@ export class Archimate {
     this.assertRelationshipType(relationship.type);
     this.assertRelationshipEndpointExists(relationship.source, 'source');
     this.assertRelationshipEndpointExists(relationship.target, 'target');
+    const endpointError = this.relationshipEndpointError(
+      relationship,
+      this.getElement(relationship.source)!,
+      this.getElement(relationship.target)!
+    );
+    if (endpointError) throw new Error(endpointError);
 
     const folder = this.model.relations;
     if (!folder.elements) folder.elements = [];
@@ -407,6 +413,7 @@ export class Archimate {
     const seenIds = new Map<string, string>();
     const modelElementIds = new Set<string>();
     const relationshipIds = new Set<string>();
+    const endpoints = new Map<string, Element>();
 
     const profileIds = new Set<string>();
     for (const [index, profile] of (this.content.profiles || []).entries()) {
@@ -430,10 +437,13 @@ export class Archimate {
         } else if (folderKey !== 'diagrams') {
           modelElementIds.add(element.id);
         }
+        if (folderKey !== 'diagrams' && element.id && !endpoints.has(element.id)) {
+          endpoints.set(element.id, element);
+        }
       }
     }
 
-    this.validateRelationships(new Set([...modelElementIds, ...relationshipIds]), issues);
+    this.validateRelationships(endpoints, issues);
     this.validateViews(modelElementIds, relationshipIds, seenIds, issues);
 
     return issues;
@@ -1303,11 +1313,13 @@ export class Archimate {
   /**
    * Relationship endpoints may be model elements or other relationships (ArchiMate 3).
    */
-  private validateRelationships(endpointIds: Set<string>, issues: ValidationIssue[]): void {
+  private validateRelationships(endpoints: Map<string, Element>, issues: ValidationIssue[]): void {
     for (const [index, relationship] of (this.model.relations.elements || []).entries()) {
       const path = `folder.relations.elements[${index}]`;
+      const source = relationship.source ? endpoints.get(relationship.source) : undefined;
+      const target = relationship.target ? endpoints.get(relationship.target) : undefined;
 
-      if (relationship.source && !endpointIds.has(relationship.source)) {
+      if (relationship.source && !source) {
         issues.push({
           code: 'relationship-missing-source',
           message: `Relationship "${relationship.id}" references missing source element "${relationship.source}".`,
@@ -1316,7 +1328,7 @@ export class Archimate {
         });
       }
 
-      if (relationship.target && !endpointIds.has(relationship.target)) {
+      if (relationship.target && !target) {
         issues.push({
           code: 'relationship-missing-target',
           message: `Relationship "${relationship.id}" references missing target element "${relationship.target}".`,
@@ -1324,7 +1336,52 @@ export class Archimate {
           id: relationship.id,
         });
       }
+
+      const endpointError = source && target ? this.relationshipEndpointError(relationship, source, target) : null;
+      if (endpointError) {
+        issues.push({
+          code: 'relationship-endpoint-not-allowed',
+          message: endpointError,
+          path,
+          id: relationship.id,
+        });
+      }
     }
+  }
+
+  /**
+   * Checks a relationship that has another relationship as its source or target
+   * against Archi's relationships matrix (com.archimatetool.model/model/relationships.xml)
+   * and ArchimateModelUtils.hasDirectRelationship. Element-to-element combinations are not checked.
+   */
+  private relationshipEndpointError(
+    relationship: { id?: string; type: string },
+    source: Element,
+    target: Element
+  ): string | null {
+    const sourceIsRelationship = elementTypeToFolderKey.get(source.type) === 'relations';
+    const targetIsRelationship = elementTypeToFolderKey.get(target.type) === 'relations';
+    if (!sourceIsRelationship && !targetIsRelationship) return null;
+
+    const label = relationship.id ? `Relationship "${relationship.id}"` : 'Relationship';
+    const connects = (endpoint: Element, other: Element) =>
+      endpoint.id === relationship.id ||
+      (endpoint as Relationship).source === other.id ||
+      (endpoint as Relationship).target === other.id;
+    if ((targetIsRelationship && connects(target, source)) || (sourceIsRelationship && connects(source, target))) {
+      return `${label} cannot connect "${source.id}" to "${target.id}": a relationship cannot connect to itself or to one of its own endpoints.`;
+    }
+
+    const allowed: string[] = sourceIsRelationship
+      ? (targetIsRelationship || target.type === 'Junction' ? [] : ['Association'])
+      : source.type === 'Junction'
+        ? []
+        : ['Grouping', 'Location', 'Plateau'].includes(source.type)
+          ? ['Association', 'Aggregation', 'Composition']
+          : ['Association'];
+    if (allowed.includes(relationship.type.replace(/Relationship$/, ''))) return null;
+
+    return `${label} of type ${relationship.type} is not allowed from ${source.type} "${source.id}" to ${target.type} "${target.id}".`;
   }
 
   private validateViews(

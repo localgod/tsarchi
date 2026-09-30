@@ -8,6 +8,7 @@ import {
   type ArchimateRelationshipType
 } from '../src/constants/archimate-mappings.mjs';
 import type { Model } from '../src/interfaces/Model.mjs';
+import type { Relationship, RelationshipInput } from '../src/interfaces/Relationship.mjs';
 
 vi.mock('../src/Parser.mjs', () => ({
   Parser: vi.fn().mockImplementation(function() {
@@ -406,6 +407,49 @@ describe('Archimate', () => {
       expect(archimate.getRelationship('rel-c-ab')?.target).toBe('rel-a-b');
       expect(archimate.getRelationship('rel-cab-a')?.source).toBe('rel-c-ab');
       expect(archimate.validateModel()).toEqual([]);
+    });
+
+    it('should allow aggregation and composition from a grouping, location or plateau to a relationship', () => {
+      archimate.upsertRelationship({ id: 'rel-a-b', type: 'FlowRelationship', source: 'rel-app-a', target: 'rel-app-b' });
+      archimate.upsertElement({ id: 'rel-grouping', name: 'Grouping', type: 'Grouping' });
+      archimate.upsertElement({ id: 'rel-location', name: 'Location', type: 'Location' });
+      archimate.upsertElement({ id: 'rel-plateau', name: 'Plateau', type: 'Plateau' });
+
+      archimate.upsertRelationship({ id: 'rel-g-ab', type: 'AggregationRelationship', source: 'rel-grouping', target: 'rel-a-b' });
+      archimate.upsertRelationship({ id: 'rel-l-ab', type: 'CompositionRelationship', source: 'rel-location', target: 'rel-a-b' });
+      archimate.upsertRelationship({ id: 'rel-p-ab', type: 'Aggregation', source: 'rel-plateau', target: 'rel-a-b' });
+
+      expect(archimate.validateModel()).toEqual([]);
+    });
+
+    it.each([
+      ['a non-association from an element to a relationship', 'AggregationRelationship', 'rel-app-c', 'rel-a-b'],
+      ['a non-association from a relationship to an element', 'FlowRelationship', 'rel-a-b', 'rel-app-c'],
+      ['an association between two relationships', 'AssociationRelationship', 'rel-a-b', 'rel-b-c'],
+      ['an association from a junction to a relationship', 'AssociationRelationship', 'rel-junction', 'rel-a-b'],
+      ['an association from a relationship to a junction', 'AssociationRelationship', 'rel-a-b', 'rel-junction'],
+      ['an association from a relationship to its own source', 'AssociationRelationship', 'rel-a-b', 'rel-app-a'],
+      ['an association from an element to a relationship it connects', 'AssociationRelationship', 'rel-app-b', 'rel-a-b'],
+    ])('should reject %s', (_label, type, source, target) => {
+      archimate.upsertRelationship({ id: 'rel-a-b', type: 'FlowRelationship', source: 'rel-app-a', target: 'rel-app-b' });
+      archimate.upsertRelationship({ id: 'rel-b-c', type: 'FlowRelationship', source: 'rel-app-b', target: 'rel-app-c' });
+      archimate.upsertElement({ id: 'rel-junction', name: 'Junction', type: 'Junction' });
+
+      expect(() => archimate.upsertRelationship({ id: 'rel-new', type: type as RelationshipInput['type'], source, target }))
+        .toThrowError(/Relationship "rel-new"/);
+      expect(archimate.getRelationship('rel-new')).toBeNull();
+
+      ((archimate as any).model as Model).relations.elements!.push({ id: 'rel-new', type, source, target } as Relationship);
+      expect(archimate.validateModel()).toEqual([
+        expect.objectContaining({ code: 'relationship-endpoint-not-allowed', id: 'rel-new' }),
+      ]);
+    });
+
+    it('should reject a relationship that targets itself', () => {
+      archimate.upsertRelationship({ id: 'rel-a-b', type: 'AssociationRelationship', source: 'rel-app-a', target: 'rel-app-b' });
+
+      expect(() => archimate.upsertRelationship({ id: 'rel-a-b', type: 'AssociationRelationship', source: 'rel-app-a', target: 'rel-a-b' }))
+        .toThrowError('cannot connect to itself');
     });
 
     it('should reject views as relationship endpoints', () => {

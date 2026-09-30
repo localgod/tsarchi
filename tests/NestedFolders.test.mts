@@ -27,6 +27,22 @@ function elementIds(folder: SchemaFolder | undefined): string[] {
   return (Array.isArray(elements) ? elements : elements ? [elements] : []).map(element => element['@_id']);
 }
 
+describe('top-level folders', () => {
+  it('should load a model with a single top-level folder', () => {
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<archimate:model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:archimate="http://www.archimatetool.com/archimate" name="M" id="id-model" version="5.0.0">
+  <folder name="Views" id="id-views" type="diagrams">
+    <element xsi:type="archimate:ArchimateDiagramModel" name="View" id="id-view"/>
+  </folder>
+</archimate:model>`;
+    const archimate = new Archimate();
+    archimate.parse(new XMLParser({ ignoreAttributes: false }).parse(xml) as Schema);
+
+    expect(archimate.getFolder('diagrams')).toEqual({ id: 'id-views', name: 'Views' });
+    expect(archimate.getElement('id-view')?.type).toBe('ArchimateDiagramModel');
+  });
+});
+
 describe('nested folders', () => {
   it('should load elements from nested folders (Archi testDeleteHandler model)', async () => {
     const archimate = await parseFile('tests/fixtures/archi/testDeleteHandler.archimate');

@@ -41,9 +41,9 @@ export class Serializer {
       ? { ...this.modelMetadata, '@_name': modelMetadata }
       : modelMetadata
     this.xmlMetadata = xmlMetadata || this.xmlMetadata
-    const schema: ArchimateSchema = this.createSchemaModel();
+    const folders = Object.keys(this.model).map((key) => this.serializeTopLevelFolder(key as keyof Model));
+    const schema: ArchimateSchema = this.createSchemaModel(folders);
 
-    Object.keys(this.model).forEach((key) => this.storeFolder(schema, key as keyof Model));
     this.storeModelContent(schema, typeof content === 'string' ? { purpose: content } : content ?? {});
 
     return schema;
@@ -92,17 +92,17 @@ export class Serializer {
     return schemaProfile;
   }
 
-  private createSchemaModel(): ArchimateSchema {
+  private createSchemaModel(folders: SchemaFolder[]): ArchimateSchema {
     return {
       '?xml': this.xmlMetadata,
       'archimate:model': {
-        folder: [],
+        folder: folders,
         ...this.modelMetadata,
       },
     };
   }
 
-  private storeFolder(schema: ArchimateSchema, folderKey: keyof Model): void {
+  private serializeTopLevelFolder(folderKey: keyof Model): SchemaFolder {
     const folderModel = this.model[folderKey];
 
     const folder: SchemaFolder = {
@@ -126,7 +126,7 @@ export class Serializer {
       .map((el) => this.serializeElement(el));
     Object.assign(folder, folderModel.unrecognized);
 
-    schema['archimate:model'].folder.push(folder);
+    return folder;
   }
 
   private serializeFolder(folderModel: Folder, elementsById: Map<string, Element>, placedIds: Set<string>): SchemaFolder {

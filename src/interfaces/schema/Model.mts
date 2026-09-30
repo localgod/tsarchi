@@ -14,7 +14,7 @@ export interface ModelAttributes {
 }
 
 export interface Model extends ModelAttributes {
-  folder: Array<Folder>;
+  folder: Folder | Folder[];
   property?: Property | Property[];
   purpose?: string;
   /** Archi writes an empty `<metadata/>` as an empty string. */

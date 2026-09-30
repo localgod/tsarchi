@@ -1,9 +1,10 @@
 import type { ViewChild } from './ViewChild.mjs';
+import type { ArchimateViewType } from '../constants/archimate-mappings.mjs';
 
 export interface View {
   id: string;
   name: string;
-  type: 'ArchimateDiagramModel' | 'SketchModel' | 'CanvasModel';
+  type: ArchimateViewType;
   documentation?: string;
   viewpoint?: string;
   /** Sketch views: the background (integer code), as Archi writes it. */

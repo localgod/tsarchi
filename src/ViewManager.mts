@@ -3,6 +3,7 @@ import type { ViewChild } from './interfaces/ViewChild.mjs';
 import type { Element } from './interfaces/Element.mjs';
 import type { Model } from './interfaces/Model.mjs';
 import type { Bounds } from './interfaces/Bounds.mjs';
+import { isArchimateViewType } from './constants/archimate-mappings.mjs';
 
 export class ViewManager {
   private model: Model;
@@ -42,7 +43,7 @@ export class ViewManager {
    */
   getView(viewId: string): View | null {
     const viewElement = this.model.diagrams.elements?.find(el => el.id === viewId);
-    if (!viewElement) return null;
+    if (!viewElement || !isArchimateViewType(viewElement.type)) return null;
 
     return this.elementToView(viewElement);
   }
@@ -54,7 +55,7 @@ export class ViewManager {
     if (!this.model.diagrams.elements) return [];
 
     return this.model.diagrams.elements
-      .filter(el => options?.type === undefined || el.type === options.type)
+      .filter(el => isArchimateViewType(el.type) && (options?.type === undefined || el.type === options.type))
       .map(el => this.elementToView(el));
   }
 
@@ -288,10 +289,14 @@ export class ViewManager {
   }
 
   private elementToView(element: Element): View {
+    const { type } = element;
+    if (!isArchimateViewType(type)) {
+      throw new Error(`Element ${element.id} has type ${type}, which is not a view type`);
+    }
     const view: View = {
       id: element.id,
       name: element.name,
-      type: element.type as View['type'],
+      type,
       documentation: element.documentation,
       children: Array.isArray(element.child) ? element.child as ViewChild[] : element.child ? [element.child as ViewChild] : [],
       properties: element.properties

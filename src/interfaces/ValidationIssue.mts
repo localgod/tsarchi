@@ -5,6 +5,7 @@ export type ValidationIssueCode =
   | 'unknown-type'
   | 'relationship-missing-source'
   | 'relationship-missing-target'
+  | 'relationship-endpoint-not-allowed'
   | 'diagram-object-missing-element'
   | 'diagram-reference-missing-view'
   | 'element-missing-profile'

@@ -737,17 +737,120 @@ export class Archimate {
     return Archimate.applyFolderPatch(folder, patch);
   }
 
+  /**
+   * Creates a folder inside the folder with the given id, top-level or nested at any depth, and returns its details.
+   * The new folder is added after the parent's existing subfolders. Its id is generated unless one is given; throws
+   * when the parent does not exist, the name is empty or the id is already used.
+   */
+  public createFolder(parentFolderId: string, details: Omit<FolderDetails, 'id'> & { id?: string }): FolderDetails {
+    const parent = this.locateFolder(parentFolderId);
+    if (!parent) throw new Error(`Folder "${parentFolderId}" not found in model.`);
+    if (details.id !== undefined && (!details.id || this.hasId(details.id))) {
+      throw new Error(`Id "${details.id}" is empty or already used in the model.`);
+    }
+
+    const { id, name, documentation, properties, features } = details;
+    const folder: Folder = { id: id ?? this.generateUniqueId(), name: '' };
+    Archimate.applyFolderPatch(folder, { name, documentation, properties, features });
+    if (!parent.folder.folders) parent.folder.folders = [];
+    parent.folder.folders.push(folder);
+    return Archimate.folderDetails(folder);
+  }
+
+  /**
+   * Moves a nested folder, with its elements and subfolders, into another folder of the same top-level folder,
+   * after that folder's existing subfolders. As in Archi, a folder cannot move to another top-level folder or into
+   * itself. Throws when either folder does not exist, the folder is top-level, or the move is not allowed.
+   */
+  public moveFolder(folderId: string, parentFolderId: string): void {
+    const location = this.locateFolder(folderId);
+    if (!location) throw new Error(`Folder "${folderId}" not found in model.`);
+    if (!location.parent) throw new Error(`Folder "${folderId}" is a top-level folder and cannot be moved.`);
+    const target = this.locateFolder(parentFolderId);
+    if (!target) throw new Error(`Folder "${parentFolderId}" not found in model.`);
+    if (target.folderKey !== location.folderKey) {
+      throw new Error(`Folder "${folderId}" cannot be moved to another top-level folder.`);
+    }
+    if (target.path.includes(location.folder)) {
+      throw new Error(`Folder "${folderId}" cannot be moved into itself.`);
+    }
+    if (target.folder === location.parent) return;
+
+    location.parent.folders = location.parent.folders!.filter(folder => folder !== location.folder);
+    if (!target.folder.folders) target.folder.folders = [];
+    target.folder.folders.push(location.folder as Folder);
+  }
+
+  /**
+   * Deletes a nested folder together with its contents, as Archi does: its subfolders, the elements, relationships
+   * or views placed in them, and everything `deleteElement` and `deleteView` remove along with those. Returns false
+   * when there is no folder with that id; throws when it is a top-level folder.
+   */
+  public deleteFolder(folderId: string): boolean {
+    const location = this.locateFolder(folderId);
+    if (!location) return false;
+    if (!location.parent) throw new Error(`Folder "${folderId}" is a top-level folder and cannot be deleted.`);
+
+    location.parent.folders = location.parent.folders!.filter(folder => folder !== location.folder);
+
+    const topLevelIds = new Set((this.model[location.folderKey].elements || []).map(element => element.id));
+    const collect = (folder: Folder): string[] =>
+      [...(folder.elementIds || []), ...(folder.folders || []).flatMap(collect)];
+    for (const id of collect(location.folder as Folder)) {
+      if (!topLevelIds.has(id)) continue;
+      if (location.folderKey === 'diagrams') this.deleteView(id);
+      else this.deleteElement(id);
+    }
+    return true;
+  }
+
+  /**
+   * Moves an element, relationship or view into the folder with the given id, nested at any depth or top-level. The
+   * folder must belong to the same top-level folder as the element, as in Archi. The element is placed after the
+   * folder's existing elements. Throws when the element or folder does not exist or the move is not allowed.
+   */
+  public moveElementToFolder(elementId: string, folderId: string): void {
+    const element = this.findElementLocationById(elementId);
+    if (!element) throw new Error(`Element "${elementId}" not found in model.`);
+    const target = this.locateFolder(folderId);
+    if (!target) throw new Error(`Folder "${folderId}" not found in model.`);
+    if (target.folderKey !== element.folderKey) {
+      throw new Error(`Element "${elementId}" cannot be moved to a folder outside "${element.folder.name}".`);
+    }
+
+    this.removeFromNestedFolders(element.folder.folders || [], elementId);
+    if (target.parent) {
+      const folder = target.folder as Folder;
+      folder.elementIds = [...(folder.elementIds || []), elementId];
+    }
+  }
+
   private findFolderById(folderId: string): ModelFolder | Folder | undefined {
-    const search = (folders: Folder[]): Folder | undefined => {
+    return this.locateFolder(folderId)?.folder;
+  }
+
+  /**
+   * Finds a folder by id, with the key of its top-level folder, its parent (undefined for a top-level folder) and
+   * the chain of folders from the top-level folder down to it.
+   */
+  private locateFolder(folderId: string): {
+    folderKey: FolderKey;
+    folder: ModelFolder | Folder;
+    parent?: ModelFolder | Folder;
+    path: Array<ModelFolder | Folder>;
+  } | undefined {
+    if (!folderId) return undefined;
+    const search = (folders: Folder[], path: Array<ModelFolder | Folder>): Array<ModelFolder | Folder> | undefined => {
       for (const folder of folders) {
-        const found = folder.id === folderId ? folder : search(folder.folders || []);
+        const found = folder.id === folderId ? [...path, folder] : search(folder.folders || [], [...path, folder]);
         if (found) return found;
       }
       return undefined;
     };
-    for (const folder of Object.values(this.model)) {
-      const found = folder.id === folderId ? folder : search(folder.folders || []);
-      if (found) return found;
+    for (const folderKey of Object.keys(this.model) as FolderKey[]) {
+      const topLevel = this.model[folderKey];
+      const path = topLevel.id === folderId ? [topLevel] : search(topLevel.folders || [], [topLevel]);
+      if (path) return { folderKey, folder: path[path.length - 1], parent: path[path.length - 2], path };
     }
     return undefined;
   }

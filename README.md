@@ -157,6 +157,15 @@ model.updateFolder("business", {
 model.updateFolderById("id-folder-portals", { name: "Customer Portals", documentation: undefined });
 ```
 
+`createFolder` adds a folder inside any folder, top-level or nested, with a generated id unless one is given. `moveFolder` moves a nested folder, with its content, to another folder of the same top-level folder, and `moveElementToFolder` moves an element, relationship or view into a folder of its own top-level folder; as in Archi, neither crosses top-level folders. `deleteFolder` deletes a nested folder with everything in it, including the relationships and diagram objects that `deleteElement` removes along with its elements:
+
+```typescript
+const { id } = model.createFolder(model.getFolder("application").id, { name: "Portals" });
+model.moveElementToFolder("id-portal", id);
+model.moveFolder(id, "id-folder-customer");
+model.deleteFolder(id);
+```
+
 #### Relationship Management
 
 Relationships can be created and queried directly:

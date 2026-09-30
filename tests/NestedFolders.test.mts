@@ -194,3 +194,128 @@ describe('nested folder details', () => {
     expect(() => archimate.updateFolderById('id-folder-legacy', { name: '' })).toThrow('A folder name cannot be empty.');
   });
 });
+
+describe('creating, moving and deleting nested folders', () => {
+  const file = 'tests/fixtures/roundtrip/nested-folders.archimate';
+
+  it('should create a nested folder with a generated id and write it on save', async () => {
+    const archimate = await parseFile(file);
+
+    const created = archimate.createFolder('id-folder-portals', {
+      name: 'Mobile',
+      documentation: 'Apps.',
+      properties: new Map([['owner', 'mobile']]),
+    });
+
+    expect(created).toEqual({
+      id: expect.stringMatching(/^id-[0-9a-f]{32}$/),
+      name: 'Mobile',
+      documentation: 'Apps.',
+      properties: new Map([['owner', 'mobile']]),
+    });
+    expect(archimate.getFolderById(created.id)).toEqual(created);
+    expect(archimate.getFolders('application')[0].folders?.map(folder => folder.id))
+      .toEqual(['id-folder-legacy', created.id]);
+    expect(archimate.validateModel()).toEqual([]);
+    const saved = findSchemaFolder(archimate.serialize()['archimate:model'].folder, created.id);
+    expect(saved).toMatchObject({ '@_name': 'Mobile', '@_id': created.id, documentation: 'Apps.' });
+  });
+
+  it('should create a folder under a top-level folder with a given id', async () => {
+    const archimate = await parseFile(file);
+
+    archimate.createFolder('id-nested-strategy', { id: 'id-folder-goals', name: 'Goals' });
+
+    expect(archimate.getFolders('strategy')).toEqual([{ id: 'id-folder-goals', name: 'Goals' }]);
+    expect(archimate.hasId('id-folder-goals')).toBe(true);
+  });
+
+  it('should reject a missing parent, an empty name or a used id', async () => {
+    const archimate = await parseFile(file);
+
+    expect(() => archimate.createFolder('id-missing', { name: 'X' })).toThrow('not found');
+    expect(() => archimate.createFolder('id-folder-portals', { name: '' })).toThrow('cannot be empty');
+    expect(() => archimate.createFolder('id-folder-portals', { id: 'id-portal', name: 'X' })).toThrow('already used');
+    expect(archimate.getFolders('application')[0].folders).toHaveLength(1);
+  });
+
+  it('should move a nested folder with its content within the same top-level folder', async () => {
+    const archimate = await parseFile(file);
+
+    archimate.moveFolder('id-folder-legacy', 'id-folder-empty');
+
+    const [portals, empty] = archimate.getFolders('application');
+    expect(portals.folders).toEqual([]);
+    expect(empty.folders?.map(folder => folder.id)).toEqual(['id-folder-legacy']);
+    const legacy = findSchemaFolder(archimate.serialize()['archimate:model'].folder, 'id-folder-legacy');
+    expect(elementIds(legacy)).toEqual(['id-old-portal']);
+
+    archimate.moveFolder('id-folder-legacy', 'id-nested-application');
+    expect(archimate.getFolders('application').map(folder => folder.id))
+      .toEqual(['id-folder-portals', 'id-folder-empty', 'id-folder-legacy']);
+  });
+
+  it('should reject moves Archi does not allow', async () => {
+    const archimate = await parseFile(file);
+
+    expect(() => archimate.moveFolder('id-folder-portals', 'id-folder-legacy')).toThrow('into itself');
+    expect(() => archimate.moveFolder('id-folder-portals', 'id-folder-portals')).toThrow('into itself');
+    expect(() => archimate.moveFolder('id-folder-portals', 'id-nested-business')).toThrow('another top-level folder');
+    expect(() => archimate.moveFolder('id-nested-application', 'id-nested-business')).toThrow('top-level folder');
+    expect(() => archimate.moveFolder('id-missing', 'id-folder-empty')).toThrow('not found');
+    expect(() => archimate.moveFolder('id-folder-legacy', 'id-missing')).toThrow('not found');
+  });
+
+  it('should delete a nested folder with its subfolders, elements and what depends on them', async () => {
+    const archimate = await parseFile(file);
+
+    expect(archimate.deleteFolder('id-folder-portals')).toBe(true);
+
+    expect(archimate.getFolders('application').map(folder => folder.id)).toEqual(['id-folder-empty']);
+    expect(archimate.getFolderById('id-folder-legacy')).toBeNull();
+    expect(archimate.findElementsByFolder('application').map(element => element.id)).toEqual(['id-crm']);
+    expect(archimate.getRelationship('id-serving')).toBeNull();
+    expect(archimate.hasId('id-portal-object')).toBe(false);
+    expect(archimate.validateModel()).toEqual([]);
+  });
+
+  it('should delete the views in a deleted diagrams subfolder', async () => {
+    const archimate = await parseFile(file);
+
+    archimate.deleteFolder('id-folder-overviews');
+
+    expect(archimate.listViews()).toEqual([]);
+    expect(archimate.getFolders('diagrams')).toEqual([]);
+  });
+
+  it('should not delete a missing or top-level folder', async () => {
+    const archimate = await parseFile(file);
+
+    expect(archimate.deleteFolder('id-missing')).toBe(false);
+    expect(() => archimate.deleteFolder('id-nested-application')).toThrow('top-level folder');
+  });
+
+  it('should move elements into and out of nested folders', async () => {
+    const archimate = await parseFile(file);
+
+    archimate.moveElementToFolder('id-crm', 'id-folder-empty');
+    archimate.moveElementToFolder('id-old-portal', 'id-nested-application');
+    archimate.moveElementToFolder('id-portal', 'id-folder-legacy');
+
+    const [portals, empty] = archimate.getFolders('application');
+    expect(empty.elementIds).toEqual(['id-crm']);
+    expect(portals.elementIds).toEqual(['id-portal-service']);
+    expect(portals.folders?.[0].elementIds).toEqual(['id-portal']);
+    const folders = archimate.serialize()['archimate:model'].folder;
+    expect(elementIds(folders.find(folder => folder['@_type'] === 'application'))).toEqual(['id-old-portal']);
+    expect(elementIds(findSchemaFolder(folders, 'id-folder-empty'))).toEqual(['id-crm']);
+  });
+
+  it('should reject moving an element to a folder of another top-level folder', async () => {
+    const archimate = await parseFile(file);
+
+    expect(() => archimate.moveElementToFolder('id-crm', 'id-folder-serving')).toThrow('cannot be moved');
+    expect(() => archimate.moveElementToFolder('id-missing', 'id-folder-empty')).toThrow('not found');
+    expect(() => archimate.moveElementToFolder('id-crm', 'id-missing')).toThrow('not found');
+  });
+});

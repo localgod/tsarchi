@@ -105,7 +105,7 @@ export class Parser {
   }
 
   private findFolder(data: ArchimateSchema, folderKey: keyof Model): SchemaFolder | undefined {
-    return data['archimate:model']?.folder?.find((elm) => elm['@_type'] === folderKey);
+    return this.ensureArray(data['archimate:model']?.folder).find((elm) => elm['@_type'] === folderKey);
   }
 
   private setFolderMetadata(folderKey: keyof Model, folder: SchemaFolder): void {

@@ -34,9 +34,11 @@ This project adheres to [Keep a CHANGELOG](http://keepachangelog.com/)
 - `Child.sourceConnection` is now typed `SourceConnection | SourceConnection[]`, matching the XML when a diagram child has several connections. Code that reads it as a single object must handle the array case.
 - `SourceConnection.archimateRelationship` is now optional, since note and sketch connections have no underlying relationship.
 - The schema `Model` interface now extends a new `ModelAttributes` interface, which accepts any `@_xmlns:*` namespace attribute.
+- ⚠️ The schema `Model.folder` is now typed `Folder | Folder[]`, matching what fast-xml-parser returns for a model with one top-level folder. `serialize()` still writes an array, but code that reads `folder` from a parsed file must handle the single-object case ([#434](https://github.com/localgod/tsarchi/issues/434)).
 
 ### Fixed
 
+- Loading a model with a single top-level `<folder>` no longer throws `folder?.find is not a function` ([#434](https://github.com/localgod/tsarchi/issues/434)).
 - Diagram children expose the style settings Archi stores as `<feature>` entries as typed properties: `lineAlpha`, `gradient`, `iconVisible`, `iconColor`, `deriveElementLineColor` and `lineStyle`. They are read from the features of files written by Archi, and saved as `<feature name="…" value="…"/>` in place of the previous XML attributes, which Archi ignores. Clearing one of these properties removes its feature, and `Child.features` keeps every feature in file order ([#391](https://github.com/localgod/tsarchi/issues/391)).
 - `listViews()` returns sketch and canvas views too, matching `getView()`. Pass `{ type: 'ArchimateDiagramModel' }` to list only ArchiMate views, as before ([#416](https://github.com/localgod/tsarchi/issues/416)).
 - `getView()` and `listViews()` return a view's `viewpoint`, `background` and `connectionRouterType` ([#393](https://github.com/localgod/tsarchi/issues/393)).

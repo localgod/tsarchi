@@ -120,7 +120,6 @@ export const archimateRelationshipAliasTypes = [
 ] as const;
 
 export const archimateViewTypes = [
-  'Diagram',
   'ArchimateDiagramModel',
   'SketchModel',
   'CanvasModel',
@@ -204,6 +203,10 @@ export type ArchimateModelType =
 
 export function isArchimateModelType(type: string): type is ArchimateModelType {
   return elementTypeToFolderKey.has(type as ArchimateModelType);
+}
+
+export function isArchimateViewType(type: string): type is ArchimateViewType {
+  return (archimateViewTypes as readonly string[]).includes(type);
 }
 
 /**

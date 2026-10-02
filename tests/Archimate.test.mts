@@ -49,6 +49,49 @@ describe('Archimate', () => {
     });
   });
 
+  describe('model name, id and version', () => {
+    it('should have defaults for a new model', () => {
+      expect(archimate.getName()).toBe('');
+      expect(archimate.getId()).toMatch(/^id-/);
+      expect(archimate.getVersion()).toBe('5.0.0');
+    });
+
+    it('should change the name', () => {
+      archimate.setName('My model');
+      expect(archimate.getName()).toBe('My model');
+    });
+  });
+
+  describe('listElements() and listRelationships()', () => {
+    it('should be empty for a new model', () => {
+      expect(archimate.listElements()).toEqual([]);
+      expect(archimate.listRelationships()).toEqual([]);
+    });
+
+    it('should list elements from every folder, without relationships and views', () => {
+      archimate.upsertElement({ id: 'actor', name: 'Actor', type: 'BusinessActor' });
+      archimate.upsertElement({ id: 'app', name: 'App', type: 'ApplicationComponent' });
+      archimate.upsertElement({ id: 'junction', name: '', type: 'Junction' });
+      archimate.upsertRelationship({ id: 'serves', type: 'ServingRelationship', source: 'app', target: 'actor' });
+      archimate.createView('View');
+
+      expect(archimate.listElements().map(element => element.id)).toEqual(['actor', 'app', 'junction']);
+      expect(archimate.listRelationships().map(relationship => relationship.id)).toEqual(['serves']);
+    });
+
+    it('should return arrays that do not change the model when modified', () => {
+      archimate.upsertElement({ id: 'actor', name: 'Actor', type: 'BusinessActor' });
+      archimate.upsertElement({ id: 'app', name: 'App', type: 'ApplicationComponent' });
+      archimate.upsertRelationship({ id: 'serves', type: 'ServingRelationship', source: 'app', target: 'actor' });
+
+      archimate.listElements().pop();
+      archimate.listRelationships().pop();
+
+      expect(archimate.listElements()).toHaveLength(2);
+      expect(archimate.listRelationships()).toHaveLength(1);
+    });
+  });
+
   describe('generateRandomId()', () => {
     it('should generate unique IDs starting with "id-" and length 35', () => {
       const id = archimate.generateRandomId();
@@ -983,13 +1026,13 @@ describe('Archimate', () => {
     it('should set model and name from parsed schema', () => {
       const input: any = { 'archimate:model': { '@_name': 'Parsed Model' } };
       archimate.parse(input);
-      expect((archimate as any).name).toBe('Parsed Model');
+      expect(archimate.getName()).toBe('Parsed Model');
     });
 
     it('should default name to "Unnamed Model" if not provided', () => {
       const input: any = {};
       archimate.parse(input);
-      expect((archimate as any).name).toBe('Unnamed Model');
+      expect(archimate.getName()).toBe('Unnamed Model');
     });
   });
 

@@ -8,12 +8,10 @@ export const archimateStrategyElementTypes = [
   'CourseOfAction',
   'Resource',
   'ValueStream',
-  'Stage',
 ] as const;
 
 export const archimateBusinessElementTypes = [
   'BusinessActor',
-  'Actor',
   'BusinessRole',
   'BusinessCollaboration',
   'BusinessInterface',
@@ -24,8 +22,8 @@ export const archimateBusinessElementTypes = [
   'BusinessEvent',
   'BusinessObject',
   'Contract',
-  'BusinessProduct',
   'Representation',
+  'Product',
   'Meaning',
   'Value',
 ] as const;
@@ -37,6 +35,7 @@ export const archimateApplicationElementTypes = [
   'ApplicationProcess',
   'ApplicationFunction',
   'ApplicationInteraction',
+  'ApplicationEvent',
   'ApplicationService',
   'DataObject',
 ] as const;
@@ -55,9 +54,9 @@ export const archimateTechnologyElementTypes = [
   'Path',
   'Artifact',
   'TechnologyEvent',
-  'TechnologyObject',
-  'DistributionNetwork',
+  'Equipment',
   'Facility',
+  'DistributionNetwork',
   'Material',
 ] as const;
 
@@ -117,7 +116,6 @@ export const archimateRelationshipAliasTypes = [
   'UsedBy',
   'Influence',
   'Specialization',
-  'Material',
 ] as const;
 
 export const archimateViewTypes = [

@@ -10,8 +10,13 @@
       "import": "./dist/src/index.mjs",
       "types": "./dist/src/index.d.mts"
     },
+    "./node": {
+      "import": "./dist/src/node/index.mjs",
+      "types": "./dist/src/node/index.d.mts"
+    },
     "./package.json": "./package.json"
   },
+  "sideEffects": false,
   "files": [
     "dist"
   ],

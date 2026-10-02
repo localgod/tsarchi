@@ -1,5 +1,5 @@
 import type { Element } from '../src/interfaces/Element.mjs';
-import { TsArchi } from '../src/TsArchi.mjs';
+import { TsArchi } from '../src/node/TsArchi.mjs';
 
 // Simple argument parser
 function parseArgs() {

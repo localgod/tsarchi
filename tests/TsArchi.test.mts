@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, type Mock } from 'vitest';
-import { TsArchi } from '../src/TsArchi.mjs';
+import { TsArchi } from '../src/node/TsArchi.mjs';
 import { readFile, writeFile } from 'fs/promises';
 import type { Schema } from '../src/interfaces/schema/Schema.mjs';
 

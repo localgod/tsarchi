@@ -2,13 +2,15 @@ import { describe, it, beforeEach, expect, vi } from 'vitest';
 import { Archimate } from '../src/Archimate.mjs';
 import {
   archimateModelTypes,
+  archimateRelationshipAliasTypes,
+  archimateRelationshipTypes,
   elementTypeToFolderKey,
   folderType,
   isArchimateModelType,
   type ArchimateElementType,
   type ArchimateRelationshipType
 } from '../src/constants/archimate-mappings.mjs';
-import { relationshipsMatrix } from '../src/constants/relationships-matrix.mjs';
+import { relationshipMatrixKeys, relationshipsMatrix } from '../src/constants/relationships-matrix.mjs';
 import type { Model } from '../src/interfaces/Model.mjs';
 import type { Relationship, RelationshipInput } from '../src/interfaces/Relationship.mjs';
 
@@ -489,7 +491,7 @@ describe('Archimate', () => {
     it.each([
       ['an assignment between two application components', 'AssignmentRelationship', 'rel-app-a', 'rel-app-b'],
       ['an access between two application components', 'AccessRelationship', 'rel-app-a', 'rel-app-b'],
-      ['a short-named influence between two application components', 'Influence', 'rel-app-a', 'rel-app-b'],
+      ['an influence between two application components', 'InfluenceRelationship', 'rel-app-a', 'rel-app-b'],
     ])('should reject %s', (_label, type, source, target) => {
       expect(() => archimate.upsertRelationship({ id: 'rel-new', type: type as RelationshipInput['type'], source, target }))
         .toThrowError(`Relationship "rel-new" of type ${type} is not allowed from ApplicationComponent "rel-app-a" to ApplicationComponent "rel-app-b".`);
@@ -502,10 +504,52 @@ describe('Archimate', () => {
       expect(() => archimate.assertValidModel()).not.toThrow();
     });
 
-    it('should not check relationship types that Archi\'s matrix does not know', () => {
-      archimate.upsertRelationship({ id: 'rel-used-by', type: 'UsedByRelationship', source: 'rel-app-a', target: 'rel-app-b' });
+    it('should reject a short-named type the matrix does not allow, reporting the full type', () => {
+      expect(() => archimate.upsertRelationship({ id: 'rel-new', type: 'Influence', source: 'rel-app-a', target: 'rel-app-b' }))
+        .toThrowError('Relationship "rel-new" of type InfluenceRelationship is not allowed from ApplicationComponent "rel-app-a" to ApplicationComponent "rel-app-b".');
+    });
 
+    it.each(archimateRelationshipAliasTypes)('should store the short name %s as the full relationship type', (alias) => {
+      // Grouping to Grouping allows every relationship type.
+      archimate.upsertElement({ id: 'rel-grouping-a', name: 'Grouping A', type: 'Grouping' });
+      archimate.upsertElement({ id: 'rel-grouping-b', name: 'Grouping B', type: 'Grouping' });
+
+      const relationship = archimate.upsertRelationship({ id: 'rel-alias', type: alias, source: 'rel-grouping-a', target: 'rel-grouping-b' });
+
+      expect(relationship.type).toBe(`${alias}Relationship`);
+      expect(archimate.getRelationship('rel-alias')?.type).toBe(`${alias}Relationship`);
+      expect(archimate.findRelationshipsBetween('rel-grouping-a', 'rel-grouping-b', { type: alias }).map(rel => rel.id)).toEqual(['rel-alias']);
       expect(archimate.validateModel()).toEqual([]);
+    });
+
+    it('should match an existing relationship by its full type when given a short name', () => {
+      archimate.upsertRelationship({ name: 'Flow', type: 'FlowRelationship', source: 'rel-app-a', target: 'rel-app-b' });
+      archimate.upsertRelationship({ name: 'Flow', type: 'Flow', source: 'rel-app-a', target: 'rel-app-b', documentation: 'updated' });
+
+      expect(archimate.findRelationshipsBetween('rel-app-a', 'rel-app-b')).toEqual([
+        expect.objectContaining({ type: 'FlowRelationship', documentation: 'updated' }),
+      ]);
+    });
+
+    it.each(['UsedByRelationship', 'RepresentationRelationship', 'MaterialRelationship', 'UsedBy', 'Flow'])(
+      'should not accept %s as a stored relationship type, as Archi does not write it', (type) => {
+        expect(isArchimateModelType(type)).toBe(false);
+        expect(archimateModelTypes).not.toContain(type);
+
+        ((archimate as any).model as Model).relations.elements!.push({ id: 'rel-legacy', name: 'Legacy', type, source: 'rel-app-a', target: 'rel-app-b' } as unknown as Relationship);
+        expect(archimate.validateModel()).toEqual([
+          expect.objectContaining({ code: 'unknown-type', severity: 'error', id: 'rel-legacy' }),
+        ]);
+      });
+
+    it.each(['UsedByRelationship', 'RepresentationRelationship', 'MaterialRelationship', 'UsedBy'])(
+      'should reject %s in upsertRelationship()', (type) => {
+        expect(() => archimate.upsertRelationship({ id: 'rel-new', type: type as RelationshipInput['type'], source: 'rel-app-a', target: 'rel-app-b' }))
+          .toThrowError(`Unknown relationship type "${type}".`);
+      });
+
+    it('should list exactly the relationship types in Archi\'s relationships matrix', () => {
+      expect([...archimateRelationshipTypes].sort()).toEqual(Object.values(relationshipMatrixKeys).sort());
     });
 
     describe('junctions', () => {

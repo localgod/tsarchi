@@ -14,16 +14,9 @@ import type { ValidationIssue, ValidationIssueCode } from './interfaces/Validati
 import { Parser } from './Parser.mjs'
 import { Serializer } from './Serializer.mjs'
 import { ViewManager } from './ViewManager.mjs'
-import { folderType, elementTypeToFolderKey, isArchimateModelType, canvasModelTypes, canvasNamespace, allowedRelationshipTypes } from './constants/archimate-mappings.mjs';
+import { folderType, elementTypeToFolderKey, isArchimateModelType, canvasModelTypes, canvasNamespace, allowedRelationshipTypes, resolveRelationshipType } from './constants/archimate-mappings.mjs';
 import { relationshipMatrixKeys } from './constants/relationships-matrix.mjs';
 import type { ArchimateModelType, ArchimateRelationshipAliasType, ArchimateRelationshipType } from './constants/archimate-mappings.mjs';
-
-/**
- * Full relationship type name for a short alias ("Association" -> "AssociationRelationship").
- */
-function fullRelationshipType(type: string): string {
-  return type.endsWith('Relationship') ? type : `${type}Relationship`;
-}
 
 /**
  * Codes for models Archi opens and saves, but that break a naming convention or an ArchiMate rule
@@ -332,8 +325,10 @@ export class Archimate {
    *
    * Updates are matched by id when provided, otherwise by name + type + source + target.
    */
-  public upsertRelationship(relationship: RelationshipInput): Relationship {
-    this.assertRelationshipType(relationship.type);
+  public upsertRelationship(input: RelationshipInput): Relationship {
+    const type = resolveRelationshipType(input.type);
+    this.assertRelationshipType(type);
+    const relationship = { ...input, type };
     this.assertRelationshipEndpointExists(relationship.source, 'source');
     this.assertRelationshipEndpointExists(relationship.target, 'target');
     const typeIssue = this.relationshipTypeIssue(
@@ -413,7 +408,7 @@ export class Archimate {
       const reverseMatch = options?.bidirectional === true &&
         relationship.source === targetElementId &&
         relationship.target === sourceElementId;
-      const typeMatch = options?.type ? relationship.type === options.type : true;
+      const typeMatch = options?.type ? relationship.type === resolveRelationshipType(options.type) : true;
 
       return typeMatch && (directMatch || reverseMatch);
     }) as Relationship[];
@@ -1259,8 +1254,8 @@ export class Archimate {
     }
   }
 
-  private assertRelationshipType(type: ArchimateModelType): asserts type is ArchimateRelationshipType | ArchimateRelationshipAliasType {
-    if (elementTypeToFolderKey.get(type) !== 'relations') {
+  private assertRelationshipType(type: string): asserts type is ArchimateRelationshipType {
+    if (elementTypeToFolderKey.get(type as ArchimateModelType) !== 'relations') {
       throw new Error(`Unknown relationship type "${type}".`);
     }
   }
@@ -1401,7 +1396,7 @@ export class Archimate {
   ): Pick<PendingIssue, 'code' | 'message'> | null {
     const label = relationship.id ? `Relationship "${relationship.id}"` : 'Relationship';
     const isRelationship = (element: Element) => elementTypeToFolderKey.get(element.type) === 'relations';
-    const type = fullRelationshipType(relationship.type);
+    const type = relationship.type;
 
     const connects = (endpoint: Element, other: Element) =>
       endpoint.id === relationship.id ||
@@ -1414,8 +1409,7 @@ export class Archimate {
       };
     }
 
-    // Types Archi's matrix does not know (e.g. ArchiMate 2's UsedByRelationship) are not checked,
-    // nor are element types it does not know.
+    // Unknown relationship and element types are not checked here; they are reported as unknown-type.
     if (!(Object.values(relationshipMatrixKeys) as string[]).includes(type)) return null;
     const isAllowed = (from: Element, to: Element) =>
       allowedRelationshipTypes(from.type, to.type)?.includes(type as ArchimateRelationshipType) ?? true;
@@ -1429,7 +1423,7 @@ export class Archimate {
 
     const isGroupingOrLocationStructural = (from: Element | undefined, relationshipType: string) =>
       (from?.type === 'Grouping' || from?.type === 'Location') &&
-      ['AggregationRelationship', 'CompositionRelationship'].includes(fullRelationshipType(relationshipType));
+      ['AggregationRelationship', 'CompositionRelationship'].includes(relationshipType);
 
     const junctionIssue = (junction: Element, side: 'source' | 'target'): Pick<PendingIssue, 'code' | 'message'> | null => {
       const others = relationshipsOf(junction.id).filter(other => other.id !== relationship.id);
@@ -1450,7 +1444,7 @@ export class Archimate {
       }
 
       const mismatch = others.find(other =>
-        !isGroupingOrLocationStructural(lookup(other.source), other.type) && fullRelationshipType(other.type) !== type
+        !isGroupingOrLocationStructural(lookup(other.source), other.type) && other.type !== type
       );
       if (mismatch) {
         return {

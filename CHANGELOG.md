@@ -8,6 +8,8 @@ This project adheres to [Keep a CHANGELOG](http://keepachangelog.com/)
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-10-02
+
 ### Added
 
 - `Archimate.getFolders(folderKey)` returns the nested folders of a top-level folder, and the new `Folder` interface describes them. Top-level folders in `Model` now share the `ModelFolder` interface, which adds optional `documentation`, `properties` and `folders`.
@@ -46,6 +48,7 @@ This project adheres to [Keep a CHANGELOG](http://keepachangelog.com/)
 - `SourceConnection.archimateRelationship` is now optional, since note and sketch connections have no underlying relationship.
 - The schema `Model` interface now extends a new `ModelAttributes` interface, which accepts any `@_xmlns:*` namespace attribute.
 - ⚠️ The schema `Model.folder` is now typed `Folder | Folder[]`, matching what fast-xml-parser returns for a model with one top-level folder. `serialize()` still writes an array, but code that reads `folder` from a parsed file must handle the single-object case ([#434](https://github.com/localgod/tsarchi/issues/434)).
+- The npm package contains only the compiled library (`dist/src`). The compiled round-trip test scripts and examples are no longer published.
 
 ### Fixed
 
@@ -117,7 +120,8 @@ Unpublished from npm. Its changes were released in 1.0.2.
 - A `sync` command-line script that loads a model from `-i` and saves it to `-o`.
 - The package contains the TypeScript sources only, without compiled JavaScript.
 
-[Unreleased]: https://github.com/localgod/tsarchi/compare/1.0.3...HEAD
+[Unreleased]: https://github.com/localgod/tsarchi/compare/2.0.0...HEAD
+[2.0.0]: https://github.com/localgod/tsarchi/compare/1.0.3...2.0.0
 [1.0.3]: https://github.com/localgod/tsarchi/releases/tag/1.0.3
 [1.0.2]: https://github.com/localgod/tsarchi/releases/tag/1.0.2
 [1.0.1]: https://github.com/localgod/tsarchi/tree/1.0.1

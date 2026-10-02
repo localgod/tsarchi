@@ -5,14 +5,19 @@
 - [TSArchi](#tsarchi)
   - [Introduction](#introduction)
   - [Features](#features)
-  - [Getting Started](#getting-started)
-    - [Prerequisites](#prerequisites)
-    - [Installation](#installation)
-    - [Building the Project](#building-the-project)
+  - [Installation](#installation)
+  - [Upgrading from 1.x](#upgrading-from-1x)
   - [Usage](#usage)
-    - [Running Examples](#running-examples)
-      - [Example Commands](#example-commands)
     - [Parsing an ArchiMate File Programmatically](#parsing-an-archimate-file-programmatically)
+    - [Loading and Saving Text](#loading-and-saving-text)
+    - [Browser Use](#browser-use)
+    - [Nested Folders](#nested-folders)
+    - [Relationship Management](#relationship-management)
+    - [Available Element Types](#available-element-types)
+    - [View Management](#view-management)
+    - [Auto-generating Views](#auto-generating-views)
+    - [View Management Operations](#view-management-operations)
+    - [Error Handling](#error-handling)
   - [Contributing](#contributing)
   - [License](#license)
 
@@ -26,82 +31,37 @@ TSArchi provides a TypeScript-based tool for parsing, modifying, and saving `.ar
 - **Model Manipulation**: Add, modify, and remove elements and relationships in the parsed model.
 - **Model Serialization**: Save the modified model back into an `.archimate` file.
 - **Type Safety**: Enforces strong TypeScript types for all operations on the model.
-- **Error Resilience**: Graceful handling of invalid XML, missing data, and malformed files.
+- **Clear Errors**: Files that are not well-formed XML or not Archi models throw an `ArchimateParseError`, and models are validated before they are saved.
 - **Element Upsert**: Smart insert/update operations that preserve existing IDs while updating properties.
 - **Comprehensive Element Support**: Full support for all ArchiMate 3.x element types and relationships.
 - **Advanced View Management**: Create, update, and manage ArchiMate diagrams with visual positioning and styling.
 - **Auto-layout Capabilities**: Generate views automatically with grid, circular, or hierarchical layouts.
 
-## Getting Started
+## Installation
 
-### Prerequisites
-
-Ensure you have the following installed:
-
-- [Node.js](https://nodejs.org/) (v20 or later)
-- [npm](https://www.npmjs.com/)
-
-### Installation
-
-1. Clone the repository:
-
-   ```bash
-   git clone https://github.com/localgod/tsarchi.git
-   cd tsarchi
-   ```
-
-2. Install the dependencies:
-
-   ```bash
-   npm install
-   ```
-
-### Building the Project
-
-Before running the project, you need to compile the TypeScript files:
+TSArchi requires [Node.js](https://nodejs.org/) 20 or later. Install it from npm:
 
 ```bash
-npm run build
+npm install tsarchi
 ```
 
-This will compile the TypeScript source files into the `dist/` folder.
+The `tsarchi` entry point holds the model API and runs in Node.js and in the browser. `TsArchi`, which reads and writes files, is imported from `tsarchi/node`.
+
+## Upgrading from 1.x
+
+Version 2.0.0 has breaking changes. The main ones:
+
+- `TsArchi` is imported from `tsarchi/node` instead of `tsarchi`.
+- `Parser`, `Serializer`, `BoundsMapper`, `SourceConnectionMapper` and `DiagramAttributeMapper` are no longer exported. Load and save models through `Archimate` and `TsArchi`.
+- `TsArchi.load()` and `loadModel()` throw an `ArchimateParseError` for a file that is not an Archi model, and pass on file read errors, instead of logging them and returning an empty result.
+- Every `ValidationIssue` has a `severity`. Only errors stop a model from being saved; unnamed elements and relationships that Archi's relationships matrix rejects are warnings.
+- `upsertElement()` matches an existing element on `id` when one is given, instead of on `name` and `type`.
+- The type lists follow Archi: types Archi never writes, such as `UsedByRelationship` and `Stage`, are removed, and short names such as `Flow` are no longer model types, though `upsertRelationship()` still accepts them. `Junction` is an element type in the Other folder.
+- `View.background` is a number. `Child.sourceConnection` and the schema's `Model.folder` can be a single object or an array.
+
+See the [changelog](CHANGELOG.md) for the full list.
 
 ## Usage
-
-### Running Examples
-
-TSArchi includes example scripts that demonstrate how to use the library:
-
-- `--input <path>`: The path to the input `.archimate` file you wish to parse and manipulate.
-- `--output <path>`: The path where the modified model will be saved as a `.archimate` file.
-
-#### Example Commands
-
-Running the sample example directly:
-
-```bash
-node ./dist/examples/sample01.mjs --input ./models/example.archimate --output ./models/output.archimate
-```
-
-Or using npm script:
-
-```bash
-npm run example
-```
-
-The example script will:
-
-1. Parse the model in the input file.
-2. Add a new Application Component (if it doesn't already exist).
-3. Save the modified model to the output file.
-
-#### Creating Your Own Examples
-
-You can create additional examples in the `examples/` folder. Each example should:
-
-- Import TSArchi from `../src/node/TsArchi.mjs`
-- Use native Node.js argument parsing (no external dependencies)
-- Follow the naming pattern `sampleXX.mts`
 
 ### Parsing an ArchiMate File Programmatically
 
@@ -134,7 +94,7 @@ console.log(
 await tsArchi.saveModel("./path/to/output.archimate");
 ```
 
-#### Loading and Saving Text
+### Loading and Saving Text
 
 `Archimate.fromXml` and `toXml` load and save the text of an `.archimate` file without touching the file system, for text from a browser file input, IPC or a test. `TsArchi` uses the same XML settings, so both give the same result:
 
@@ -156,11 +116,11 @@ try {
 
 `TsArchi.load` and `loadModel` throw the same `ArchimateParseError`, and pass on file read errors.
 
-#### Browser Use
+### Browser Use
 
 The `tsarchi` entry point uses no Node built-ins, so it can be bundled for the browser. `TsArchi` reads and writes files with `fs/promises` and is exported from `tsarchi/node` instead. In a browser, load and save with `Archimate.fromXml` and `toXml`.
 
-#### Nested Folders
+### Nested Folders
 
 User-created folders are kept on load and written back in place on save. Element lookups such as `findElementsByFolder` include elements from nested folders; `getFolders` returns the folder tree, where each folder lists the ids of the elements placed directly in it:
 
@@ -197,7 +157,7 @@ model.moveFolder(id, "id-folder-customer");
 model.deleteFolder(id);
 ```
 
-#### Relationship Management
+### Relationship Management
 
 Relationships can be created and queried directly:
 
@@ -247,7 +207,7 @@ model.updateElement("element-id", { features: new Map([["myFeature", "value"]]) 
 
 Anything else that TSArchi does not recognise, on the model, its folders, elements, relationships, views, diagram objects and view connections, is kept in an `unrecognized` field and written back unchanged, so content from newer Archi versions survives a round trip.
 
-#### Available Element Types
+### Available Element Types
 
 TSArchi supports all standard ArchiMate element types organized by layers:
 
@@ -272,7 +232,7 @@ if (isArchimateModelType(elementType)) {
 }
 ```
 
-#### View Management
+### View Management
 
 TSArchi provides comprehensive view management capabilities for creating and manipulating ArchiMate diagrams:
 
@@ -323,7 +283,7 @@ model.addDiagramObjectToGroup(view.id, group.id, "another-element-id", {
 });
 ```
 
-#### Auto-generating Views
+### Auto-generating Views
 
 Create views automatically from existing model elements:
 
@@ -348,7 +308,7 @@ const businessView = model.createViewByFolder("Business Overview", "business", {
 });
 ```
 
-#### View Management Operations
+### View Management Operations
 
 ```typescript
 // List all views (ArchiMate, sketch and canvas)
@@ -372,11 +332,11 @@ model.updateDiagramObjectStyle("view-id", "object-id", {
 model.deleteView("view-id");
 ```
 
-#### Error Handling
+### Error Handling
 
-TSArchi includes robust error handling:
+TSArchi reports problems instead of silently changing the model:
 
-- Invalid XML files return empty objects instead of throwing errors
+- Loading text that is not well-formed XML or not an Archi model throws an `ArchimateParseError` (see [Loading and Saving Text](#loading-and-saving-text))
 - Missing or malformed bounds data defaults to zero values
 - Duplicate elements are handled gracefully with upsert operations
 - View operations validate element and relationship existence
@@ -395,14 +355,8 @@ for (const issue of issues) {
 
 ## Contributing
 
-We welcome contributions! Please follow these steps to contribute to the project:
-
-1. Fork the repository.
-2. Create a feature branch (`git checkout -b feature/my-feature`).
-3. Commit your changes (`git commit -am 'Add my feature'`).
-4. Push to the branch (`git push origin feature/my-feature`).
-5. Create a pull request.
+Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for setting up the project, running the tests and examples, and submitting changes.
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE.md) file for details.

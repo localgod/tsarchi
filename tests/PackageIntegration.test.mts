@@ -73,6 +73,16 @@ describe('package integration', () => {
       await rm(tempDir, { recursive: true, force: true });
     }
   });
+
+  it('publishes only the compiled library, without tests or examples', async () => {
+    const { stdout } = await execFileAsync('npm', ['pack', '--dry-run', '--json', '--ignore-scripts'], { cwd: process.cwd() });
+    const [{ files }] = JSON.parse(stdout) as [{ files: { path: string }[] }];
+    const paths = files.map((file) => file.path);
+
+    expect(paths).toContain('dist/src/index.mjs');
+    expect(paths).toContain('dist/src/node/index.mjs');
+    expect(paths.filter((path) => !path.startsWith('dist/src/')).sort()).toEqual(['LICENSE.md', 'README.md', 'package.json']);
+  });
 });
 
 describe('public API', () => {

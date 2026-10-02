@@ -11,7 +11,9 @@ import type { View, ViewConnection } from './interfaces/View.mjs';
 import type { Bounds } from './interfaces/Bounds.mjs';
 import { ArchimateValidationError } from './interfaces/ValidationIssue.mjs';
 import type { ValidationIssue, ValidationIssueCode } from './interfaces/ValidationIssue.mjs';
+import { ArchimateParseError } from './interfaces/ArchimateParseError.mjs';
 import { Parser } from './internal/Parser.mjs'
+import { parseArchimateXml, buildArchimateXml } from './internal/Xml.mjs'
 import { Serializer } from './internal/Serializer.mjs'
 import { ViewManager } from './ViewManager.mjs'
 import { folderType, elementTypeToFolderKey, isArchimateModelType, canvasModelTypes, archimateNamespace, canvasNamespace, allowedRelationshipTypes, resolveRelationshipType } from './constants/archimate-mappings.mjs';
@@ -510,6 +512,32 @@ export class Archimate {
       '@_id': input['archimate:model']?.['@_id'] || defaultModelMetadata['@_id'],
       '@_version': input['archimate:model']?.['@_version'] || defaultModelMetadata['@_version'],
     };
+  }
+
+  /**
+   * Loads a model from the text of an .archimate file.
+   * Throws an ArchimateParseError when the text is not XML (`not-xml`), has no `<archimate:model>` root
+   * (`not-archimate`), or its content cannot be read as a model (`invalid-structure`).
+   */
+  public static fromXml(text: string): Archimate {
+    const schema = parseArchimateXml(text);
+    const archimate = new Archimate();
+    try {
+      archimate.parse(schema);
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : String(error);
+      throw new ArchimateParseError('invalid-structure', `Could not read the Archi model: ${reason}`, { cause: error });
+    }
+    return archimate;
+  }
+
+  /**
+   * Returns the model as the text of an .archimate file.
+   * Throws an ArchimateValidationError if validateModel finds errors, as saving does.
+   */
+  public toXml(): string {
+    this.assertValidModel();
+    return buildArchimateXml(this.serialize());
   }
 
   public serialize(): ArchimateSchema {

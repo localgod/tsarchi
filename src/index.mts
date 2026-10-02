@@ -5,6 +5,7 @@ export * from "./TsArchi.mjs";
 export * from "./ViewManager.mjs";
 export * from "./constants/archimate-mappings.mjs";
 export * from "./constants/relationships-matrix.mjs";
+export * from "./interfaces/ArchimateParseError.mjs";
 export * from "./interfaces/Bounds.mjs";
 export * from "./interfaces/Child.mjs";
 export * from "./interfaces/Element.mjs";

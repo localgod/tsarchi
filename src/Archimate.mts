@@ -11,10 +11,10 @@ import type { View, ViewConnection } from './interfaces/View.mjs';
 import type { Bounds } from './interfaces/Bounds.mjs';
 import { ArchimateValidationError } from './interfaces/ValidationIssue.mjs';
 import type { ValidationIssue, ValidationIssueCode } from './interfaces/ValidationIssue.mjs';
-import { Parser } from './Parser.mjs'
-import { Serializer } from './Serializer.mjs'
+import { Parser } from './internal/Parser.mjs'
+import { Serializer } from './internal/Serializer.mjs'
 import { ViewManager } from './ViewManager.mjs'
-import { folderType, elementTypeToFolderKey, isArchimateModelType, canvasModelTypes, canvasNamespace, allowedRelationshipTypes, resolveRelationshipType } from './constants/archimate-mappings.mjs';
+import { folderType, elementTypeToFolderKey, isArchimateModelType, canvasModelTypes, archimateNamespace, canvasNamespace, allowedRelationshipTypes, resolveRelationshipType } from './constants/archimate-mappings.mjs';
 import { relationshipMatrixKeys } from './constants/relationships-matrix.mjs';
 import type { ArchimateModelType, ArchimateRelationshipAliasType, ArchimateRelationshipType } from './constants/archimate-mappings.mjs';
 
@@ -87,7 +87,7 @@ export class Archimate {
   private defaultModelMetadata(): ModelAttributes {
     return {
       '@_xmlns:xsi': 'http://www.w3.org/2001/XMLSchema-instance',
-      '@_xmlns:archimate': 'http://www.archimatetool.com/archimate',
+      '@_xmlns:archimate': archimateNamespace,
       '@_name': this.name,
       '@_id': 'id-d81fe19001de4c3cb53c05c2b757d35d',
       '@_version': '5.0.0',

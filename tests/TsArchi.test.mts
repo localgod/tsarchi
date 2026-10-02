@@ -88,34 +88,47 @@ describe('TsArchi XML Parsing and Manipulation', () => {
     expect(testActorElement).toHaveProperty('@_id', 'id-test-actor');
   });
 
-  it('should return an empty object for invalid XML', async () => {
+  it('should throw an ArchimateParseError for XML that is not an Archi model', async () => {
     (readFile as Mock).mockResolvedValue(invalidXml);
 
     const tsArchi = new TsArchi();
-    const parsedData = await tsArchi.load('dummy/path/to/invalid.xml');
 
-    expect(parsedData).toBeDefined();
-    expect(parsedData).toEqual({});
+    await expect(tsArchi.load('dummy/path/to/invalid.xml')).rejects.toMatchObject({
+      name: 'ArchimateParseError',
+      kind: 'not-archimate'
+    });
   });
 
-  it('should handle empty model data gracefully in loadModel', async () => {
-    (readFile as Mock).mockResolvedValue(invalidXml);
+  it('should throw from loadModel instead of returning an empty model', async () => {
+    (readFile as Mock).mockResolvedValue('<archimate:model><folder></archimate:model>');
 
     const tsArchi = new TsArchi();
-    const model = await tsArchi.loadModel('dummy/path/to/invalid.xml');
 
-    expect(model).toBeDefined();
-    expect(typeof model.generateRandomId).toBe('function');
+    await expect(tsArchi.loadModel('dummy/path/to/broken.archimate')).rejects.toMatchObject({
+      name: 'ArchimateParseError',
+      kind: 'not-xml',
+      line: 1
+    });
   });
 
-  it('should handle file read errors gracefully', async () => {
+  it('should pass on file read errors', async () => {
     (readFile as Mock).mockRejectedValue(new Error('File not found'));
 
     const tsArchi = new TsArchi();
-    const parsedData = await tsArchi.load('dummy/path/to/nonexistent.xml');
 
-    expect(parsedData).toBeDefined();
-    expect(parsedData).toEqual({});
+    await expect(tsArchi.load('dummy/path/to/nonexistent.xml')).rejects.toThrow('File not found');
+    await expect(tsArchi.loadModel('dummy/path/to/nonexistent.xml')).rejects.toThrow('File not found');
+  });
+
+  it('should write the same XML as Archimate.toXml', async () => {
+    vi.clearAllMocks();
+    (readFile as Mock).mockResolvedValue(validArchimateXml);
+
+    const tsArchi = new TsArchi();
+    const model = await tsArchi.loadModel('dummy/path/to/model.archimate');
+    await tsArchi.saveModel('dummy/path/to/output.archimate');
+
+    expect(writeFile).toHaveBeenCalledWith('dummy/path/to/output.archimate', model.toXml(), 'utf8');
   });
 
   it('should validate the model before saving', async () => {

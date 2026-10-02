@@ -74,3 +74,19 @@ describe('package integration', () => {
     }
   });
 });
+
+describe('public API', () => {
+  it('keeps internal modules out of the package index', async () => {
+    const index = await import('../src/index.mjs');
+
+    expect(index).toHaveProperty('Archimate');
+    expect(index).toHaveProperty('TsArchi');
+    expect(index).not.toHaveProperty('DiagramAttributeMapper');
+    expect(index).not.toHaveProperty('childAttributes');
+    expect(index).not.toHaveProperty('connectionAttributes');
+    expect(index).not.toHaveProperty('Parser');
+    expect(index).not.toHaveProperty('Serializer');
+    expect(index).not.toHaveProperty('BoundsMapper');
+    expect(index).not.toHaveProperty('SourceConnectionMapper');
+  });
+});

@@ -1,11 +1,6 @@
 // Auto-generated index.mts
 
 export * from "./Archimate.mjs";
-export * from "./BoundMapper.mjs";
-export * from "./DiagramAttributeMapper.mjs";
-export * from "./Parser.mjs";
-export * from "./Serializer.mjs";
-export * from "./SourceConnectionMapper.mjs";
 export * from "./TsArchi.mjs";
 export * from "./ViewManager.mjs";
 export * from "./constants/archimate-mappings.mjs";

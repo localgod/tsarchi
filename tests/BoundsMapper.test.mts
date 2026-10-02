@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { BoundsMapper } from '../src/BoundMapper.mjs';
+import { BoundsMapper } from '../src/internal/BoundMapper.mjs';
 import type { Bounds as SchemaBounds } from '../src/interfaces/schema/Bounds.mjs';
 
 describe('BoundsMapper', () => {

@@ -14,7 +14,7 @@ import { relationshipMatrixKeys, relationshipsMatrix } from '../src/constants/re
 import type { Model } from '../src/interfaces/Model.mjs';
 import type { Relationship, RelationshipInput } from '../src/interfaces/Relationship.mjs';
 
-vi.mock('../src/Parser.mjs', () => ({
+vi.mock('../src/internal/Parser.mjs', () => ({
   Parser: vi.fn().mockImplementation(function() {
     return {
       parse: vi.fn().mockReturnValue({ mockFolder: { elements: [] } }),
@@ -23,7 +23,7 @@ vi.mock('../src/Parser.mjs', () => ({
   })
 }));
 
-vi.mock('../src/Serializer.mjs', () => ({
+vi.mock('../src/internal/Serializer.mjs', () => ({
   Serializer: vi.fn().mockImplementation(function() {
     return {
       serialize: vi.fn().mockReturnValue({ mockSerialized: true })

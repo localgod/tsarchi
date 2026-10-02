@@ -4,7 +4,7 @@ import { XMLParser } from 'fast-xml-parser';
 import { Archimate } from '../src/Archimate.mjs';
 import type { Schema } from '../src/interfaces/schema/Schema.mjs';
 import type { SourceConnection as SchemaSourceConnection } from '../src/interfaces/schema/SourceConnection.mjs';
-import { SourceConnectionMapper } from '../src/SourceConnectionMapper.mjs';
+import { SourceConnectionMapper } from '../src/internal/SourceConnectionMapper.mjs';
 import type { Child } from '../src/interfaces/Child.mjs';
 
 const fixturesDir = 'tests/fixtures/archi';

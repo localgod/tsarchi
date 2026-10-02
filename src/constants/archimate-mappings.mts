@@ -128,14 +128,6 @@ export const archimateViewTypes = [
 ] as const;
 
 /**
- * Diagram child types used in sketch views, in addition to the shared Group type.
- */
-export const sketchModelChildTypes = [
-  'SketchModelSticky',
-  'SketchModelActor',
-] as const;
-
-/**
  * Types that Archi writes in the canvas namespace (xsi:type="canvas:...") rather than the archimate namespace.
  */
 export const canvasModelTypes = [
@@ -185,7 +177,6 @@ export type ArchimateConnectorType = typeof archimateConnectorTypes[number];
 export type ArchimateRelationshipType = typeof archimateRelationshipTypes[number];
 export type ArchimateRelationshipAliasType = typeof archimateRelationshipAliasTypes[number];
 export type ArchimateViewType = typeof archimateViewTypes[number];
-export type SketchModelChildType = typeof sketchModelChildTypes[number];
 export type CanvasModelType = typeof canvasModelTypes[number];
 export type ArchimateElementType =
   | ArchimateStrategyElementType

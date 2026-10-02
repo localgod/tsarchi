@@ -18,6 +18,8 @@ function scanDir(dir, relativePath = ".") {
   for (const entry of entries) {
     const entryPath = path.join(dir, entry.name);
     if (entry.isDirectory()) {
+      // Modules in internal/ are implementation details and stay out of the public API
+      if (entry.name === "internal") continue;
       // Recurse into subdirectory
       scanDir(entryPath, path.join(relativePath, entry.name));
     } else if (

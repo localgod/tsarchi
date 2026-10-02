@@ -2,7 +2,7 @@ import { mkdir, mkdtemp, readdir, readFile, rm } from 'fs/promises';
 import { tmpdir } from 'os';
 import { basename, join } from 'path';
 import { XMLParser } from 'fast-xml-parser';
-import { TsArchi } from '../src/TsArchi.mjs';
+import { TsArchi } from '../src/node/TsArchi.mjs';
 
 export interface RoundtripResult {
   fixturePath: string;

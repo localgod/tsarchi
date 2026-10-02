@@ -6,6 +6,8 @@ export type ValidationIssueCode =
   | 'relationship-missing-source'
   | 'relationship-missing-target'
   | 'relationship-endpoint-not-allowed'
+  | 'relationship-type-not-allowed'
+  | 'junction-relationship-type-mismatch'
   | 'diagram-object-missing-element'
   | 'diagram-reference-missing-view'
   | 'element-missing-profile'
@@ -14,8 +16,15 @@ export type ValidationIssueCode =
   | 'view-connection-missing-target'
   | 'view-target-connection-missing-source';
 
+/**
+ * `error`: the model is inconsistent (dangling references, duplicate ids, unknown types) and is not saved.
+ * `warning`: Archi opens and saves the model, but it breaks a convention or an ArchiMate rule.
+ */
+export type ValidationSeverity = 'error' | 'warning';
+
 export interface ValidationIssue {
   code: ValidationIssueCode;
+  severity: ValidationSeverity;
   message: string;
   path: string;
   id?: string;

@@ -382,10 +382,11 @@ describe('Archimate', () => {
     });
 
     it('should create and update the access type of access relationships', () => {
-      archimate.upsertRelationship({ id: 'access-a-b', name: 'reads', type: 'AccessRelationship', source: 'rel-app-a', target: 'rel-app-b', accessType: 1 });
+      archimate.upsertElement({ id: 'rel-data', name: 'Data', type: 'DataObject' });
+      archimate.upsertRelationship({ id: 'access-a-b', name: 'reads', type: 'AccessRelationship', source: 'rel-app-a', target: 'rel-data', accessType: 1 });
       expect(archimate.getRelationship('access-a-b')?.accessType).toBe(1);
 
-      archimate.upsertRelationship({ id: 'access-a-b', name: 'reads', type: 'AccessRelationship', source: 'rel-app-a', target: 'rel-app-b', accessType: 3 });
+      archimate.upsertRelationship({ id: 'access-a-b', name: 'reads', type: 'AccessRelationship', source: 'rel-app-a', target: 'rel-data', accessType: 3 });
       expect(archimate.getRelationship('access-a-b')?.accessType).toBe(3);
     });
 
@@ -400,7 +401,7 @@ describe('Archimate', () => {
     });
 
     it('should accept relationships as relationship endpoints', () => {
-      archimate.upsertRelationship({ id: 'rel-a-b', type: 'AssignmentRelationship', source: 'rel-app-a', target: 'rel-app-b' });
+      archimate.upsertRelationship({ id: 'rel-a-b', type: 'CompositionRelationship', source: 'rel-app-a', target: 'rel-app-b' });
       archimate.upsertRelationship({ id: 'rel-c-ab', type: 'AssociationRelationship', source: 'rel-app-c', target: 'rel-a-b' });
       archimate.upsertRelationship({ id: 'rel-cab-a', type: 'AssociationRelationship', source: 'rel-c-ab', target: 'rel-app-a' });
 
@@ -445,6 +446,110 @@ describe('Archimate', () => {
       ]);
     });
 
+    it('should accept relationship types that Archi\'s matrix allows between two elements', () => {
+      archimate.upsertElement({ id: 'rel-service', name: 'Service', type: 'ApplicationService' });
+      archimate.upsertElement({ id: 'rel-process', name: 'Process', type: 'BusinessProcess' });
+
+      archimate.upsertRelationship({ id: 'rel-serving', type: 'ServingRelationship', source: 'rel-service', target: 'rel-process' });
+      archimate.upsertRelationship({ id: 'rel-flow', type: 'Flow', source: 'rel-service', target: 'rel-process' });
+
+      expect(archimate.validateModel()).toEqual([]);
+    });
+
+    it.each([
+      ['an assignment between two application components', 'AssignmentRelationship', 'rel-app-a', 'rel-app-b'],
+      ['an access between two application components', 'AccessRelationship', 'rel-app-a', 'rel-app-b'],
+      ['a short-named influence between two application components', 'Influence', 'rel-app-a', 'rel-app-b'],
+    ])('should reject %s', (_label, type, source, target) => {
+      expect(() => archimate.upsertRelationship({ id: 'rel-new', type: type as RelationshipInput['type'], source, target }))
+        .toThrowError(`Relationship "rel-new" of type ${type} is not allowed from ApplicationComponent "rel-app-a" to ApplicationComponent "rel-app-b".`);
+      expect(archimate.getRelationship('rel-new')).toBeNull();
+
+      ((archimate as any).model as Model).relations.elements!.push({ id: 'rel-new', type, source, target } as Relationship);
+      expect(archimate.validateModel()).toEqual([
+        expect.objectContaining({ code: 'relationship-type-not-allowed', severity: 'warning', id: 'rel-new' }),
+      ]);
+      expect(() => archimate.assertValidModel()).not.toThrow();
+    });
+
+    it('should not check relationship types that Archi\'s matrix does not know', () => {
+      archimate.upsertRelationship({ id: 'rel-used-by', type: 'UsedByRelationship', source: 'rel-app-a', target: 'rel-app-b' });
+
+      expect(archimate.validateModel()).toEqual([]);
+    });
+
+    describe('junctions', () => {
+      beforeEach(() => {
+        archimate.upsertElement({ id: 'j-actor', name: 'Actor', type: 'BusinessActor' });
+        archimate.upsertElement({ id: 'j-role', name: 'Role', type: 'BusinessRole' });
+        archimate.upsertElement({ id: 'j-junction', name: 'Junction', type: 'Junction' });
+        archimate.upsertElement({ id: 'j-grouping', name: 'Grouping', type: 'Grouping' });
+      });
+
+      it('should reject a relationship whose type differs from the other relationships on a junction', () => {
+        archimate.upsertRelationship({ id: 'j-in', type: 'FlowRelationship', source: 'rel-app-a', target: 'j-junction' });
+
+        expect(() => archimate.upsertRelationship({ id: 'j-out', type: 'TriggeringRelationship', source: 'j-junction', target: 'rel-app-b' }))
+          .toThrowError('all relationships on a Junction must have the same type');
+        expect(() => archimate.upsertRelationship({ id: 'j-in-2', type: 'ServingRelationship', source: 'rel-app-c', target: 'j-junction' }))
+          .toThrowError('all relationships on a Junction must have the same type');
+        archimate.upsertRelationship({ id: 'j-out', type: 'Flow', source: 'j-junction', target: 'rel-app-b' });
+
+        ((archimate as any).model as Model).relations.elements!.push(
+          { id: 'j-bad', type: 'TriggeringRelationship', source: 'j-junction', target: 'rel-app-c' } as Relationship
+        );
+        expect(archimate.validateModel()).toEqual([
+          expect.objectContaining({ code: 'junction-relationship-type-mismatch', severity: 'warning', id: 'j-in' }),
+          expect.objectContaining({ code: 'junction-relationship-type-mismatch', severity: 'warning', id: 'j-out' }),
+          expect.objectContaining({ code: 'junction-relationship-type-mismatch', severity: 'warning', id: 'j-bad' }),
+        ]);
+      });
+
+      it('should let a relationship on a junction change type when it is the only one', () => {
+        archimate.upsertRelationship({ id: 'j-in', type: 'FlowRelationship', source: 'rel-app-a', target: 'j-junction' });
+        archimate.upsertRelationship({ id: 'j-in', type: 'TriggeringRelationship', source: 'rel-app-a', target: 'j-junction' });
+
+        expect(archimate.getRelationship('j-in')?.type).toBe('TriggeringRelationship');
+        expect(archimate.validateModel()).toEqual([]);
+      });
+
+      it('should reject a relationship that is not allowed between the concepts a junction links', () => {
+        archimate.upsertRelationship({ id: 'j-in', type: 'RealizationRelationship', source: 'j-actor', target: 'j-junction' });
+
+        expect(() => archimate.upsertRelationship({ id: 'j-out', type: 'RealizationRelationship', source: 'j-junction', target: 'j-role' }))
+          .toThrowError('Relationship "j-out" of type RealizationRelationship is not allowed from BusinessActor "j-actor" to BusinessRole "j-role" through Junction "j-junction".');
+
+        ((archimate as any).model as Model).relations.elements!.push(
+          { id: 'j-out', type: 'RealizationRelationship', source: 'j-junction', target: 'j-role' } as Relationship
+        );
+        expect(archimate.validateModel()).toEqual([
+          expect.objectContaining({ code: 'relationship-type-not-allowed', id: 'j-in' }),
+          expect.objectContaining({ code: 'relationship-type-not-allowed', id: 'j-out' }),
+        ]);
+      });
+
+      it('should accept a relationship that is allowed between the concepts a junction links', () => {
+        archimate.upsertRelationship({ id: 'j-in', type: 'AssignmentRelationship', source: 'j-actor', target: 'j-junction' });
+        archimate.upsertRelationship({ id: 'j-out', type: 'AssignmentRelationship', source: 'j-junction', target: 'j-role' });
+
+        expect(archimate.validateModel()).toEqual([]);
+      });
+
+      it('should let a grouping or location aggregate or compose a junction whatever its other relationships', () => {
+        archimate.upsertElement({ id: 'j-location', name: 'Location', type: 'Location' });
+        archimate.upsertRelationship({ id: 'j-in', type: 'FlowRelationship', source: 'rel-app-a', target: 'j-junction' });
+        archimate.upsertRelationship({ id: 'j-group', type: 'AggregationRelationship', source: 'j-grouping', target: 'j-junction' });
+        archimate.upsertRelationship({ id: 'j-location-in', type: 'Composition', source: 'j-location', target: 'j-junction' });
+        archimate.upsertRelationship({ id: 'j-out', type: 'FlowRelationship', source: 'j-junction', target: 'rel-app-b' });
+
+        expect(archimate.validateModel()).toEqual([]);
+        expect(() => archimate.upsertRelationship({ id: 'j-group-flow', type: 'FlowRelationship', source: 'j-grouping', target: 'j-junction' }))
+          .not.toThrow();
+        expect(() => archimate.upsertRelationship({ id: 'j-group-serving', type: 'ServingRelationship', source: 'j-grouping', target: 'j-junction' }))
+          .toThrowError('all relationships on a Junction must have the same type');
+      });
+    });
+
     it('should reject a relationship that targets itself', () => {
       archimate.upsertRelationship({ id: 'rel-a-b', type: 'AssociationRelationship', source: 'rel-app-a', target: 'rel-app-b' });
 
@@ -463,7 +568,7 @@ describe('Archimate', () => {
     });
 
     it('should delete relationships connected to a deleted relationship', () => {
-      archimate.upsertRelationship({ id: 'rel-a-b', type: 'AssignmentRelationship', source: 'rel-app-a', target: 'rel-app-b' });
+      archimate.upsertRelationship({ id: 'rel-a-b', type: 'CompositionRelationship', source: 'rel-app-a', target: 'rel-app-b' });
       archimate.upsertRelationship({ id: 'rel-c-ab', type: 'AssociationRelationship', source: 'rel-app-c', target: 'rel-a-b' });
       archimate.upsertRelationship({ id: 'rel-cab-a', type: 'AssociationRelationship', source: 'rel-c-ab', target: 'rel-app-a' });
       archimate.upsertRelationship({ id: 'rel-b-c', type: 'FlowRelationship', source: 'rel-app-b', target: 'rel-app-c' });
@@ -477,7 +582,7 @@ describe('Archimate', () => {
     });
 
     it('should delete relationships attached to relationships of a deleted element', () => {
-      archimate.upsertRelationship({ id: 'rel-a-b', type: 'AssignmentRelationship', source: 'rel-app-a', target: 'rel-app-b' });
+      archimate.upsertRelationship({ id: 'rel-a-b', type: 'CompositionRelationship', source: 'rel-app-a', target: 'rel-app-b' });
       archimate.upsertRelationship({ id: 'rel-c-ab', type: 'AssociationRelationship', source: 'rel-app-c', target: 'rel-a-b' });
 
       expect(archimate.deleteElement('rel-app-a')).toBe(true);
@@ -703,13 +808,14 @@ describe('Archimate', () => {
       expect(archimate.validateModel()).toEqual([]);
     });
 
-    it('should report missing-name for unnamed elements', () => {
+    it('should report missing-name for unnamed elements as a warning that does not block saving', () => {
       const model = (archimate as any).model as Model;
       model.application.elements = [{ id: 'unnamed-app', type: 'ApplicationComponent' } as any];
 
       expect(archimate.validateModel()).toEqual([
-        expect.objectContaining({ code: 'missing-name', id: 'unnamed-app' })
+        expect.objectContaining({ code: 'missing-name', severity: 'warning', id: 'unnamed-app' })
       ]);
+      expect(() => archimate.assertValidModel()).not.toThrow();
     });
 
     it('should report duplicate IDs, unknown types, and broken references', () => {
@@ -784,7 +890,18 @@ describe('Archimate', () => {
         'view-connection-missing-target',
         'view-target-connection-missing-source'
       ]));
+      expect(archimate.validateModel().every(issue => issue.severity === 'error')).toBe(true);
       expect(() => archimate.assertValidModel()).toThrow('Archimate model validation failed');
+    });
+
+    it('should throw only the errors from assertValidModel', () => {
+      const model = (archimate as any).model as Model;
+      model.application.elements = [{ id: 'unnamed-app', type: 'ApplicationComponent' } as any];
+      model.relations.elements = [{ id: 'broken-rel', type: 'FlowRelationship', source: 'unnamed-app', target: 'missing' } as any];
+
+      expect(() => archimate.assertValidModel()).toThrow(expect.objectContaining({
+        issues: [expect.objectContaining({ code: 'relationship-missing-target', severity: 'error' })],
+      }));
     });
   });
 

@@ -77,7 +77,8 @@ describe('deleteRelationship on a loaded model', () => {
     expect(archimate.deleteRelationship('3bede7f0')).toBe(true);
     expect(archimate.deleteRelationship('bfb084f7')).toBe(true);
 
-    expect(archimate.validateModel()).toEqual([]);
+    // testDeleteHandler also has two relationships Archi's matrix rejects, reported as warnings.
+    expect(archimate.validateModel().filter(issue => issue.severity === 'error')).toEqual([]);
     const saved = collectById(archimate.serialize());
     for (const id of ['5c85e0d2', '7958363b', 'db268768', '8cb15a1c']) {
       expect(saved.has(id)).toBe(false);

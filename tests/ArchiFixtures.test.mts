@@ -42,7 +42,30 @@ function findChild(archimate: Archimate, viewId: string, id: string): Child | un
   return search(archimate.getElement(viewId)?.child);
 }
 
+// testDeleteHandler has two relationships Archi's matrix rejects; they are warnings, not errors.
+function errors(archimate: Archimate) {
+  return archimate.validateModel().filter(issue => issue.severity === 'error');
+}
+
 describe('Archi-produced models', () => {
+  it('should report relationships Archi\'s matrix rejects as warnings', async () => {
+    const archimate = await parseFixture('testDeleteHandler.archimate');
+
+    expect(archimate.validateModel()).toEqual([
+      expect.objectContaining({ code: 'relationship-type-not-allowed', severity: 'warning', id: 'd934bb5f' }),
+      expect.objectContaining({ code: 'relationship-type-not-allowed', severity: 'warning', id: 'ff805459' }),
+    ]);
+    expect(() => archimate.assertValidModel()).not.toThrow();
+  });
+
+  it.each(['Archisurance.archimate', 'Archisurance-xmlexchange.archimate', 'modelimporter-test.archimate', 'test.archimate', 'testCopySnapshot.archimate'])(
+    'should find no relationship Archi\'s matrix rejects in %s',
+    async (name) => {
+      const archimate = await parseFixture(name);
+      expect(archimate.validateModel()).toEqual([]);
+    }
+  );
+
   it.each(['Archisurance.archimate', 'testDeleteHandler.archimate'])(
     'should not report missing-name for unnamed relationships in %s',
     async (name) => {
@@ -175,7 +198,7 @@ describe('Archi-produced models', () => {
 
     expect(archimate.deleteView('12917bec')).toBe(true);
 
-    expect(archimate.validateModel()).toEqual([]);
+    expect(errors(archimate)).toEqual([]);
     expect(findChild(archimate, '17cdf396', '99a52921')).toBeUndefined();
   });
 
@@ -186,7 +209,7 @@ describe('Archi-produced models', () => {
 
       expect(archimate.deleteElement(elementId)).toBe(true);
 
-      expect(archimate.validateModel()).toEqual([]);
+      expect(errors(archimate)).toEqual([]);
       expect(findChild(archimate, '12917bec', objectId)).toBeUndefined();
     }
   });

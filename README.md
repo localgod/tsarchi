@@ -350,12 +350,15 @@ TSArchi includes robust error handling:
 - Duplicate elements are handled gracefully with upsert operations
 - View operations validate element and relationship existence
 - Models are validated before saving to catch duplicate IDs, unknown types, broken relationships, broken view references, and references to missing profiles
+- Relationship types are checked against Archi's relationships matrix, including its Junction rules. `upsertRelationship()` throws for a type Archi would not allow
+
+Every issue from `validateModel()` has a `severity`. Only `error` issues stop a model from being saved. `warning` issues cover models Archi still opens and saves: unnamed elements, and relationships that Archi's matrix rejects (older models often have them).
 
 ```typescript
 const issues = model.validateModel();
 
-if (issues.length > 0) {
-  console.error(issues);
+for (const issue of issues) {
+  console.log(`${issue.severity}: ${issue.message}`);
 }
 ```
 

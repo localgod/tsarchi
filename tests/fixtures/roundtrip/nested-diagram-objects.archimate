@@ -15,7 +15,7 @@
   <folder name="Other" id="id-nested-other" type="other"/>
   <folder name="Relations" id="id-nested-relations" type="relations">
     <element xsi:type="archimate:AccessRelationship" id="id-rel-api-db" source="id-api" target="id-db"/>
-    <element xsi:type="archimate:AssignmentRelationship" id="id-rel-server-portal" source="id-server" target="id-portal"/>
+    <element xsi:type="archimate:RealizationRelationship" id="id-rel-server-portal" source="id-server" target="id-portal"/>
   </folder>
   <folder name="Views" id="id-nested-views" type="diagrams">
     <element xsi:type="archimate:ArchimateDiagramModel" name="Nested" id="id-nested-view">

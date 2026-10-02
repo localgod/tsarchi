@@ -58,8 +58,6 @@ type ViewValidationIds = {
 
 export class Archimate {
 
-  private name: string
-
   /** Model-level content besides the folders: purpose, properties, metadata, profiles and unrecognised content. */
   private content: ModelContent
 
@@ -72,7 +70,6 @@ export class Archimate {
   private viewManager: ViewManager
 
   public constructor() {
-    this.name = ''
     this.content = {}
     this.xmlMetadata = this.defaultXmlMetadata()
     this.modelMetadata = this.defaultModelMetadata()
@@ -88,7 +85,7 @@ export class Archimate {
     return {
       '@_xmlns:xsi': 'http://www.w3.org/2001/XMLSchema-instance',
       '@_xmlns:archimate': archimateNamespace,
-      '@_name': this.name,
+      '@_name': '',
       '@_id': 'id-d81fe19001de4c3cb53c05c2b757d35d',
       '@_version': '5.0.0',
     };
@@ -378,6 +375,23 @@ export class Archimate {
   }
 
   /**
+   * Lists all elements in the model, in folder order, including those in nested folders. Relationships and views
+   * are left out.
+   */
+  public listElements(): Element[] {
+    return (Object.keys(this.model) as FolderKey[])
+      .filter(folderKey => folderKey !== 'relations' && folderKey !== 'diagrams')
+      .flatMap(folderKey => this.model[folderKey].elements || []);
+  }
+
+  /**
+   * Lists all relationships in the model, including those in nested folders.
+   */
+  public listRelationships(): Relationship[] {
+    return [...(this.model.relations.elements || [])] as Relationship[];
+  }
+
+  /**
    * Retrieves a relationship by ID.
    */
   public getRelationship(relationshipId: string): Relationship | null {
@@ -483,7 +497,6 @@ export class Archimate {
   public parse(input: ArchimateSchema): void {
     const parser = new Parser(this.model);
     this.model = parser.parse(input);
-    this.name = input['archimate:model']?.['@_name'] || 'Unnamed Model';
     this.content = parser.parseModelContent(input);
     const defaultModelMetadata = this.defaultModelMetadata();
     this.xmlMetadata = input['?xml'] || this.defaultXmlMetadata();
@@ -493,7 +506,7 @@ export class Archimate {
     this.modelMetadata = {
       ...defaultModelMetadata,
       ...namespaces,
-      '@_name': this.name,
+      '@_name': input['archimate:model']?.['@_name'] || 'Unnamed Model',
       '@_id': input['archimate:model']?.['@_id'] || defaultModelMetadata['@_id'],
       '@_version': input['archimate:model']?.['@_version'] || defaultModelMetadata['@_version'],
     };
@@ -502,6 +515,34 @@ export class Archimate {
   public serialize(): ArchimateSchema {
     const serializer = new Serializer(this.model)
     return serializer.serialize(this.withRequiredNamespaces(this.modelMetadata), this.xmlMetadata, this.content)
+  }
+
+  /**
+   * Returns the model's name.
+   */
+  public getName(): string {
+    return this.modelMetadata['@_name'];
+  }
+
+  /**
+   * Sets the model's name.
+   */
+  public setName(name: string): void {
+    this.modelMetadata['@_name'] = name;
+  }
+
+  /**
+   * Returns the model's id.
+   */
+  public getId(): string {
+    return this.modelMetadata['@_id'];
+  }
+
+  /**
+   * Returns the version of the model's file format, as written by Archi (for example `5.0.0`).
+   */
+  public getVersion(): string {
+    return this.modelMetadata['@_version'];
   }
 
   /**

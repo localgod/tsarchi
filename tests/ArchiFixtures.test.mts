@@ -181,6 +181,28 @@ describe('Archi-produced models', () => {
     expect(archimate.getRelationship('695')?.accessType).toBe(1);
   });
 
+  it('should expose the model name, id and version', async () => {
+    const archimate = await parseFixture('Archisurance.archimate');
+    expect(archimate.getName()).toBe('Archisurance');
+    expect(archimate.getId()).toBe('11f5304f');
+    expect(archimate.getVersion()).toBe('5.0.0');
+
+    archimate.setName('Renamed');
+    expect(archimate.getName()).toBe('Renamed');
+    expect(archimate.serialize()['archimate:model']['@_name']).toBe('Renamed');
+  });
+
+  it('should list all elements and relationships', async () => {
+    const archimate = await parseFixture('Archisurance.archimate');
+    const elements = archimate.listElements();
+    const relationships = archimate.listRelationships();
+
+    expect(elements).toHaveLength(120);
+    expect(elements.every(element => !element.type.endsWith('Relationship') && !element.type.endsWith('Model'))).toBe(true);
+    expect(relationships).toHaveLength(176);
+    expect(relationships.every(relationship => relationship.type.endsWith('Relationship'))).toBe(true);
+  });
+
   it('should load and save the model purpose', async () => {
     const archimate = await parseFixture('testDeleteHandler.archimate');
     expect(archimate.getPurpose()).toBe('A variety of testing scenarios');

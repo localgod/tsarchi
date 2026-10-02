@@ -125,6 +125,9 @@ const newElement = {
 
 model.upsertElement(newElement);
 
+// Read the model's name and contents
+console.log(`${model.getName()} — ${model.listElements().length} elements, ${model.listRelationships().length} relationships`);
+
 // Save the modified model
 await tsArchi.saveModel("./path/to/output.archimate");
 ```
@@ -197,7 +200,7 @@ model.upsertRelationship({
 });
 ```
 
-The model's purpose text is available through `model.getPurpose()` and `model.setPurpose(text)`.
+The model's name is available through `model.getName()` and `model.setName(name)`, and its id and file format version through `model.getId()` and `model.getVersion()`. The model's purpose text is available through `model.getPurpose()` and `model.setPurpose(text)`.
 
 Model-level properties, metadata and specializations (profiles) are available the same way:
 

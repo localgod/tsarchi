@@ -30,9 +30,9 @@ describe('package integration', () => {
         import { readFile } from 'fs/promises';
 
         const packageJson = JSON.parse(await readFile(new URL('./package.json', import.meta.url), 'utf8'));
-        const exportPath = packageJson.exports['.'].import;
+        const exportPath = packageJson.exports['./node'].import;
 
-        if (exportPath !== './dist/src/index.mjs') {
+        if (exportPath !== './dist/src/node/index.mjs') {
           throw new Error(\`Unexpected package export path: \${exportPath}\`);
         }
 
@@ -80,7 +80,7 @@ describe('public API', () => {
     const index = await import('../src/index.mjs');
 
     expect(index).toHaveProperty('Archimate');
-    expect(index).toHaveProperty('TsArchi');
+    expect(index).not.toHaveProperty('TsArchi');
     expect(index).not.toHaveProperty('DiagramAttributeMapper');
     expect(index).not.toHaveProperty('childAttributes');
     expect(index).not.toHaveProperty('connectionAttributes');
@@ -88,5 +88,11 @@ describe('public API', () => {
     expect(index).not.toHaveProperty('Serializer');
     expect(index).not.toHaveProperty('BoundsMapper');
     expect(index).not.toHaveProperty('SourceConnectionMapper');
+  });
+
+  it('exports TsArchi from the node entry point', async () => {
+    const node = await import('../src/node/index.mjs');
+
+    expect(Object.keys(node)).toEqual(['TsArchi']);
   });
 });

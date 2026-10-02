@@ -20,6 +20,8 @@ function scanDir(dir, relativePath = ".") {
     if (entry.isDirectory()) {
       // Modules in internal/ are implementation details and stay out of the public API
       if (entry.name === "internal") continue;
+      // Modules in node/ use Node built-ins and are exported from `tsarchi/node`, so the index stays browser-safe
+      if (relativePath === "." && entry.name === "node") continue;
       // Recurse into subdirectory
       scanDir(entryPath, path.join(relativePath, entry.name));
     } else if (

@@ -3,7 +3,7 @@ import { join } from 'path';
 import { XMLBuilder } from 'fast-xml-parser';
 import type { XmlBuilderOptions } from 'fast-xml-parser';
 import chalk from 'chalk';
-import { TsArchi } from '../src/TsArchi.mjs';
+import { TsArchi } from '../src/node/TsArchi.mjs';
 import { compareObjects, normalizeXml } from './roundtrip-utils.mjs';
 
 /**

@@ -1,7 +1,6 @@
 // Auto-generated index.mts
 
 export * from "./Archimate.mjs";
-export * from "./TsArchi.mjs";
 export * from "./ViewManager.mjs";
 export * from "./constants/archimate-mappings.mjs";
 export * from "./constants/relationships-matrix.mjs";

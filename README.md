@@ -126,11 +126,35 @@ const newElement = {
 model.upsertElement(newElement);
 
 // Read the model's name and contents
-console.log(`${model.getName()} — ${model.listElements().length} elements, ${model.listRelationships().length} relationships`);
+console.log(
+  `${model.getName()} — ${model.listElements().length} elements, ${model.listRelationships().length} relationships`,
+);
 
 // Save the modified model
 await tsArchi.saveModel("./path/to/output.archimate");
 ```
+
+#### Loading and Saving Text
+
+`Archimate.fromXml` and `toXml` load and save the text of an `.archimate` file without touching the file system, for text from a browser file input, IPC or a test. `TsArchi` uses the same XML settings, so both give the same result:
+
+```typescript
+import { Archimate, ArchimateParseError } from "tsarchi";
+
+try {
+  const model = Archimate.fromXml(text);
+  // ...
+  const xml = model.toXml(); // throws ArchimateValidationError if the model has errors
+} catch (error) {
+  if (error instanceof ArchimateParseError) {
+    // error.kind: "not-xml" | "not-archimate" | "invalid-structure"
+    // error.line / error.column: where the XML is not well-formed
+    console.error(error.message);
+  }
+}
+```
+
+`TsArchi.load` and `loadModel` throw the same `ArchimateParseError`, and pass on file read errors.
 
 #### Nested Folders
 

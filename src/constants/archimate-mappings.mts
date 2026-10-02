@@ -98,14 +98,18 @@ export const archimateRelationshipTypes = [
   'TriggeringRelationship',
   'ServingRelationship',
   'RealizationRelationship',
-  'UsedByRelationship',
   'InfluenceRelationship',
   'SpecializationRelationship',
-  'RepresentationRelationship',
-  'MaterialRelationship',
 ] as const;
 
+/**
+ * Short names that `upsertRelationship()` and `findRelationshipsBetween()` accept in place of a relationship type
+ * ("Flow" for "FlowRelationship"). They are not types: Archi never writes them, and they are stored and saved
+ * as the full type.
+ */
 export const archimateRelationshipAliasTypes = [
+  'Access',
+  'Assignment',
   'Association',
   'Composition',
   'Aggregation',
@@ -113,7 +117,6 @@ export const archimateRelationshipAliasTypes = [
   'Triggering',
   'Serving',
   'Realization',
-  'UsedBy',
   'Influence',
   'Specialization',
 ] as const;
@@ -168,7 +171,6 @@ export const archimateModelTypes = [
   ...archimateOtherElementTypes,
   ...archimateConnectorTypes,
   ...archimateRelationshipTypes,
-  ...archimateRelationshipAliasTypes,
   ...archimateViewTypes,
 ] as const;
 
@@ -197,11 +199,17 @@ export type ArchimateElementType =
 export type ArchimateModelType =
   | ArchimateElementType
   | ArchimateRelationshipType
-  | ArchimateRelationshipAliasType
   | ArchimateViewType;
 
 export function isArchimateModelType(type: string): type is ArchimateModelType {
   return elementTypeToFolderKey.has(type as ArchimateModelType);
+}
+
+/**
+ * Returns the relationship type for a short name ("Flow" -> "FlowRelationship"); any other value is returned unchanged.
+ */
+export function resolveRelationshipType(type: string): string {
+  return (archimateRelationshipAliasTypes as readonly string[]).includes(type) ? `${type}Relationship` : type;
 }
 
 export function isArchimateViewType(type: string): type is ArchimateViewType {
@@ -248,7 +256,6 @@ const elementTypeFolderEntries = [
 
   // Relationships
   ...archimateRelationshipTypes.map(type => [type, 'relations'] as const),
-  ...archimateRelationshipAliasTypes.map(type => [type, 'relations'] as const),
 
   // Diagrams (Views)
   ...archimateViewTypes.map(type => [type, 'diagrams'] as const),

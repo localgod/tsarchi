@@ -2,11 +2,13 @@ import { describe, it, beforeEach, expect, vi } from 'vitest';
 import { Archimate } from '../src/Archimate.mjs';
 import {
   archimateModelTypes,
+  elementTypeToFolderKey,
   folderType,
   isArchimateModelType,
   type ArchimateElementType,
   type ArchimateRelationshipType
 } from '../src/constants/archimate-mappings.mjs';
+import { relationshipsMatrix } from '../src/constants/relationships-matrix.mjs';
 import type { Model } from '../src/interfaces/Model.mjs';
 import type { Relationship, RelationshipInput } from '../src/interfaces/Relationship.mjs';
 
@@ -82,6 +84,34 @@ describe('Archimate', () => {
         expect.objectContaining({ id: `other-${type}`, type })
       ]);
       expect(archimate.validateModel()).toEqual([]);
+    });
+
+    it.each([
+      ['ApplicationEvent', 'application'],
+      ['Equipment', 'technology'],
+      ['Product', 'business'],
+      ['Material', 'technology'],
+    ] as const)('should place %s in the %s folder', (type, folderKey) => {
+      archimate.upsertElement({ id: `el-${type}`, name: type, type });
+
+      expect(isArchimateModelType(type)).toBe(true);
+      expect(((archimate as any).model as Model)[folderKey].elements).toEqual([
+        expect.objectContaining({ id: `el-${type}`, type })
+      ]);
+      expect(archimate.validateModel()).toEqual([]);
+    });
+
+    it.each(['Stage', 'Actor', 'BusinessProduct', 'TechnologyObject'])('should not accept %s, which Archi does not have', (type) => {
+      expect(isArchimateModelType(type)).toBe(false);
+      expect(() => archimate.upsertElement({ id: 'el', name: type, type: type as ArchimateElementType })).toThrow();
+    });
+
+    it('should list exactly the element types in Archi\'s relationships matrix', () => {
+      const elementTypes = [...elementTypeToFolderKey]
+        .filter(([, folderKey]) => folderKey !== 'relations' && folderKey !== 'diagrams')
+        .map(([type]) => type);
+
+      expect(elementTypes.sort()).toEqual(Object.keys(relationshipsMatrix).filter(type => type !== 'Relationship').sort());
     });
 
     it('should expose supported model types and a type guard', () => {

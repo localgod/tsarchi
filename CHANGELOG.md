@@ -65,8 +65,60 @@ This project adheres to [Keep a CHANGELOG](http://keepachangelog.com/)
 - Nested folders are no longer dropped. Their elements are loaded into the top-level folder's `elements` list, and the folders are saved back in place with their name, id, documentation and properties ([#376](https://github.com/localgod/tsarchi/issues/376)).
 - Top-level folders keep their name and documentation on save instead of being reset to the default name.
 - `validateModel()` no longer reports `missing-name` for relationships and junctions, which Archi saves without a name by default, so models with unnamed relationships can be saved ([#377](https://github.com/localgod/tsarchi/issues/377)).
-
 - Parsing no longer throws on view connections without `xsi:type` (as written by Archi in sketch and canvas models). They default to `Connection` and are saved without the attribute ([#375](https://github.com/localgod/tsarchi/issues/375)).
 - Diagram children with multiple `sourceConnection` entries are now parsed and serialized.
 - Space-separated `targetConnections` are validated as individual connection ids.
 - Saving keeps every namespace declaration on the model root (such as `xmlns:canvas`), and `xsi:type` values keep the prefix they were loaded with instead of being written as `archimate:canvas:...` ([#387](https://github.com/localgod/tsarchi/issues/387)).
+
+## [1.0.3] - 2026-07-24
+
+### Added
+
+- `Archimate.getElement()`, `findElementsByName()`, `findElementsByType()`, `findElementsByFolder()`, `updateElement()` and `deleteElement()` read, change and delete elements.
+- `Archimate.upsertRelationship()`, `getRelationship()`, `findRelationshipsForElement()`, `findRelationshipsBetween()` and `deleteRelationship()` work with relationships, described by a new `Relationship` interface. `upsertRelationship()` also accepts short type names such as `Flow`.
+- Views can be created and edited: `createView()`, `getView()`, `listViews()`, `addDiagramObject()`, `addGroup()`, `addDiagramObjectToGroup()`, `addConnection()`, `updateDiagramObjectStyle()` and `deleteView()`, and views can be generated with `generateViewFromElements()`, `createViewByElementType()` and `createViewByFolder()`. New `View` and `ViewChild` interfaces describe them.
+- `Archimate.validateModel()` returns a `ValidationIssue` for each duplicate or missing id, missing name, unknown type, and relationship, diagram object or view connection that refers to something missing. `assertValidModel()` throws an `ArchimateValidationError` holding them.
+- `Archimate.hasId()` and `generateUniqueId()`, for ids that do not collide with ids already in the model.
+- Typed lists of ArchiMate types per layer (`archimateBusinessElementTypes`, ..., `archimateRelationshipTypes`, `archimateViewTypes`, `archimateModelTypes`), the matching types (`ArchimateElementType`, `ArchimateRelationshipType`, `ArchimateModelType`, ...) and `isArchimateModelType()`.
+- `TsArchi.getModel()` returns the loaded `Archimate` model.
+
+### Changed
+
+- ⚠️ `Archimate.addElement()` is replaced by `upsertElement()`, which updates the element with the same name and type when there is one, merging its properties, instead of adding a duplicate. It generates an id when none is given, and throws for an unknown type instead of logging a warning and skipping the element. `TsArchi.addElementToModel()` is removed: use `getModel().upsertElement()`.
+- ⚠️ `TsArchi.saveModel()` validates the model first and throws an `ArchimateValidationError` instead of saving an invalid model.
+- ⚠️ The `tsarchi` command-line tool and the `commander` dependency are removed. The sample it ran is now `examples/sample01.mts`.
+- `Archimate.parse()` and `serialize()` are typed with the `Schema` interface instead of `object`.
+
+### Fixed
+
+- Importing the package no longer runs the command-line tool, which read the process arguments and exited when `-i` and `-o` were missing.
+- Diagram children without `<bounds>` load with zero bounds instead of throwing.
+- `TsArchi.loadModel()` keeps an empty model and logs a warning when the file is not an Archi model.
+
+## [1.0.2] - 2025-08-13
+
+### Added
+
+- The package is published as compiled ES modules with TypeScript declarations, with a single entry point: `import { Archimate, TsArchi } from "tsarchi"`.
+- `Archimate.addElement()` adds an element to the folder for its type, `findElementInFolderByName()` finds an element by name, and `generateRandomId()` is public. `TsArchi.addElementToModel()` adds an element to the loaded model.
+- `folderType` and `elementTypeToFolderKey` map folders to their names and element types to their folders.
+- The `sync` script is published as a `tsarchi` command-line tool. Its `bin` entry points to a file that is not in the package.
+
+## [1.0.1] - 2025-08-12 [YANKED]
+
+Unpublished from npm. Its changes were released in 1.0.2.
+
+## [1.0.0] - 2025-06-03
+
+### Added
+
+- `Archimate.parse()` loads a parsed `.archimate` file (folders, elements, properties, diagram children with their bounds and source connections) and `serialize()` builds it back.
+- `TsArchi` reads and writes `.archimate` files with `load()`, `loadModel()`, `saveModel()` and `save()`.
+- A `sync` command-line script that loads a model from `-i` and saves it to `-o`.
+- The package contains the TypeScript sources only, without compiled JavaScript.
+
+[Unreleased]: https://github.com/localgod/tsarchi/compare/1.0.3...HEAD
+[1.0.3]: https://github.com/localgod/tsarchi/releases/tag/1.0.3
+[1.0.2]: https://github.com/localgod/tsarchi/releases/tag/1.0.2
+[1.0.1]: https://github.com/localgod/tsarchi/tree/1.0.1
+[1.0.0]: https://github.com/localgod/tsarchi/releases/tag/1.0.0

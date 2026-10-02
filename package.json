@@ -1,6 +1,6 @@
 {
   "name": "tsarchi",
-  "version": "1.0.3",
+  "version": "2.0.0",
   "description": "TypeScript implementation of the Archi model",
   "type": "module",
   "module": "./dist/src/index.mjs",
@@ -18,7 +18,7 @@
   },
   "sideEffects": false,
   "files": [
-    "dist"
+    "dist/src"
   ],
   "scripts": {
     "prebuild": "node scripts/generate-index.js",
@@ -32,8 +32,8 @@
     "dev": "tsc --watch",
     "lint": "oxlint --ignore-path .gitignore .",
     "lintfix": "oxlint --fix --ignore-path .gitignore .",
-    "format": "oxfmt --check README.md LICENSE.md CHANGELOG.md",
-    "formatfix": "oxfmt README.md LICENSE.md CHANGELOG.md",
+    "format": "oxfmt --check README.md LICENSE.md CHANGELOG.md CONTRIBUTING.md",
+    "formatfix": "oxfmt README.md LICENSE.md CHANGELOG.md CONTRIBUTING.md",
     "prepublishOnly": "npm run build && npm test"
   },
   "repository": {

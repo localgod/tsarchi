@@ -14,7 +14,7 @@ Archi serializes its EMF model with XMI. The ecore files are the source of truth
 | Core model (elements, views, diagram objects, connections, folders) | `com.archimatetool.model/model/archimate.ecore` |
 | Canvas model (`canvas:` namespace) | `com.archimatetool.canvas/model/canvas.ecore` |
 | Feature names and constants (`FEATURE_*`, line style / text position codes) | `com.archimatetool.model/src/com/archimatetool/model/IDiagramModelObject.java`, `IDiagramModelConnection.java`, `ITextPosition.java`, `ITextAlignment.java`, `IFontAttribute.java` |
-| Legacy-format upgrades | `com.archimatetool.editor/src/com/archimatetool/editor/model/compatibility/` |
+| Legacy-format upgrades (only to recognise pre-ArchiMate 3 names; these are out of scope and stay `unknown-type`) | `com.archimatetool.editor/src/com/archimatetool/editor/model/compatibility/` |
 | Real files | `tests/**/testdata/**/*.archimate` (see `tests/fixtures/archi/README.md` for the ones already vendored) |
 
 Fetch without cloning:

@@ -9,3 +9,5 @@ dist
 *.tgz
 .tsbuildinfo
 
+*.d.mts
+*.d.mts.map

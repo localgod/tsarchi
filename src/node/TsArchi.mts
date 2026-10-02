@@ -1,8 +1,8 @@
-import { Archimate } from './Archimate.mjs'
+import { Archimate } from '../Archimate.mjs'
 import { readFile, writeFile } from 'fs/promises';
 import type { PathLike } from 'fs';
-import type { Schema } from './interfaces/schema/Schema.mjs';
-import { parseArchimateXml, buildArchimateXml } from './internal/Xml.mjs';
+import type { Schema } from '../interfaces/schema/Schema.mjs';
+import { parseArchimateXml, buildArchimateXml } from '../internal/Xml.mjs';
 
 export class TsArchi {
   private model: Archimate

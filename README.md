@@ -99,7 +99,7 @@ The example script will:
 
 You can create additional examples in the `examples/` folder. Each example should:
 
-- Import TSArchi from `../src/TsArchi.mjs`
+- Import TSArchi from `../src/node/TsArchi.mjs`
 - Use native Node.js argument parsing (no external dependencies)
 - Follow the naming pattern `sampleXX.mts`
 
@@ -108,7 +108,7 @@ You can create additional examples in the `examples/` folder. Each example shoul
 You can use TSArchi programmatically in your TypeScript/JavaScript projects:
 
 ```typescript
-import { TsArchi } from "tsarchi";
+import { TsArchi } from "tsarchi/node";
 
 const tsArchi = new TsArchi();
 
@@ -155,6 +155,10 @@ try {
 ```
 
 `TsArchi.load` and `loadModel` throw the same `ArchimateParseError`, and pass on file read errors.
+
+#### Browser Use
+
+The `tsarchi` entry point uses no Node built-ins, so it can be bundled for the browser. `TsArchi` reads and writes files with `fs/promises` and is exported from `tsarchi/node` instead. In a browser, load and save with `Archimate.fromXml` and `toXml`.
 
 #### Nested Folders
 
@@ -273,7 +277,7 @@ if (isArchimateModelType(elementType)) {
 TSArchi provides comprehensive view management capabilities for creating and manipulating ArchiMate diagrams:
 
 ```typescript
-import { TsArchi } from "tsarchi";
+import { TsArchi } from "tsarchi/node";
 
 const tsArchi = new TsArchi();
 const model = await tsArchi.loadModel("./model.archimate");

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<archimate:model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:archimate="http://www.archimatetool.com/archimate" name="element-types" id="id-element-types-model" version="5.0.0">
+  <folder name="Strategy" id="id-element-types-strategy" type="strategy"/>
+  <folder name="Business" id="id-element-types-business" type="business">
+    <element xsi:type="archimate:Product" name="Product" id="id-product"/>
+  </folder>
+  <folder name="Application" id="id-element-types-application" type="application">
+    <element xsi:type="archimate:ApplicationEvent" name="Application Event" id="id-application-event"/>
+  </folder>
+  <folder name="Technology &amp; Physical" id="id-element-types-technology" type="technology">
+    <element xsi:type="archimate:Equipment" name="Equipment" id="id-equipment"/>
+    <element xsi:type="archimate:Material" name="Material" id="id-material"/>
+  </folder>
+  <folder name="Motivation" id="id-element-types-motivation" type="motivation"/>
+  <folder name="Implementation &amp; Migration" id="id-element-types-implementation" type="implementation_migration"/>
+  <folder name="Other" id="id-element-types-other" type="other"/>
+  <folder name="Relations" id="id-element-types-relations" type="relations">
+    <element xsi:type="archimate:TriggeringRelationship" id="id-product-event" source="id-product" target="id-application-event"/>
+    <element xsi:type="archimate:AccessRelationship" id="id-equipment-material" source="id-equipment" target="id-material"/>
+  </folder>
+  <folder name="Views" id="id-element-types-views" type="diagrams"/>
+</archimate:model>

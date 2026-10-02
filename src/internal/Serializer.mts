@@ -1,19 +1,19 @@
-import type { Schema as ArchimateSchema } from "./interfaces/schema/Schema.mjs";
-import type { ModelAttributes } from "./interfaces/schema/Model.mjs";
-import type { XmlMetadata } from "./interfaces/schema/XmlMetadata.mjs";
-import type { Folder as SchemaFolder } from "./interfaces/schema/Folder.mjs";
-import type { Element as SchemaElement } from "./interfaces/schema/Element.mjs";
-import type { Element } from "./interfaces/Element.mjs";
-import type { Child as SchemaChild } from "./interfaces/schema/Child.mjs";
-import type { Property as SchemaProperty } from "./interfaces/schema/Property.mjs";
-import type { Model, ModelContent, ModelFolder } from './interfaces/Model.mjs';
-import type { Profile } from './interfaces/Profile.mjs';
-import type { Profile as SchemaProfile } from "./interfaces/schema/Profile.mjs";
-import type { Folder } from './interfaces/Folder.mjs';
-import type { Child } from './interfaces/Child.mjs';
+import type { Schema as ArchimateSchema } from "../interfaces/schema/Schema.mjs";
+import type { ModelAttributes } from "../interfaces/schema/Model.mjs";
+import type { XmlMetadata } from "../interfaces/schema/XmlMetadata.mjs";
+import type { Folder as SchemaFolder } from "../interfaces/schema/Folder.mjs";
+import type { Element as SchemaElement } from "../interfaces/schema/Element.mjs";
+import type { Element } from "../interfaces/Element.mjs";
+import type { Child as SchemaChild } from "../interfaces/schema/Child.mjs";
+import type { Property as SchemaProperty } from "../interfaces/schema/Property.mjs";
+import type { Model, ModelContent, ModelFolder } from '../interfaces/Model.mjs';
+import type { Profile } from '../interfaces/Profile.mjs';
+import type { Profile as SchemaProfile } from "../interfaces/schema/Profile.mjs";
+import type { Folder } from '../interfaces/Folder.mjs';
+import type { Child } from '../interfaces/Child.mjs';
 import { BoundsMapper } from './BoundMapper.mjs';
 import { SourceConnectionMapper } from './SourceConnectionMapper.mjs';
-import { folderType, toXsiType } from './constants/archimate-mappings.mjs';
+import { folderType, toXsiType } from '../constants/archimate-mappings.mjs';
 import { DiagramAttributeMapper, childAttributes, childFeatures, childTextElements } from './DiagramAttributeMapper.mjs';
 
 export class Serializer {

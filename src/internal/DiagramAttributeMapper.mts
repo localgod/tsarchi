@@ -1,7 +1,7 @@
-import type { Bendpoint as SchemaBendpoint } from "./interfaces/schema/Bendpoint.mjs";
-import type { Feature as SchemaFeature } from "./interfaces/schema/Feature.mjs";
-import type { Property as SchemaProperty } from "./interfaces/schema/Property.mjs";
-import type { ViewBendpoint } from "./interfaces/View.mjs";
+import type { Bendpoint as SchemaBendpoint } from "../interfaces/schema/Bendpoint.mjs";
+import type { Feature as SchemaFeature } from "../interfaces/schema/Feature.mjs";
+import type { Property as SchemaProperty } from "../interfaces/schema/Property.mjs";
+import type { ViewBendpoint } from "../interfaces/View.mjs";
 
 type AttributeKind = 'string' | 'number' | 'boolean';
 

@@ -21,8 +21,8 @@ Run the `verify-archi-format` skill first. You need to know whether it's an attr
 
 | Owner in XML | Schema type | Domain type | Read / write |
 | --- | --- | --- | --- |
-| `<child>` in a view | `schema/Child.mts` | `Child.mts` | `childAttributes` / `childTextElements` in `DiagramAttributeMapper.mts` |
-| `<sourceConnection>` | `schema/SourceConnection.mts` | `SourceConnection.mts` | `connectionAttributes`; nested elements in `SourceConnectionMapper.mts` |
+| `<child>` in a view | `schema/Child.mts` | `Child.mts` | `childAttributes` / `childTextElements` in `internal/DiagramAttributeMapper.mts` |
+| `<sourceConnection>` | `schema/SourceConnection.mts` | `SourceConnection.mts` | `connectionAttributes`; nested elements in `internal/SourceConnectionMapper.mts` |
 | `<element>` that is a view | `schema/Element.mts` | `Element.mts` (+ `View.mts` if exposed via `ViewManager`) | `Parser.createElement` / `Serializer` view block |
 | `<element>` (ArchiMate element or relationship) | `schema/Element.mts` | `Element.mts` | `Parser` / `Serializer` element handling |
 | `<folder>` | `schema/Folder.mts` | `Folder.mts` / `ModelFolder` in `Model.mts` | `Parser` / `Serializer` folder handling |

@@ -8,6 +8,8 @@ This project adheres to [Keep a CHANGELOG](http://keepachangelog.com/)
 
 ## [Unreleased]
 
+## [2.1.0] - 2026-10-03
+
 ### Added
 
 - `validateModel()` reports an element or relationship without an `xsi:type` with the new `missing-type` error code. Such elements used to be saved with an invented `xsi:type="archimate:Unknown"`, and are now saved without one ([#449](https://github.com/localgod/tsarchi/issues/449)).
@@ -132,7 +134,8 @@ Unpublished from npm. Its changes were released in 1.0.2.
 - A `sync` command-line script that loads a model from `-i` and saves it to `-o`.
 - The package contains the TypeScript sources only, without compiled JavaScript.
 
-[Unreleased]: https://github.com/localgod/tsarchi/compare/2.0.0...HEAD
+[Unreleased]: https://github.com/localgod/tsarchi/compare/2.1.0...HEAD
+[2.1.0]: https://github.com/localgod/tsarchi/compare/2.0.0...2.1.0
 [2.0.0]: https://github.com/localgod/tsarchi/compare/1.0.3...2.0.0
 [1.0.3]: https://github.com/localgod/tsarchi/releases/tag/1.0.3
 [1.0.2]: https://github.com/localgod/tsarchi/releases/tag/1.0.2

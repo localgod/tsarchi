@@ -4,6 +4,7 @@ import type { Element } from './interfaces/Element.mjs';
 import type { Model } from './interfaces/Model.mjs';
 import type { Bounds } from './interfaces/Bounds.mjs';
 import { isArchimateViewType } from './constants/archimate-mappings.mjs';
+import { removeFromNestedFolders } from './internal/NestedFolders.mjs';
 
 export class ViewManager {
   private model: Model;
@@ -294,7 +295,7 @@ export class ViewManager {
   }
 
   /**
-   * Removes a view from the model
+   * Removes a view from the model and from the nested folder that lists it.
    */
   deleteView(viewId: string): boolean {
     if (!this.model.diagrams.elements) return false;
@@ -303,6 +304,7 @@ export class ViewManager {
     if (index === -1) return false;
 
     this.model.diagrams.elements.splice(index, 1);
+    removeFromNestedFolders(this.model.diagrams.folders || [], new Set([viewId]));
     return true;
   }
 

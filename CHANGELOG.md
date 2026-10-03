@@ -8,6 +8,14 @@ This project adheres to [Keep a CHANGELOG](http://keepachangelog.com/)
 
 ## [Unreleased]
 
+### Added
+
+- `validateModel()` reports an element or relationship without an `xsi:type` with the new `missing-type` error code. Such elements used to be saved with an invented `xsi:type="archimate:Unknown"`, and are now saved without one ([#449](https://github.com/localgod/tsarchi/issues/449)).
+
+### Changed
+
+- `unknown-type` is a warning instead of an error, so a model with element or relationship types tsarchi does not know (from a newer Archi or a plugin) can be saved with `toXml()`, and those elements and relationships are written back unchanged. Namespace declarations on folders, elements, relationships, diagram children and view connections are kept on save, so a prefixed type such as `vendor:Widget` stays bound. `upsertElement()` and `upsertRelationship()` still throw for an unknown type ([#449](https://github.com/localgod/tsarchi/issues/449)).
+
 ## [2.0.0] - 2026-10-02
 
 ### Added

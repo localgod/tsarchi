@@ -54,7 +54,7 @@ Version 2.0.0 has breaking changes. The main ones:
 - `TsArchi` is imported from `tsarchi/node` instead of `tsarchi`.
 - `Parser`, `Serializer`, `BoundsMapper`, `SourceConnectionMapper` and `DiagramAttributeMapper` are no longer exported. Load and save models through `Archimate` and `TsArchi`.
 - `TsArchi.load()` and `loadModel()` throw an `ArchimateParseError` for a file that is not an Archi model, and pass on file read errors, instead of logging them and returning an empty result.
-- Every `ValidationIssue` has a `severity`. Only errors stop a model from being saved; unnamed elements and relationships that Archi's relationships matrix rejects are warnings.
+- Every `ValidationIssue` has a `severity`. Only errors stop a model from being saved; unnamed elements, relationships that Archi's relationships matrix rejects, and element or relationship types tsarchi does not know are warnings.
 - `upsertElement()` matches an existing element on `id` when one is given, instead of on `name` and `type`.
 - The type lists follow Archi: types Archi never writes, such as `UsedByRelationship` and `Stage`, are removed, and short names such as `Flow` are no longer model types, though `upsertRelationship()` still accepts them. `Junction` is an element type in the Other folder.
 - `View.background` is a number. `Child.sourceConnection` and the schema's `Model.folder` can be a single object or an array.
@@ -343,7 +343,7 @@ TSArchi reports problems instead of silently changing the model:
 - Models are validated before saving to catch duplicate IDs, unknown types, broken relationships, broken view references, and references to missing profiles
 - Relationship types are checked against Archi's relationships matrix, including its Junction rules. `upsertRelationship()` throws for a type Archi would not allow
 
-Every issue from `validateModel()` has a `severity`. Only `error` issues stop a model from being saved. `warning` issues cover models Archi still opens and saves: unnamed elements, and relationships that Archi's matrix rejects (older models often have them).
+Every issue from `validateModel()` has a `severity`. Only `error` issues stop a model from being saved. `warning` issues cover models Archi still opens and saves: unnamed elements, and relationships that Archi's matrix rejects (older models often have them). Elements and relationships with a type tsarchi does not know (`unknown-type`), such as content from a newer Archi or a plugin, are also warnings: they are kept as loaded and written back unchanged. `upsertElement()` and `upsertRelationship()` still throw for an unknown type.
 
 ```typescript
 const issues = model.validateModel();

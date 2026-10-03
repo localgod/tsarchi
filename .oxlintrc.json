@@ -1,0 +1,11 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "overrides": [
+    {
+      "files": ["src/**"],
+      "rules": {
+        "no-console": "error"
+      }
+    }
+  ]
+}

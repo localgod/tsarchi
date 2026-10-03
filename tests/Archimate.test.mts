@@ -278,6 +278,23 @@ describe('Archimate', () => {
         .toThrowError('ID "shared-id" is already in use.');
     });
 
+    it('should return the inserted or updated element without writing to the console', () => {
+      const log = vi.spyOn(console, 'log');
+      try {
+        const inserted = archimate.upsertElement({ name: 'App', type: 'ApplicationComponent' });
+        expect(inserted.id).toMatch(/^id-/);
+        expect(archimate.getElement(inserted.id)).toBe(inserted);
+
+        const updated = archimate.upsertElement({ id: inserted.id, name: 'Renamed', type: 'ApplicationComponent' });
+        expect(updated).toBe(inserted);
+        expect(updated.name).toBe('Renamed');
+
+        expect(log).not.toHaveBeenCalled();
+      } finally {
+        log.mockRestore();
+      }
+    });
+
   });
 
   describe('findElementInFolderByName()', () => {

@@ -1,7 +1,7 @@
-import type { Bendpoint as SchemaBendpoint } from "../interfaces/schema/Bendpoint.mjs";
-import type { Feature as SchemaFeature } from "../interfaces/schema/Feature.mjs";
-import type { Property as SchemaProperty } from "../interfaces/schema/Property.mjs";
-import type { ViewBendpoint } from "../interfaces/View.mjs";
+import type { Bendpoint as SchemaBendpoint } from '../interfaces/schema/Bendpoint.mjs';
+import type { Feature as SchemaFeature } from '../interfaces/schema/Feature.mjs';
+import type { Property as SchemaProperty } from '../interfaces/schema/Property.mjs';
+import type { ViewBendpoint } from '../interfaces/View.mjs';
 
 type AttributeKind = 'string' | 'number' | 'boolean';
 
@@ -88,9 +88,7 @@ export class DiagramAttributeMapper {
     for (const [property, attribute, kind] of specs) {
       const raw = source[`@_${attribute}`];
       if (raw === undefined || raw === null) continue;
-      result[property] = kind === 'number' ? Number(raw)
-        : kind === 'boolean' ? String(raw) === 'true'
-        : String(raw);
+      result[property] = kind === 'number' ? Number(raw) : kind === 'boolean' ? String(raw) === 'true' : String(raw);
     }
     return result;
   }
@@ -134,10 +132,13 @@ export class DiagramAttributeMapper {
   /**
    * Reads the given features into model properties, skipping absent ones.
    */
-  public static readFeatures(features: Map<string, string> | undefined, specs: readonly AttributeSpec[]): Record<string, string | number | boolean> {
+  public static readFeatures(
+    features: Map<string, string> | undefined,
+    specs: readonly AttributeSpec[]
+  ): Record<string, string | number | boolean> {
     return DiagramAttributeMapper.readAttributes(
       Object.fromEntries(Array.from(features ?? [], ([name, value]) => [`@_${name}`, value])),
-      specs,
+      specs
     );
   }
 
@@ -145,7 +146,11 @@ export class DiagramAttributeMapper {
    * Merges the given model properties into a copy of the features. A set property replaces the feature in place,
    * or is appended when new; an unset property removes it.
    */
-  public static writeFeatures(model: object, features: Map<string, string> | undefined, specs: readonly AttributeSpec[]): Map<string, string> {
+  public static writeFeatures(
+    model: object,
+    features: Map<string, string> | undefined,
+    specs: readonly AttributeSpec[]
+  ): Map<string, string> {
     const source = model as Record<string, unknown>;
     const result = new Map(features);
     for (const [property, name] of specs) {

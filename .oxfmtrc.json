@@ -1,0 +1,15 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "ignorePatterns": ["src/index.mts", "src/constants/relationships-matrix.mts"],
+  "overrides": [
+    {
+      "files": ["*.mts", "*.ts", "*.mjs", "*.js"],
+      "options": {
+        "singleQuote": true,
+        "trailingComma": "es5",
+        "printWidth": 140,
+        "arrowParens": "avoid"
+      }
+    }
+  ]
+}

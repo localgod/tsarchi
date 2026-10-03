@@ -32,13 +32,23 @@ describe('features on folders, elements and relationships', () => {
   it('should load features on nested folders in file order', async () => {
     const archimate = await parseFixture();
 
-    expect(archimate.getFolders('business')[0].features).toEqual(new Map([['folderFeature', 'nested'], ['secondFeature', '2']]));
+    expect(archimate.getFolders('business')[0].features).toEqual(
+      new Map([
+        ['folderFeature', 'nested'],
+        ['secondFeature', '2'],
+      ])
+    );
   });
 
   it('should write features set in code', async () => {
     const archimate = await parseFixture();
 
-    archimate.updateElement('id-insurant', { features: new Map([['elementFeature', 'changed'], ['added', 'yes']]) });
+    archimate.updateElement('id-insurant', {
+      features: new Map([
+        ['elementFeature', 'changed'],
+        ['added', 'yes'],
+      ]),
+    });
 
     const insurant = businessFolder(archimate).element as unknown as { '@_id': string; feature: unknown }[];
     expect(insurant.find(element => element['@_id'] === 'id-insurant')?.feature).toEqual([
@@ -85,7 +95,10 @@ describe('top-level folder details', () => {
       name: 'Business Layer',
       documentation: 'Changed.',
       properties: new Map([['Owner', 'EA']]),
-      features: new Map([['folderFeature', 'changed'], ['added', 'yes']]),
+      features: new Map([
+        ['folderFeature', 'changed'],
+        ['added', 'yes'],
+      ]),
     });
 
     expect(details).toEqual(archimate.getFolder('business'));

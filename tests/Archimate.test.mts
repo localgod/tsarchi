@@ -8,27 +8,27 @@ import {
   folderType,
   isArchimateModelType,
   type ArchimateElementType,
-  type ArchimateRelationshipType
+  type ArchimateRelationshipType,
 } from '../src/constants/archimate-mappings.mjs';
 import { relationshipMatrixKeys, relationshipsMatrix } from '../src/constants/relationships-matrix.mjs';
 import type { Model } from '../src/interfaces/Model.mjs';
 import type { Relationship, RelationshipInput } from '../src/interfaces/Relationship.mjs';
 
 vi.mock('../src/internal/Parser.mjs', () => ({
-  Parser: vi.fn().mockImplementation(function() {
+  Parser: vi.fn().mockImplementation(function () {
     return {
       parse: vi.fn().mockReturnValue({ mockFolder: { elements: [] } }),
-      parseModelContent: vi.fn().mockReturnValue({})
+      parseModelContent: vi.fn().mockReturnValue({}),
     };
-  })
+  }),
 }));
 
 vi.mock('../src/internal/Serializer.mjs', () => ({
-  Serializer: vi.fn().mockImplementation(function() {
+  Serializer: vi.fn().mockImplementation(function () {
     return {
-      serialize: vi.fn().mockReturnValue({ mockSerialized: true })
+      serialize: vi.fn().mockReturnValue({ mockSerialized: true }),
     };
-  })
+  }),
 }));
 
 describe('Archimate', () => {
@@ -103,12 +103,10 @@ describe('Archimate', () => {
       archimate.upsertElement({
         id: 'id-existing',
         name: 'Existing',
-        type: 'ApplicationComponent'
+        type: 'ApplicationComponent',
       });
 
-      const randomSpy = vi.spyOn(archimate, 'generateRandomId')
-        .mockReturnValueOnce('id-existing')
-        .mockReturnValueOnce('id-unique');
+      const randomSpy = vi.spyOn(archimate, 'generateRandomId').mockReturnValueOnce('id-existing').mockReturnValueOnce('id-unique');
 
       expect(archimate.hasId('id-existing')).toBe(true);
       expect(archimate.hasId('id-missing')).toBe(false);
@@ -120,14 +118,12 @@ describe('Archimate', () => {
   });
 
   describe('Archimate model type exports', () => {
-    it.each(['Location', 'Grouping'] as const)('should place %s in the other folder', (type) => {
+    it.each(['Location', 'Grouping'] as const)('should place %s in the other folder', type => {
       archimate.upsertElement({ id: `other-${type}`, name: type, type });
 
       expect(archimateModelTypes).toContain(type);
       expect(isArchimateModelType(type)).toBe(true);
-      expect(((archimate as any).model as Model).other.elements).toEqual([
-        expect.objectContaining({ id: `other-${type}`, type })
-      ]);
+      expect(((archimate as any).model as Model).other.elements).toEqual([expect.objectContaining({ id: `other-${type}`, type })]);
       expect(archimate.validateModel()).toEqual([]);
     });
 
@@ -140,23 +136,25 @@ describe('Archimate', () => {
       archimate.upsertElement({ id: `el-${type}`, name: type, type });
 
       expect(isArchimateModelType(type)).toBe(true);
-      expect(((archimate as any).model as Model)[folderKey].elements).toEqual([
-        expect.objectContaining({ id: `el-${type}`, type })
-      ]);
+      expect(((archimate as any).model as Model)[folderKey].elements).toEqual([expect.objectContaining({ id: `el-${type}`, type })]);
       expect(archimate.validateModel()).toEqual([]);
     });
 
-    it.each(['Stage', 'Actor', 'BusinessProduct', 'TechnologyObject'])('should not accept %s, which Archi does not have', (type) => {
+    it.each(['Stage', 'Actor', 'BusinessProduct', 'TechnologyObject'])('should not accept %s, which Archi does not have', type => {
       expect(isArchimateModelType(type)).toBe(false);
       expect(() => archimate.upsertElement({ id: 'el', name: type, type: type as ArchimateElementType })).toThrow();
     });
 
-    it('should list exactly the element types in Archi\'s relationships matrix', () => {
+    it("should list exactly the element types in Archi's relationships matrix", () => {
       const elementTypes = [...elementTypeToFolderKey]
         .filter(([, folderKey]) => folderKey !== 'relations' && folderKey !== 'diagrams')
         .map(([type]) => type);
 
-      expect(elementTypes.sort()).toEqual(Object.keys(relationshipsMatrix).filter(type => type !== 'Relationship').sort());
+      expect(elementTypes.sort()).toEqual(
+        Object.keys(relationshipsMatrix)
+          .filter(type => type !== 'Relationship')
+          .sort()
+      );
     });
 
     it('should expose supported model types and a type guard', () => {
@@ -171,27 +169,41 @@ describe('Archimate', () => {
   });
 
   describe('upsertElement()', () => {
-
     it.each([
       {
         name: 'Add new element and update properties',
         initial: { name: 'Test App', type: 'ApplicationComponent', properties: new Map([['version', '1.0']]) },
         updates: [{ properties: new Map([['status', 'active']]) }],
-        expected: { version: '1.0', status: 'active' }
+        expected: { version: '1.0', status: 'active' },
       },
       {
         name: 'Merge properties and preserve id',
-        initial: { id: 'fixed-id-123', name: 'Merge Test', type: 'ApplicationComponent', properties: new Map([['version', '1.0'], ['crown', 'gold']]) },
-        updates: [{ properties: new Map([['status', 'planned'], ['version', '1.1']]) }],
+        initial: {
+          id: 'fixed-id-123',
+          name: 'Merge Test',
+          type: 'ApplicationComponent',
+          properties: new Map([
+            ['version', '1.0'],
+            ['crown', 'gold'],
+          ]),
+        },
+        updates: [
+          {
+            properties: new Map([
+              ['status', 'planned'],
+              ['version', '1.1'],
+            ]),
+          },
+        ],
         expected: { version: '1.1', status: 'planned', crown: 'gold' },
-        expectedId: 'fixed-id-123'
+        expectedId: 'fixed-id-123',
       },
       {
         name: 'Add element without previous properties',
         initial: { name: 'No Props', type: 'ApplicationComponent' },
         updates: [{ properties: new Map([['newProp', 'value']]) }],
-        expected: { newProp: 'value' }
-      }
+        expected: { newProp: 'value' },
+      },
     ])('should upsert element correctly: $name', ({ initial, updates, expected, expectedId }) => {
       archimate.upsertElement(initial as any);
       updates.forEach(u => archimate.upsertElement({ ...initial, ...u } as any));
@@ -208,17 +220,19 @@ describe('Archimate', () => {
     });
 
     it('should not add element if type is unknown', () => {
-      expect(() => archimate.upsertElement({
-        name: 'Unknown Type Test',
-        type: 'NotARealType'
-      } as any)).toThrowError('Unknown element type "NotARealType".');
+      expect(() =>
+        archimate.upsertElement({
+          name: 'Unknown Type Test',
+          type: 'NotARealType',
+        } as any)
+      ).toThrowError('Unknown element type "NotARealType".');
     });
 
     it('should support documented BusinessActor elements', () => {
       archimate.upsertElement({
         id: 'business-actor-1',
         name: 'Documented Actor',
-        type: 'BusinessActor'
+        type: 'BusinessActor',
       });
 
       const actor = archimate.findElementInFolderByName('business', 'Documented Actor');
@@ -230,15 +244,16 @@ describe('Archimate', () => {
       archimate.upsertElement({
         id: 'id-existing',
         name: 'Existing',
-        type: 'ApplicationComponent'
+        type: 'ApplicationComponent',
       });
-      const randomSpy = vi.spyOn(archimate, 'generateRandomId')
+      const randomSpy = vi
+        .spyOn(archimate, 'generateRandomId')
         .mockReturnValueOnce('id-existing')
         .mockReturnValueOnce('id-generated-element');
 
       archimate.upsertElement({
         name: 'Generated ID Element',
-        type: 'ApplicationComponent'
+        type: 'ApplicationComponent',
       });
 
       expect(archimate.findElementInFolderByName('application', 'Generated ID Element')?.id).toBe('id-generated-element');
@@ -274,8 +289,9 @@ describe('Archimate', () => {
     it('should throw when the id is used by something else', () => {
       archimate.upsertElement({ id: 'shared-id', name: 'Actor', type: 'BusinessActor' });
 
-      expect(() => archimate.upsertElement({ id: 'shared-id', name: 'App', type: 'ApplicationComponent' }))
-        .toThrowError('ID "shared-id" is already in use.');
+      expect(() => archimate.upsertElement({ id: 'shared-id', name: 'App', type: 'ApplicationComponent' })).toThrowError(
+        'ID "shared-id" is already in use.'
+      );
     });
 
     it('should return the inserted or updated element without writing to the console', () => {
@@ -294,7 +310,6 @@ describe('Archimate', () => {
         log.mockRestore();
       }
     });
-
   });
 
   describe('findElementInFolderByName()', () => {
@@ -305,7 +320,7 @@ describe('Archimate', () => {
     it('should return the matching element if found', () => {
       archimate.upsertElement({
         name: 'Lookup Test',
-        type: 'ApplicationComponent'
+        type: 'ApplicationComponent',
       });
       const found = archimate.findElementInFolderByName('application', 'Lookup Test');
       expect(found).not.toBeNull();
@@ -319,19 +334,19 @@ describe('Archimate', () => {
         id: 'app-a',
         name: 'App A',
         type: 'ApplicationComponent',
-        properties: new Map([['version', '1.0']])
+        properties: new Map([['version', '1.0']]),
       });
       archimate.upsertElement({
         id: 'app-b',
         name: 'App B',
-        type: 'ApplicationComponent'
+        type: 'ApplicationComponent',
       });
       archimate.upsertElement({
         id: 'rel-a-b',
         name: 'A to B',
         type: 'FlowRelationship',
         source: 'app-a',
-        target: 'app-b'
+        target: 'app-b',
       });
     });
 
@@ -345,7 +360,7 @@ describe('Archimate', () => {
       archimate.upsertElement({
         id: 'business-app-a',
         name: 'App A',
-        type: 'BusinessActor'
+        type: 'BusinessActor',
       });
 
       const matches = archimate.findElementsByName('App A');
@@ -356,7 +371,7 @@ describe('Archimate', () => {
       const updated = archimate.updateElement('app-a', {
         name: 'App A Updated',
         documentation: 'Updated documentation',
-        properties: new Map([['status', 'active']])
+        properties: new Map([['status', 'active']]),
       });
 
       expect(updated?.id).toBe('app-a');
@@ -388,7 +403,7 @@ describe('Archimate', () => {
 
     it('should move an element when its type changes folder', () => {
       const updated = archimate.updateElement('app-a', {
-        type: 'BusinessActor'
+        type: 'BusinessActor',
       });
 
       expect(updated?.type).toBe('BusinessActor');
@@ -397,9 +412,11 @@ describe('Archimate', () => {
     });
 
     it('should reject updates to unknown element types', () => {
-      expect(() => archimate.updateElement('app-a', {
-        type: 'NotARealType'
-      })).toThrowError('Unknown element type "NotARealType".');
+      expect(() =>
+        archimate.updateElement('app-a', {
+          type: 'NotARealType',
+        })
+      ).toThrowError('Unknown element type "NotARealType".');
     });
 
     it('should delete elements and clean relationships and view references', () => {
@@ -408,13 +425,13 @@ describe('Archimate', () => {
         x: 0,
         y: 0,
         width: 100,
-        height: 50
+        height: 50,
       });
       const targetObject = archimate.addDiagramObject(view.id, 'app-b', {
         x: 200,
         y: 0,
         width: 100,
-        height: 50
+        height: 50,
       });
       archimate.addConnection(view.id, sourceObject!.id, targetObject!.id, 'rel-a-b');
 
@@ -436,13 +453,13 @@ describe('Archimate', () => {
         x: 0,
         y: 0,
         width: 100,
-        height: 50
+        height: 50,
       });
       const targetObject = archimate.addDiagramObject(view.id, 'app-b', {
         x: 200,
         y: 0,
         width: 100,
-        height: 50
+        height: 50,
       });
       archimate.addConnection(view.id, sourceObject!.id, targetObject!.id, 'rel-a-b');
 
@@ -460,17 +477,17 @@ describe('Archimate', () => {
       archimate.upsertElement({
         id: 'rel-app-a',
         name: 'Relationship App A',
-        type: 'ApplicationComponent'
+        type: 'ApplicationComponent',
       });
       archimate.upsertElement({
         id: 'rel-app-b',
         name: 'Relationship App B',
-        type: 'ApplicationComponent'
+        type: 'ApplicationComponent',
       });
       archimate.upsertElement({
         id: 'rel-app-c',
         name: 'Relationship App C',
-        type: 'ApplicationComponent'
+        type: 'ApplicationComponent',
       });
     });
 
@@ -481,7 +498,7 @@ describe('Archimate', () => {
         type: 'FlowRelationship',
         source: 'rel-app-a',
         target: 'rel-app-b',
-        properties: new Map([['kind', 'data']])
+        properties: new Map([['kind', 'data']]),
       });
 
       expect(relationship.id).toBe('formal-rel-a-b');
@@ -494,17 +511,43 @@ describe('Archimate', () => {
 
     it('should create and update the access type of access relationships', () => {
       archimate.upsertElement({ id: 'rel-data', name: 'Data', type: 'DataObject' });
-      archimate.upsertRelationship({ id: 'access-a-b', name: 'reads', type: 'AccessRelationship', source: 'rel-app-a', target: 'rel-data', accessType: 1 });
+      archimate.upsertRelationship({
+        id: 'access-a-b',
+        name: 'reads',
+        type: 'AccessRelationship',
+        source: 'rel-app-a',
+        target: 'rel-data',
+        accessType: 1,
+      });
       expect(archimate.getRelationship('access-a-b')?.accessType).toBe(1);
 
-      archimate.upsertRelationship({ id: 'access-a-b', name: 'reads', type: 'AccessRelationship', source: 'rel-app-a', target: 'rel-data', accessType: 3 });
+      archimate.upsertRelationship({
+        id: 'access-a-b',
+        name: 'reads',
+        type: 'AccessRelationship',
+        source: 'rel-app-a',
+        target: 'rel-data',
+        accessType: 3,
+      });
       expect(archimate.getRelationship('access-a-b')?.accessType).toBe(3);
     });
 
     it('should accept junctions as relationship endpoints', () => {
       archimate.upsertElement({ id: 'rel-junction', name: 'Junction', type: 'Junction' });
-      archimate.upsertRelationship({ id: 'rel-a-j', name: 'A to J', type: 'FlowRelationship', source: 'rel-app-a', target: 'rel-junction' });
-      archimate.upsertRelationship({ id: 'rel-j-b', name: 'J to B', type: 'FlowRelationship', source: 'rel-junction', target: 'rel-app-b' });
+      archimate.upsertRelationship({
+        id: 'rel-a-j',
+        name: 'A to J',
+        type: 'FlowRelationship',
+        source: 'rel-app-a',
+        target: 'rel-junction',
+      });
+      archimate.upsertRelationship({
+        id: 'rel-j-b',
+        name: 'J to B',
+        type: 'FlowRelationship',
+        source: 'rel-junction',
+        target: 'rel-app-b',
+      });
 
       expect(((archimate as any).model as Model).other.elements).toEqual([expect.objectContaining({ id: 'rel-junction' })]);
       expect(archimate.getRelationship('rel-junction')).toBeNull();
@@ -547,17 +590,16 @@ describe('Archimate', () => {
       archimate.upsertRelationship({ id: 'rel-b-c', type: 'FlowRelationship', source: 'rel-app-b', target: 'rel-app-c' });
       archimate.upsertElement({ id: 'rel-junction', name: 'Junction', type: 'Junction' });
 
-      expect(() => archimate.upsertRelationship({ id: 'rel-new', type: type as RelationshipInput['type'], source, target }))
-        .toThrowError(/Relationship "rel-new"/);
+      expect(() => archimate.upsertRelationship({ id: 'rel-new', type: type as RelationshipInput['type'], source, target })).toThrowError(
+        /Relationship "rel-new"/
+      );
       expect(archimate.getRelationship('rel-new')).toBeNull();
 
       ((archimate as any).model as Model).relations.elements!.push({ id: 'rel-new', type, source, target } as Relationship);
-      expect(archimate.validateModel()).toEqual([
-        expect.objectContaining({ code: 'relationship-endpoint-not-allowed', id: 'rel-new' }),
-      ]);
+      expect(archimate.validateModel()).toEqual([expect.objectContaining({ code: 'relationship-endpoint-not-allowed', id: 'rel-new' })]);
     });
 
-    it('should accept relationship types that Archi\'s matrix allows between two elements', () => {
+    it("should accept relationship types that Archi's matrix allows between two elements", () => {
       archimate.upsertElement({ id: 'rel-service', name: 'Service', type: 'ApplicationService' });
       archimate.upsertElement({ id: 'rel-process', name: 'Process', type: 'BusinessProcess' });
 
@@ -572,8 +614,9 @@ describe('Archimate', () => {
       ['an access between two application components', 'AccessRelationship', 'rel-app-a', 'rel-app-b'],
       ['an influence between two application components', 'InfluenceRelationship', 'rel-app-a', 'rel-app-b'],
     ])('should reject %s', (_label, type, source, target) => {
-      expect(() => archimate.upsertRelationship({ id: 'rel-new', type: type as RelationshipInput['type'], source, target }))
-        .toThrowError(`Relationship "rel-new" of type ${type} is not allowed from ApplicationComponent "rel-app-a" to ApplicationComponent "rel-app-b".`);
+      expect(() => archimate.upsertRelationship({ id: 'rel-new', type: type as RelationshipInput['type'], source, target })).toThrowError(
+        `Relationship "rel-new" of type ${type} is not allowed from ApplicationComponent "rel-app-a" to ApplicationComponent "rel-app-b".`
+      );
       expect(archimate.getRelationship('rel-new')).toBeNull();
 
       ((archimate as any).model as Model).relations.elements!.push({ id: 'rel-new', type, source, target } as Relationship);
@@ -584,20 +627,30 @@ describe('Archimate', () => {
     });
 
     it('should reject a short-named type the matrix does not allow, reporting the full type', () => {
-      expect(() => archimate.upsertRelationship({ id: 'rel-new', type: 'Influence', source: 'rel-app-a', target: 'rel-app-b' }))
-        .toThrowError('Relationship "rel-new" of type InfluenceRelationship is not allowed from ApplicationComponent "rel-app-a" to ApplicationComponent "rel-app-b".');
+      expect(() =>
+        archimate.upsertRelationship({ id: 'rel-new', type: 'Influence', source: 'rel-app-a', target: 'rel-app-b' })
+      ).toThrowError(
+        'Relationship "rel-new" of type InfluenceRelationship is not allowed from ApplicationComponent "rel-app-a" to ApplicationComponent "rel-app-b".'
+      );
     });
 
-    it.each(archimateRelationshipAliasTypes)('should store the short name %s as the full relationship type', (alias) => {
+    it.each(archimateRelationshipAliasTypes)('should store the short name %s as the full relationship type', alias => {
       // Grouping to Grouping allows every relationship type.
       archimate.upsertElement({ id: 'rel-grouping-a', name: 'Grouping A', type: 'Grouping' });
       archimate.upsertElement({ id: 'rel-grouping-b', name: 'Grouping B', type: 'Grouping' });
 
-      const relationship = archimate.upsertRelationship({ id: 'rel-alias', type: alias, source: 'rel-grouping-a', target: 'rel-grouping-b' });
+      const relationship = archimate.upsertRelationship({
+        id: 'rel-alias',
+        type: alias,
+        source: 'rel-grouping-a',
+        target: 'rel-grouping-b',
+      });
 
       expect(relationship.type).toBe(`${alias}Relationship`);
       expect(archimate.getRelationship('rel-alias')?.type).toBe(`${alias}Relationship`);
-      expect(archimate.findRelationshipsBetween('rel-grouping-a', 'rel-grouping-b', { type: alias }).map(rel => rel.id)).toEqual(['rel-alias']);
+      expect(archimate.findRelationshipsBetween('rel-grouping-a', 'rel-grouping-b', { type: alias }).map(rel => rel.id)).toEqual([
+        'rel-alias',
+      ]);
       expect(archimate.validateModel()).toEqual([]);
     });
 
@@ -611,23 +664,34 @@ describe('Archimate', () => {
     });
 
     it.each(['UsedByRelationship', 'RepresentationRelationship', 'MaterialRelationship', 'UsedBy', 'Flow'])(
-      'should not accept %s as a stored relationship type, as Archi does not write it', (type) => {
+      'should not accept %s as a stored relationship type, as Archi does not write it',
+      type => {
         expect(isArchimateModelType(type)).toBe(false);
         expect(archimateModelTypes).not.toContain(type);
 
-        ((archimate as any).model as Model).relations.elements!.push({ id: 'rel-legacy', name: 'Legacy', type, source: 'rel-app-a', target: 'rel-app-b' } as unknown as Relationship);
+        ((archimate as any).model as Model).relations.elements!.push({
+          id: 'rel-legacy',
+          name: 'Legacy',
+          type,
+          source: 'rel-app-a',
+          target: 'rel-app-b',
+        } as unknown as Relationship);
         expect(archimate.validateModel()).toEqual([
           expect.objectContaining({ code: 'unknown-type', severity: 'warning', id: 'rel-legacy' }),
         ]);
-      });
+      }
+    );
 
     it.each(['UsedByRelationship', 'RepresentationRelationship', 'MaterialRelationship', 'UsedBy'])(
-      'should reject %s in upsertRelationship()', (type) => {
-        expect(() => archimate.upsertRelationship({ id: 'rel-new', type: type as RelationshipInput['type'], source: 'rel-app-a', target: 'rel-app-b' }))
-          .toThrowError(`Unknown relationship type "${type}".`);
-      });
+      'should reject %s in upsertRelationship()',
+      type => {
+        expect(() =>
+          archimate.upsertRelationship({ id: 'rel-new', type: type as RelationshipInput['type'], source: 'rel-app-a', target: 'rel-app-b' })
+        ).toThrowError(`Unknown relationship type "${type}".`);
+      }
+    );
 
-    it('should list exactly the relationship types in Archi\'s relationships matrix', () => {
+    it("should list exactly the relationship types in Archi's relationships matrix", () => {
       expect([...archimateRelationshipTypes].sort()).toEqual(Object.values(relationshipMatrixKeys).sort());
     });
 
@@ -642,15 +706,20 @@ describe('Archimate', () => {
       it('should reject a relationship whose type differs from the other relationships on a junction', () => {
         archimate.upsertRelationship({ id: 'j-in', type: 'FlowRelationship', source: 'rel-app-a', target: 'j-junction' });
 
-        expect(() => archimate.upsertRelationship({ id: 'j-out', type: 'TriggeringRelationship', source: 'j-junction', target: 'rel-app-b' }))
-          .toThrowError('all relationships on a Junction must have the same type');
-        expect(() => archimate.upsertRelationship({ id: 'j-in-2', type: 'ServingRelationship', source: 'rel-app-c', target: 'j-junction' }))
-          .toThrowError('all relationships on a Junction must have the same type');
+        expect(() =>
+          archimate.upsertRelationship({ id: 'j-out', type: 'TriggeringRelationship', source: 'j-junction', target: 'rel-app-b' })
+        ).toThrowError('all relationships on a Junction must have the same type');
+        expect(() =>
+          archimate.upsertRelationship({ id: 'j-in-2', type: 'ServingRelationship', source: 'rel-app-c', target: 'j-junction' })
+        ).toThrowError('all relationships on a Junction must have the same type');
         archimate.upsertRelationship({ id: 'j-out', type: 'Flow', source: 'j-junction', target: 'rel-app-b' });
 
-        ((archimate as any).model as Model).relations.elements!.push(
-          { id: 'j-bad', type: 'TriggeringRelationship', source: 'j-junction', target: 'rel-app-c' } as Relationship
-        );
+        ((archimate as any).model as Model).relations.elements!.push({
+          id: 'j-bad',
+          type: 'TriggeringRelationship',
+          source: 'j-junction',
+          target: 'rel-app-c',
+        } as Relationship);
         expect(archimate.validateModel()).toEqual([
           expect.objectContaining({ code: 'junction-relationship-type-mismatch', severity: 'warning', id: 'j-in' }),
           expect.objectContaining({ code: 'junction-relationship-type-mismatch', severity: 'warning', id: 'j-out' }),
@@ -669,12 +738,18 @@ describe('Archimate', () => {
       it('should reject a relationship that is not allowed between the concepts a junction links', () => {
         archimate.upsertRelationship({ id: 'j-in', type: 'RealizationRelationship', source: 'j-actor', target: 'j-junction' });
 
-        expect(() => archimate.upsertRelationship({ id: 'j-out', type: 'RealizationRelationship', source: 'j-junction', target: 'j-role' }))
-          .toThrowError('Relationship "j-out" of type RealizationRelationship is not allowed from BusinessActor "j-actor" to BusinessRole "j-role" through Junction "j-junction".');
-
-        ((archimate as any).model as Model).relations.elements!.push(
-          { id: 'j-out', type: 'RealizationRelationship', source: 'j-junction', target: 'j-role' } as Relationship
+        expect(() =>
+          archimate.upsertRelationship({ id: 'j-out', type: 'RealizationRelationship', source: 'j-junction', target: 'j-role' })
+        ).toThrowError(
+          'Relationship "j-out" of type RealizationRelationship is not allowed from BusinessActor "j-actor" to BusinessRole "j-role" through Junction "j-junction".'
         );
+
+        ((archimate as any).model as Model).relations.elements!.push({
+          id: 'j-out',
+          type: 'RealizationRelationship',
+          source: 'j-junction',
+          target: 'j-role',
+        } as Relationship);
         expect(archimate.validateModel()).toEqual([
           expect.objectContaining({ code: 'relationship-type-not-allowed', id: 'j-in' }),
           expect.objectContaining({ code: 'relationship-type-not-allowed', id: 'j-out' }),
@@ -696,28 +771,33 @@ describe('Archimate', () => {
         archimate.upsertRelationship({ id: 'j-out', type: 'FlowRelationship', source: 'j-junction', target: 'rel-app-b' });
 
         expect(archimate.validateModel()).toEqual([]);
-        expect(() => archimate.upsertRelationship({ id: 'j-group-flow', type: 'FlowRelationship', source: 'j-grouping', target: 'j-junction' }))
-          .not.toThrow();
-        expect(() => archimate.upsertRelationship({ id: 'j-group-serving', type: 'ServingRelationship', source: 'j-grouping', target: 'j-junction' }))
-          .toThrowError('all relationships on a Junction must have the same type');
+        expect(() =>
+          archimate.upsertRelationship({ id: 'j-group-flow', type: 'FlowRelationship', source: 'j-grouping', target: 'j-junction' })
+        ).not.toThrow();
+        expect(() =>
+          archimate.upsertRelationship({ id: 'j-group-serving', type: 'ServingRelationship', source: 'j-grouping', target: 'j-junction' })
+        ).toThrowError('all relationships on a Junction must have the same type');
       });
     });
 
     it('should reject a relationship that targets itself', () => {
       archimate.upsertRelationship({ id: 'rel-a-b', type: 'AssociationRelationship', source: 'rel-app-a', target: 'rel-app-b' });
 
-      expect(() => archimate.upsertRelationship({ id: 'rel-a-b', type: 'AssociationRelationship', source: 'rel-app-a', target: 'rel-a-b' }))
-        .toThrowError('cannot connect to itself');
+      expect(() =>
+        archimate.upsertRelationship({ id: 'rel-a-b', type: 'AssociationRelationship', source: 'rel-app-a', target: 'rel-a-b' })
+      ).toThrowError('cannot connect to itself');
     });
 
     it('should reject views as relationship endpoints', () => {
       const view = archimate.createView('Endpoint View');
 
-      expect(() => archimate.upsertRelationship({
-        type: 'AssociationRelationship',
-        source: 'rel-app-a',
-        target: view.id
-      })).toThrowError(`Relationship target element "${view.id}" not found in model.`);
+      expect(() =>
+        archimate.upsertRelationship({
+          type: 'AssociationRelationship',
+          source: 'rel-app-a',
+          target: view.id,
+        })
+      ).toThrowError(`Relationship target element "${view.id}" not found in model.`);
     });
 
     it('should delete relationships connected to a deleted relationship', () => {
@@ -751,9 +831,10 @@ describe('Archimate', () => {
         name: 'Existing Relationship',
         type: 'FlowRelationship',
         source: 'rel-app-a',
-        target: 'rel-app-b'
+        target: 'rel-app-b',
       });
-      const randomSpy = vi.spyOn(archimate, 'generateRandomId')
+      const randomSpy = vi
+        .spyOn(archimate, 'generateRandomId')
         .mockReturnValueOnce('id-existing-relationship')
         .mockReturnValueOnce('id-generated-relationship');
 
@@ -761,7 +842,7 @@ describe('Archimate', () => {
         name: 'Generated Relationship',
         type: 'ServingRelationship',
         source: 'rel-app-a',
-        target: 'rel-app-c'
+        target: 'rel-app-c',
       });
 
       expect(relationship.id).toBe('id-generated-relationship');
@@ -775,7 +856,7 @@ describe('Archimate', () => {
         type: 'FlowRelationship',
         source: 'rel-app-a',
         target: 'rel-app-b',
-        properties: new Map([['kind', 'data']])
+        properties: new Map([['kind', 'data']]),
       });
 
       const updated = archimate.upsertRelationship({
@@ -784,7 +865,7 @@ describe('Archimate', () => {
         type: 'FlowRelationship',
         source: 'rel-app-a',
         target: 'rel-app-b',
-        properties: new Map([['status', 'active']])
+        properties: new Map([['status', 'active']]),
       });
 
       expect(updated.name).toBe('Formal A to B Updated');
@@ -799,21 +880,21 @@ describe('Archimate', () => {
         name: 'Formal A to B',
         type: 'FlowRelationship',
         source: 'rel-app-a',
-        target: 'rel-app-b'
+        target: 'rel-app-b',
       });
       archimate.upsertRelationship({
         id: 'formal-rel-b-a',
         name: 'Formal B to A',
         type: 'TriggeringRelationship',
         source: 'rel-app-b',
-        target: 'rel-app-a'
+        target: 'rel-app-a',
       });
       archimate.upsertRelationship({
         id: 'formal-rel-a-c',
         name: 'Formal A to C',
         type: 'ServingRelationship',
         source: 'rel-app-a',
-        target: 'rel-app-c'
+        target: 'rel-app-c',
       });
 
       expect(archimate.findRelationshipsForElement('rel-app-a').map(rel => rel.id)).toEqual(
@@ -827,23 +908,29 @@ describe('Archimate', () => {
       expect(archimate.findRelationshipsBetween('rel-app-a', 'rel-app-b', { bidirectional: true }).map(rel => rel.id)).toEqual(
         expect.arrayContaining(['formal-rel-a-b', 'formal-rel-b-a'])
       );
-      expect(archimate.findRelationshipsBetween('rel-app-a', 'rel-app-b', { bidirectional: true, type: 'FlowRelationship' }).map(rel => rel.id)).toEqual(['formal-rel-a-b']);
+      expect(
+        archimate.findRelationshipsBetween('rel-app-a', 'rel-app-b', { bidirectional: true, type: 'FlowRelationship' }).map(rel => rel.id)
+      ).toEqual(['formal-rel-a-b']);
     });
 
     it('should reject invalid relationship types and missing endpoints', () => {
-      expect(() => archimate.upsertRelationship({
-        name: 'Invalid Type',
-        type: 'ApplicationComponent' as any,
-        source: 'rel-app-a',
-        target: 'rel-app-b'
-      })).toThrowError('Unknown relationship type "ApplicationComponent".');
+      expect(() =>
+        archimate.upsertRelationship({
+          name: 'Invalid Type',
+          type: 'ApplicationComponent' as any,
+          source: 'rel-app-a',
+          target: 'rel-app-b',
+        })
+      ).toThrowError('Unknown relationship type "ApplicationComponent".');
 
-      expect(() => archimate.upsertRelationship({
-        name: 'Missing Endpoint',
-        type: 'FlowRelationship',
-        source: 'rel-app-a',
-        target: 'missing-target'
-      })).toThrowError('Relationship target element "missing-target" not found in model.');
+      expect(() =>
+        archimate.upsertRelationship({
+          name: 'Missing Endpoint',
+          type: 'FlowRelationship',
+          source: 'rel-app-a',
+          target: 'missing-target',
+        })
+      ).toThrowError('Relationship target element "missing-target" not found in model.');
     });
 
     it('should delete relationships and clean view connections', () => {
@@ -852,20 +939,20 @@ describe('Archimate', () => {
         name: 'Formal A to B',
         type: 'FlowRelationship',
         source: 'rel-app-a',
-        target: 'rel-app-b'
+        target: 'rel-app-b',
       });
       const view = archimate.createView('Formal Relationship View');
       const sourceObject = archimate.addDiagramObject(view.id, 'rel-app-a', {
         x: 0,
         y: 0,
         width: 100,
-        height: 50
+        height: 50,
       });
       const targetObject = archimate.addDiagramObject(view.id, 'rel-app-b', {
         x: 200,
         y: 0,
         width: 100,
-        height: 50
+        height: 50,
       });
       archimate.addConnection(view.id, sourceObject!.id, targetObject!.id, relationship.id);
 
@@ -885,9 +972,10 @@ describe('Archimate', () => {
       archimate.upsertElement({
         id: 'app-for-view',
         name: 'App for View',
-        type: 'ApplicationComponent'
+        type: 'ApplicationComponent',
       });
-      const randomSpy = vi.spyOn(archimate, 'generateRandomId')
+      const randomSpy = vi
+        .spyOn(archimate, 'generateRandomId')
         .mockReturnValueOnce('app-for-view')
         .mockReturnValueOnce('generated-view-id')
         .mockReturnValueOnce('app-for-view')
@@ -898,7 +986,7 @@ describe('Archimate', () => {
         x: 0,
         y: 0,
         width: 100,
-        height: 50
+        height: 50,
       });
 
       expect(view.id).toBe('generated-view-id');
@@ -914,19 +1002,19 @@ describe('Archimate', () => {
       archimate.upsertElement({
         id: 'valid-app-a',
         name: 'Valid App A',
-        type: 'ApplicationComponent'
+        type: 'ApplicationComponent',
       });
       archimate.upsertElement({
         id: 'valid-app-b',
         name: 'Valid App B',
-        type: 'ApplicationComponent'
+        type: 'ApplicationComponent',
       });
       archimate.upsertElement({
         id: 'valid-rel-a-b',
         name: 'Valid Relationship',
         type: 'FlowRelationship',
         source: 'valid-app-a',
-        target: 'valid-app-b'
+        target: 'valid-app-b',
       });
 
       const view = archimate.createView('Valid View');
@@ -934,13 +1022,13 @@ describe('Archimate', () => {
         x: 0,
         y: 0,
         width: 100,
-        height: 50
+        height: 50,
       });
       const targetObject = archimate.addDiagramObject(view.id, 'valid-app-b', {
         x: 200,
         y: 0,
         width: 100,
-        height: 50
+        height: 50,
       });
       archimate.addConnection(view.id, sourceObject!.id, targetObject!.id, 'valid-rel-a-b');
 
@@ -955,7 +1043,7 @@ describe('Archimate', () => {
       model.other.elements = [{ id: 'unnamed-junction', type: 'Junction' } as any];
       model.relations.elements = [
         { id: 'unnamed-rel', type: 'FlowRelationship', source: 'unnamed-app-a', target: 'unnamed-junction' } as any,
-        { id: 'unnamed-rel-2', type: 'FlowRelationship', source: 'unnamed-junction', target: 'unnamed-app-b' } as any
+        { id: 'unnamed-rel-2', type: 'FlowRelationship', source: 'unnamed-junction', target: 'unnamed-app-b' } as any,
       ];
 
       expect(archimate.validateModel()).toEqual([]);
@@ -966,7 +1054,7 @@ describe('Archimate', () => {
       model.application.elements = [{ id: 'unnamed-app', type: 'ApplicationComponent' } as any];
 
       expect(archimate.validateModel()).toEqual([
-        expect.objectContaining({ code: 'missing-name', severity: 'warning', id: 'unnamed-app' })
+        expect.objectContaining({ code: 'missing-name', severity: 'warning', id: 'unnamed-app' }),
       ]);
       expect(() => archimate.assertValidModel()).not.toThrow();
     });
@@ -977,18 +1065,18 @@ describe('Archimate', () => {
         {
           id: 'duplicate-id',
           name: 'Duplicate One',
-          type: 'ApplicationComponent'
+          type: 'ApplicationComponent',
         },
         {
           id: 'duplicate-id',
           name: 'Duplicate Two',
-          type: 'ApplicationComponent'
+          type: 'ApplicationComponent',
         },
         {
           id: 'unknown-type',
           name: 'Unknown Type',
-          type: 'NotARealType'
-        } as any
+          type: 'NotARealType',
+        } as any,
       ];
       model.relations.elements = [
         {
@@ -996,8 +1084,8 @@ describe('Archimate', () => {
           name: 'Broken Relationship',
           type: 'FlowRelationship',
           source: 'missing-source',
-          target: 'missing-target'
-        }
+          target: 'missing-target',
+        },
       ];
       model.diagrams.elements = [
         {
@@ -1016,33 +1104,35 @@ describe('Archimate', () => {
                   type: 'Connection',
                   source: 'view-source',
                   target: 'missing-target-object',
-                  archimateRelationship: 'missing-relationship'
-                }
-              ]
+                  archimateRelationship: 'missing-relationship',
+                },
+              ],
             } as any,
             {
               id: 'view-target',
               type: 'DiagramObject',
               archimateElement: 'duplicate-id',
               targetConnections: ['missing-connection'],
-              bounds: { x: 200, y: 0, width: 100, height: 50 }
-            } as any
-          ]
-        }
+              bounds: { x: 200, y: 0, width: 100, height: 50 },
+            } as any,
+          ],
+        },
       ];
 
       const issueCodes = archimate.validateModel().map(issue => issue.code);
 
-      expect(issueCodes).toEqual(expect.arrayContaining([
-        'duplicate-id',
-        'unknown-type',
-        'relationship-missing-source',
-        'relationship-missing-target',
-        'diagram-object-missing-element',
-        'view-connection-missing-relationship',
-        'view-connection-missing-target',
-        'view-target-connection-missing-source'
-      ]));
+      expect(issueCodes).toEqual(
+        expect.arrayContaining([
+          'duplicate-id',
+          'unknown-type',
+          'relationship-missing-source',
+          'relationship-missing-target',
+          'diagram-object-missing-element',
+          'view-connection-missing-relationship',
+          'view-connection-missing-target',
+          'view-target-connection-missing-source',
+        ])
+      );
       expect(archimate.validateModel().every(issue => issue.severity === (issue.code === 'unknown-type' ? 'warning' : 'error'))).toBe(true);
       expect(() => archimate.assertValidModel()).toThrow('Archimate model validation failed');
     });
@@ -1052,9 +1142,11 @@ describe('Archimate', () => {
       model.application.elements = [{ id: 'unnamed-app', type: 'ApplicationComponent' } as any];
       model.relations.elements = [{ id: 'broken-rel', type: 'FlowRelationship', source: 'unnamed-app', target: 'missing' } as any];
 
-      expect(() => archimate.assertValidModel()).toThrow(expect.objectContaining({
-        issues: [expect.objectContaining({ code: 'relationship-missing-target', severity: 'error' })],
-      }));
+      expect(() => archimate.assertValidModel()).toThrow(
+        expect.objectContaining({
+          issues: [expect.objectContaining({ code: 'relationship-missing-target', severity: 'error' })],
+        })
+      );
     });
   });
 
@@ -1078,5 +1170,4 @@ describe('Archimate', () => {
       expect(result).toEqual({ mockSerialized: true });
     });
   });
-
 });

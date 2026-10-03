@@ -5,14 +5,14 @@ import type { Schema } from '../interfaces/schema/Schema.mjs';
 
 const parseOptions: Partial<X2jOptions> = {
   ignoreAttributes: false,
-  allowBooleanAttributes: true
+  allowBooleanAttributes: true,
 };
 
 const buildOptions: XmlBuilderOptions = {
   ignoreAttributes: false,
   format: true,
   suppressEmptyNode: true,
-  suppressBooleanAttributes: false
+  suppressBooleanAttributes: false,
 };
 
 /**

@@ -29,10 +29,12 @@ async function expandTargets(targets: string[]): Promise<string[]> {
   for (const target of targets) {
     if ((await stat(target)).isDirectory()) {
       const entries = await readdir(target, { withFileTypes: true });
-      files.push(...entries
-        .filter(entry => entry.isFile() && entry.name.endsWith('.archimate'))
-        .map(entry => join(target, entry.name))
-        .sort());
+      files.push(
+        ...entries
+          .filter(entry => entry.isFile() && entry.name.endsWith('.archimate'))
+          .map(entry => join(target, entry.name))
+          .sort()
+      );
     } else {
       files.push(target);
     }
@@ -45,7 +47,10 @@ async function expandTargets(targets: string[]): Promise<string[]> {
  * so the same loss across many elements is counted once.
  */
 function location(path: string): string {
-  const segments = path.replace(/\[\d+\]/g, '').split('.').filter(Boolean);
+  const segments = path
+    .replace(/\[\d+\]/g, '')
+    .split('.')
+    .filter(Boolean);
   return segments.slice(-2).join('.') || '(root)';
 }
 
@@ -78,7 +83,7 @@ async function diffFile(file: string): Promise<FileReport> {
     ignoreAttributes: false,
     format: true,
     suppressEmptyNode: true,
-    suppressBooleanAttributes: false
+    suppressBooleanAttributes: false,
   };
   const outputXml = new XMLBuilder(buildOptions).build(archimate.serialize());
   const inputXml = await readFile(file, 'utf8');
@@ -127,7 +132,13 @@ async function main(): Promise<void> {
   }
 
   if (json) {
-    console.log(JSON.stringify(reports.map(({ details, ...rest }) => (verbose ? { ...rest, details } : rest)), null, 2));
+    console.log(
+      JSON.stringify(
+        reports.map(({ details, ...rest }) => (verbose ? { ...rest, details } : rest)),
+        null,
+        2
+      )
+    );
     return;
   }
 
@@ -138,7 +149,9 @@ async function main(): Promise<void> {
   console.log(`\n${chalk.bold('Summary')}`);
   for (const report of reports) {
     const invalid = Object.values(report.validation).reduce((sum, count) => sum + count, 0);
-    console.log(`  ${String(report.differences).padStart(5)} differences  ${String(invalid).padStart(4)} validation issues  ${report.file}`);
+    console.log(
+      `  ${String(report.differences).padStart(5)} differences  ${String(invalid).padStart(4)} validation issues  ${report.file}`
+    );
   }
 }
 

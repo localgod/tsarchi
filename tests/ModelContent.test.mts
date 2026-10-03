@@ -36,8 +36,18 @@ describe('model-level content', () => {
   it('should load model properties, metadata and profiles', async () => {
     const archimate = await parseFile(fixture);
 
-    expect(archimate.getProperties()).toEqual(new Map([['Owner', 'Enterprise Architecture'], ['Status', 'Draft']]));
-    expect(archimate.getMetadata()).toEqual(new Map([['schema', 'Dublin Core'], ['creator', 'tsarchi']]));
+    expect(archimate.getProperties()).toEqual(
+      new Map([
+        ['Owner', 'Enterprise Architecture'],
+        ['Status', 'Draft'],
+      ])
+    );
+    expect(archimate.getMetadata()).toEqual(
+      new Map([
+        ['schema', 'Dublin Core'],
+        ['creator', 'tsarchi'],
+      ])
+    );
     expect(archimate.getProfiles()).toEqual([
       {
         id: 'id-profile-premium',
@@ -86,18 +96,22 @@ describe('model-level content', () => {
     const archimate = parseXml(modelWith('<metadata/>'));
 
     expect(archimate.getMetadata().size).toBe(0);
-    expect(new XMLBuilder({ ignoreAttributes: false, suppressEmptyNode: true }).build(archimate.serialize()))
-      .toContain('<metadata/>');
+    expect(new XMLBuilder({ ignoreAttributes: false, suppressEmptyNode: true }).build(archimate.serialize())).toContain('<metadata/>');
   });
 
   it('should keep attributes and child elements of the model it does not recognise', () => {
-    const archimate = parseXml(modelWith(`<feature name="a" value="1"/>
+    const archimate = parseXml(
+      modelWith(`<feature name="a" value="1"/>
   <feature name="b" value="2"/>
-  <futureElement key="x"><nested>text</nested></futureElement>`).replace('version="5.0.0"', 'version="5.0.0" futureAttribute="kept"'));
+  <futureElement key="x"><nested>text</nested></futureElement>`).replace('version="5.0.0"', 'version="5.0.0" futureAttribute="kept"')
+    );
 
     const model = archimate.serialize()['archimate:model'] as unknown as Record<string, unknown>;
     expect(model['@_futureAttribute']).toBe('kept');
-    expect(model.feature).toEqual([{ '@_name': 'a', '@_value': '1' }, { '@_name': 'b', '@_value': '2' }]);
+    expect(model.feature).toEqual([
+      { '@_name': 'a', '@_value': '1' },
+      { '@_name': 'b', '@_value': '2' },
+    ]);
     expect(model.futureElement).toEqual({ '@_key': 'x', nested: 'text' });
   });
 
@@ -105,9 +119,7 @@ describe('model-level content', () => {
     const archimate = await parseFile(fixture);
     archimate.setProfiles(archimate.getProfiles().filter(profile => profile.id !== 'id-profile-premium'));
 
-    expect(archimate.validateModel()).toEqual([
-      expect.objectContaining({ code: 'element-missing-profile', id: 'id-customer' }),
-    ]);
+    expect(archimate.validateModel()).toEqual([expect.objectContaining({ code: 'element-missing-profile', id: 'id-customer' })]);
   });
 
   it('should treat profile ids as used ids', async () => {
@@ -115,17 +127,17 @@ describe('model-level content', () => {
 
     expect(archimate.hasId('id-profile-draft')).toBe(true);
     archimate.setProfiles([...archimate.getProfiles(), { id: 'id-customer', name: 'Clash' }]);
-    expect(archimate.validateModel()).toEqual([
-      expect.objectContaining({ code: 'duplicate-id', id: 'id-customer' }),
-    ]);
+    expect(archimate.validateModel()).toEqual([expect.objectContaining({ code: 'duplicate-id', id: 'id-customer' })]);
   });
 
   it('should keep the model properties Archi writes', async () => {
     const archimate = await parseFile('tests/fixtures/archi/Archisurance-xmlexchange.archimate');
 
-    expect(archimate.getProperties()).toEqual(new Map([
-      ['Property1', 'Value of Property 1'],
-      ['Property2', 'Value of Property 2'],
-    ]));
+    expect(archimate.getProperties()).toEqual(
+      new Map([
+        ['Property1', 'Value of Property 1'],
+        ['Property2', 'Value of Property 2'],
+      ])
+    );
   });
 });

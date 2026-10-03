@@ -17,17 +17,20 @@ export class ViewManager {
   /**
    * Creates a new view with the specified name and optional properties
    */
-  createView(name: string, options?: {
-    viewpoint?: string;
-    background?: number;
-    documentation?: string;
-  }): View {
+  createView(
+    name: string,
+    options?: {
+      viewpoint?: string;
+      background?: number;
+      documentation?: string;
+    }
+  ): View {
     const view: View = {
       id: this.generateUniqueId(),
       name,
       type: 'ArchimateDiagramModel',
       children: [],
-      ...options
+      ...options,
     };
 
     if (!this.model.diagrams.elements) {
@@ -62,12 +65,17 @@ export class ViewManager {
   /**
    * Adds a diagram object to a view, representing a model element
    */
-  addDiagramObject(viewId: string, elementId: string, bounds: Bounds, options?: {
-    fillColor?: string;
-    lineColor?: string;
-    fontColor?: string;
-    textAlignment?: number;
-  }): ViewDiagramObject | null {
+  addDiagramObject(
+    viewId: string,
+    elementId: string,
+    bounds: Bounds,
+    options?: {
+      fillColor?: string;
+      lineColor?: string;
+      fontColor?: string;
+      textAlignment?: number;
+    }
+  ): ViewDiagramObject | null {
     const view = this.getView(viewId);
     if (!view) return null;
 
@@ -84,7 +92,7 @@ export class ViewManager {
       bounds,
       targetConnections: [],
       sourceConnections: [],
-      ...options
+      ...options,
     };
 
     if (!view.children) view.children = [];
@@ -97,12 +105,17 @@ export class ViewManager {
   /**
    * Creates a group in a view to organize diagram objects
    */
-  addGroup(viewId: string, name: string, bounds: Bounds, options?: {
-    fillColor?: string;
-    lineColor?: string;
-    textAlignment?: number;
-    documentation?: string;
-  }): ViewGroup | null {
+  addGroup(
+    viewId: string,
+    name: string,
+    bounds: Bounds,
+    options?: {
+      fillColor?: string;
+      lineColor?: string;
+      textAlignment?: number;
+      documentation?: string;
+    }
+  ): ViewGroup | null {
     const view = this.getView(viewId);
     if (!view) return null;
 
@@ -112,7 +125,7 @@ export class ViewManager {
       name,
       bounds,
       children: [],
-      ...options
+      ...options,
     };
 
     if (!view.children) view.children = [];
@@ -125,12 +138,18 @@ export class ViewManager {
   /**
    * Adds a diagram object to a group within a view
    */
-  addDiagramObjectToGroup(viewId: string, groupId: string, elementId: string, bounds: Bounds, options?: {
-    fillColor?: string;
-    lineColor?: string;
-    fontColor?: string;
-    textAlignment?: number;
-  }): ViewDiagramObject | null {
+  addDiagramObjectToGroup(
+    viewId: string,
+    groupId: string,
+    elementId: string,
+    bounds: Bounds,
+    options?: {
+      fillColor?: string;
+      lineColor?: string;
+      fontColor?: string;
+      textAlignment?: number;
+    }
+  ): ViewDiagramObject | null {
     const view = this.getView(viewId);
     if (!view) return null;
 
@@ -152,7 +171,7 @@ export class ViewManager {
       bounds,
       targetConnections: [],
       sourceConnections: [],
-      ...options
+      ...options,
     };
 
     if (!group.children) group.children = [];
@@ -165,12 +184,18 @@ export class ViewManager {
   /**
    * Creates a connection between two diagram objects in a view
    */
-  addConnection(viewId: string, sourceObjectId: string, targetObjectId: string, relationshipId?: string, options?: {
-    lineColor?: string;
-    lineWidth?: number;
-    fontColor?: string;
-    textPosition?: number;
-  }): ViewConnection | null {
+  addConnection(
+    viewId: string,
+    sourceObjectId: string,
+    targetObjectId: string,
+    relationshipId?: string,
+    options?: {
+      lineColor?: string;
+      lineWidth?: number;
+      fontColor?: string;
+      textPosition?: number;
+    }
+  ): ViewConnection | null {
     const view = this.getView(viewId);
     if (!view) return null;
 
@@ -195,7 +220,7 @@ export class ViewManager {
       source: sourceObjectId,
       target: targetObjectId,
       archimateRelationship: relationshipId,
-      ...options
+      ...options,
     };
 
     if (!sourceObject.sourceConnections) sourceObject.sourceConnections = [];
@@ -211,13 +236,17 @@ export class ViewManager {
   /**
    * Auto-generates a view based on elements and their relationships
    */
-  generateViewFromElements(name: string, elementIds: string[], options?: {
-    includeRelationships?: boolean;
-    layoutType?: 'hierarchical' | 'circular' | 'grid';
-    viewpoint?: string;
-  }): View | null {
+  generateViewFromElements(
+    name: string,
+    elementIds: string[],
+    options?: {
+      includeRelationships?: boolean;
+      layoutType?: 'hierarchical' | 'circular' | 'grid';
+      viewpoint?: string;
+    }
+  ): View | null {
     const view = this.createView(name, { viewpoint: options?.viewpoint });
-    
+
     const includeRelationships = options?.includeRelationships ?? true;
     const layoutType = options?.layoutType ?? 'grid';
 
@@ -242,13 +271,17 @@ export class ViewManager {
   /**
    * Updates visual properties of a diagram object
    */
-  updateDiagramObjectStyle(viewId: string, objectId: string, style: {
-    fillColor?: string;
-    lineColor?: string;
-    fontColor?: string;
-    bounds?: Bounds;
-    textAlignment?: number;
-  }): boolean {
+  updateDiagramObjectStyle(
+    viewId: string,
+    objectId: string,
+    style: {
+      fillColor?: string;
+      lineColor?: string;
+      fontColor?: string;
+      bounds?: Bounds;
+      textAlignment?: number;
+    }
+  ): boolean {
     const view = this.getView(viewId);
     if (!view) return false;
 
@@ -298,8 +331,8 @@ export class ViewManager {
       name: element.name,
       type,
       documentation: element.documentation,
-      children: Array.isArray(element.child) ? element.child as ViewChild[] : element.child ? [element.child as ViewChild] : [],
-      properties: element.properties
+      children: Array.isArray(element.child) ? (element.child as ViewChild[]) : element.child ? [element.child as ViewChild] : [],
+      properties: element.properties,
     };
     if (element.viewpoint !== undefined) view.viewpoint = element.viewpoint;
     if (element.background !== undefined) view.background = element.background;
@@ -319,7 +352,7 @@ export class ViewManager {
       type: view.type,
       documentation: view.documentation,
       child: view.children,
-      properties: view.properties
+      properties: view.properties,
     };
     if (view.viewpoint !== undefined) element.viewpoint = view.viewpoint;
     if (view.background !== undefined) element.background = view.background;
@@ -354,7 +387,7 @@ export class ViewManager {
 
     for (const child of children) {
       if (child.id === childId) return child;
-      
+
       // Check if this is a group with children
       if (child.type === 'Group') {
         const group = child as ViewGroup;
@@ -381,7 +414,7 @@ export class ViewManager {
           x: col * (baseWidth + padding) + 50,
           y: row * (baseHeight + padding) + 50,
           width: baseWidth,
-          height: baseHeight
+          height: baseHeight,
         };
       }
 
@@ -392,7 +425,7 @@ export class ViewManager {
           x: Math.cos(angle) * radius + 300,
           y: Math.sin(angle) * radius + 300,
           width: baseWidth,
-          height: baseHeight
+          height: baseHeight,
         };
       }
 
@@ -401,7 +434,7 @@ export class ViewManager {
           x: 50,
           y: index * (baseHeight + padding) + 50,
           width: baseWidth,
-          height: baseHeight
+          height: baseHeight,
         };
 
       default:
@@ -413,10 +446,8 @@ export class ViewManager {
     if (!this.model.relations.elements) return;
 
     // Find relationships between the elements in the view
-    const relationships = this.model.relations.elements.filter(rel => 
-      rel.source && rel.target && 
-      elementIds.includes(rel.source) && 
-      elementIds.includes(rel.target)
+    const relationships = this.model.relations.elements.filter(
+      rel => rel.source && rel.target && elementIds.includes(rel.source) && elementIds.includes(rel.target)
     );
 
     relationships.forEach(relationship => {

@@ -26,7 +26,7 @@ export interface Child {
   '@_hintTitle'?: string;
   '@_type'?: string;
   '@_model'?: string;
-  bounds: Bounds;
+  bounds: Bounds | '';
   documentation?: string;
   content?: string;
   notes?: string;

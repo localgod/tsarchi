@@ -9,3 +9,4 @@ Unmodified models from the [Archi](https://github.com/archimatetool/archi) test 
 - `Archisurance-xmlexchange.archimate` — `tests/org.opengroup.archimate.xmlexchange.tests/testdata/Archisurance.archimate`
 - `modelimporter-test.archimate` — `tests/com.archimatetool.modelimporter.tests/testdata/test.archimate`
 - `compatibility_test3.archimate` — `tests/com.archimatetool.editor.tests/testdata/models/compatibility_test3.archimate`
+- `testmodel1.archimate` — `tests/com.archimatetool.editor.tests/testdata/models/testmodel1.archimate`

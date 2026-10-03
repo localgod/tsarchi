@@ -16,6 +16,10 @@ This project adheres to [Keep a CHANGELOG](http://keepachangelog.com/)
 
 - `unknown-type` is a warning instead of an error, so a model with element or relationship types tsarchi does not know (from a newer Archi or a plugin) can be saved with `toXml()`, and those elements and relationships are written back unchanged. Namespace declarations on folders, elements, relationships, diagram children and view connections are kept on save, so a prefixed type such as `vendor:Widget` stays bound. `upsertElement()` and `upsertRelationship()` still throw for an unknown type ([#449](https://github.com/localgod/tsarchi/issues/449)).
 
+### Fixed
+
+- `<bounds>` keeps the attributes Archi omits. Archi does not write `x`/`y` when they are 0 or `width`/`height` when they are -1 (its defaults), and saving used to add `x="0" y="0"`. Missing attributes now load as those defaults, so a missing `width` or `height` loads as -1 instead of 0, and attributes equal to a default are no longer written ([#450](https://github.com/localgod/tsarchi/issues/450)).
+
 ## [2.0.0] - 2026-10-02
 
 ### Added

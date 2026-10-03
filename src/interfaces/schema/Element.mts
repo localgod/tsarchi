@@ -6,7 +6,7 @@ import type { SourceConnection } from "./SourceConnection.mjs";
 
 
 export interface Element {
-  '@_xsi:type': string;
+  '@_xsi:type'?: string;
   '@_name': string;
   '@_id': string;
   /** Space-separated ids of the profiles (specializations) applied to this concept. */

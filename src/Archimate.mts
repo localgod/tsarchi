@@ -22,10 +22,12 @@ import type { ArchimateModelType, ArchimateRelationshipAliasType, ArchimateRelat
 
 /**
  * Codes for models Archi opens and saves, but that break a naming convention or an ArchiMate rule
- * Archi only enforces when relationships are created. Every other code is an error.
+ * Archi only enforces when relationships are created, and for types tsarchi does not know, which are
+ * saved unchanged. Every other code is an error.
  */
 const warningIssueCodes = new Set<ValidationIssueCode>([
   'missing-name',
+  'unknown-type',
   'relationship-endpoint-not-allowed',
   'relationship-type-not-allowed',
   'junction-relationship-type-mismatch',
@@ -1355,7 +1357,14 @@ export class Archimate {
       });
     }
 
-    if (!isArchimateModelType(element.type)) {
+    if (!element.type) {
+      issues.push({
+        code: 'missing-type',
+        message: `Element "${element.id || path}" has no type.`,
+        path,
+        id: element.id,
+      });
+    } else if (!isArchimateModelType(element.type)) {
       issues.push({
         code: 'unknown-type',
         message: `Element "${element.id || path}" has unknown type "${element.type}".`,

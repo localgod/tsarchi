@@ -581,7 +581,7 @@ describe('Archimate', () => {
 
         ((archimate as any).model as Model).relations.elements!.push({ id: 'rel-legacy', name: 'Legacy', type, source: 'rel-app-a', target: 'rel-app-b' } as unknown as Relationship);
         expect(archimate.validateModel()).toEqual([
-          expect.objectContaining({ code: 'unknown-type', severity: 'error', id: 'rel-legacy' }),
+          expect.objectContaining({ code: 'unknown-type', severity: 'warning', id: 'rel-legacy' }),
         ]);
       });
 
@@ -1007,7 +1007,7 @@ describe('Archimate', () => {
         'view-connection-missing-target',
         'view-target-connection-missing-source'
       ]));
-      expect(archimate.validateModel().every(issue => issue.severity === 'error')).toBe(true);
+      expect(archimate.validateModel().every(issue => issue.severity === (issue.code === 'unknown-type' ? 'warning' : 'error'))).toBe(true);
       expect(() => archimate.assertValidModel()).toThrow('Archimate model validation failed');
     });
 

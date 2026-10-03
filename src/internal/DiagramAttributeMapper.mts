@@ -161,10 +161,10 @@ export class DiagramAttributeMapper {
 
   /**
    * Returns the attributes and child elements of a parsed XML node that are not in `mapped`, or undefined when
-   * there are none. Namespace declarations are never included.
+   * there are none. Namespace declarations made on the node are included, so prefixes used in it stay bound on save.
    */
   public static readUnrecognized(node: object, mapped: ReadonlySet<string>): Record<string, unknown> | undefined {
-    const entries = Object.entries(node).filter(([key]) => !mapped.has(key) && !key.startsWith('@_xmlns:'));
+    const entries = Object.entries(node).filter(([key]) => !mapped.has(key));
     return entries.length > 0 ? Object.fromEntries(entries) : undefined;
   }
 

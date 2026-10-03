@@ -173,7 +173,7 @@ export class Serializer {
 
   private serializeElement(el: Element): SchemaElement {
     const element: SchemaElement = {
-      '@_xsi:type': toXsiType(el.type),
+      ...(el.type ? { '@_xsi:type': toXsiType(el.type) } : {}),
       '@_name': el.name,
       '@_id': el.id,
     };

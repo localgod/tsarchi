@@ -181,6 +181,55 @@ describe('Archi-produced models', () => {
     expect(archimate.getRelationship('695')?.accessType).toBe(1);
   });
 
+  it('should keep element and relationship types it does not know on save, as warnings', async () => {
+    const xml = await readFile(`${fixturesDir}/compatibility_test3.archimate`, 'utf8');
+    const archimate = Archimate.fromXml(xml);
+
+    expect(archimate.validateModel()).toEqual(expect.arrayContaining([
+      expect.objectContaining({ code: 'unknown-type', severity: 'warning', id: 'id-3fded24054d44e3f90889975746e5238' }),
+      expect.objectContaining({ code: 'unknown-type', severity: 'warning', id: 'id-f08fc3eed940450b9c066f5a2e066858' }),
+      expect.objectContaining({ code: 'unknown-type', severity: 'warning', id: 'id-e983ee9f5cbe4d51812734c3e0eae3e9' }),
+    ]));
+    expect(errors(archimate)).toEqual([]);
+
+    const parser = new XMLParser({ ignoreAttributes: false });
+    expect(parser.parse(archimate.toXml())).toEqual(parser.parse(xml));
+  });
+
+  describe('elements in a hand-written model', () => {
+    const wrap = (element: string) => `<?xml version="1.0" encoding="UTF-8"?>
+<archimate:model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:archimate="http://www.archimatetool.com/archimate" name="T" id="m" version="5.0.0">
+  <folder name="Business" id="f1" type="business">
+    ${element}
+  </folder>
+</archimate:model>`;
+
+    it.each(['<element id="e1" name="E1"/>', '<element xsi:type="" id="e1" name="E1"/>'])(
+      'should report a missing type as an error instead of inventing one: %s',
+      (element) => {
+        const archimate = Archimate.fromXml(wrap(element));
+
+        expect(archimate.validateModel()).toEqual([
+          expect.objectContaining({ code: 'missing-type', severity: 'error', id: 'e1' }),
+        ]);
+        expect(() => archimate.toXml()).toThrow('Archimate model validation failed');
+        expect(archimate.serialize()['archimate:model'].folder).not.toHaveProperty('element.@_xsi:type');
+      }
+    );
+
+    it('should keep a namespace declared on an element with an unknown type', () => {
+      const xml = wrap('<element xsi:type="vendor:Widget" xmlns:vendor="urn:example:vendor" id="e1" name="E1"/>');
+      const archimate = Archimate.fromXml(xml);
+
+      expect(errors(archimate)).toEqual([]);
+      const saved = new XMLParser({ ignoreAttributes: false }).parse(archimate.toXml());
+      const business = saved['archimate:model'].folder.find((folder: { '@_type': string }) => folder['@_type'] === 'business');
+      expect(business.element).toEqual({
+        '@_xsi:type': 'vendor:Widget', '@_xmlns:vendor': 'urn:example:vendor', '@_id': 'e1', '@_name': 'E1',
+      });
+    });
+  });
+
   it('should expose the model name, id and version', async () => {
     const archimate = await parseFixture('Archisurance.archimate');
     expect(archimate.getName()).toBe('Archisurance');

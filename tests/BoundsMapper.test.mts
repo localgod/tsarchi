@@ -67,4 +67,16 @@ describe('BoundsMapper', () => {
       '@_height': '75'
     });
   });
+
+  it('should read missing attributes as the Archi defaults', () => {
+    expect(BoundsMapper.schemaBoundsToBounds({ '@_width': '193', '@_height': '85' })).toEqual({ x: 0, y: 0, width: 193, height: 85 });
+    expect(BoundsMapper.schemaBoundsToBounds({ '@_x': '240', '@_y': '12' })).toEqual({ x: 240, y: 12, width: -1, height: -1 });
+    expect(BoundsMapper.schemaBoundsToBounds('')).toEqual({ x: 0, y: 0, width: -1, height: -1 });
+  });
+
+  it('should omit attributes equal to the Archi defaults', () => {
+    expect(BoundsMapper.boundsToSchemaBounds({ x: 0, y: 0, width: 193, height: 85 })).toEqual({ '@_width': '193', '@_height': '85' });
+    expect(BoundsMapper.boundsToSchemaBounds({ x: 240, y: 12, width: -1, height: -1 })).toEqual({ '@_x': '240', '@_y': '12' });
+    expect(BoundsMapper.boundsToSchemaBounds({ x: 0, y: 0, width: -1, height: -1 })).toEqual({});
+  });
 });

@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/oxlint.sh",
+            "timeout": 60,
+            "statusMessage": "Running oxlint..."
+          }
+        ]
+      }
+    ]
+  }
+}

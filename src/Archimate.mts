@@ -1357,7 +1357,14 @@ export class Archimate {
       });
     }
 
-    if (!isArchimateModelType(element.type)) {
+    if (!element.type) {
+      issues.push({
+        code: 'missing-type',
+        message: `Element "${element.id || path}" has no type.`,
+        path,
+        id: element.id,
+      });
+    } else if (!isArchimateModelType(element.type)) {
       issues.push({
         code: 'unknown-type',
         message: `Element "${element.id || path}" has unknown type "${element.type}".`,

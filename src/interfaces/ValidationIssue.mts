@@ -2,6 +2,7 @@ export type ValidationIssueCode =
   | 'duplicate-id'
   | 'missing-id'
   | 'missing-name'
+  | 'missing-type'
   | 'unknown-type'
   | 'relationship-missing-source'
   | 'relationship-missing-target'
@@ -17,7 +18,7 @@ export type ValidationIssueCode =
   | 'view-target-connection-missing-source';
 
 /**
- * `error`: the model is inconsistent (dangling references, duplicate ids) and is not saved.
+ * `error`: the model is inconsistent (dangling references, duplicate ids, missing types) and is not saved.
  * `warning`: the model is saved, but it breaks a convention or an ArchiMate rule, or has types tsarchi does not know.
  */
 export type ValidationSeverity = 'error' | 'warning';

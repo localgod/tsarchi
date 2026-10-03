@@ -8,6 +8,8 @@ import { XMLParser } from 'fast-xml-parser';
 
 const execFileAsync = promisify(execFile);
 
+type PackResult = { files: { path: string }[] };
+
 describe('package integration', () => {
   it('imports from the declared package export and preserves root metadata when saving', async () => {
     const sourcePath = new URL('../sample.archimate', import.meta.url);
@@ -76,7 +78,9 @@ describe('package integration', () => {
 
   it('publishes only the compiled library, without tests or examples', async () => {
     const { stdout } = await execFileAsync('npm', ['pack', '--dry-run', '--json', '--ignore-scripts'], { cwd: process.cwd() });
-    const [{ files }] = JSON.parse(stdout) as [{ files: { path: string }[] }];
+    // npm 11 prints an array of packages, npm 12 an object keyed by package name.
+    const packed = JSON.parse(stdout) as PackResult[] | Record<string, PackResult>;
+    const [{ files }] = Array.isArray(packed) ? packed : Object.values(packed);
     const paths = files.map((file) => file.path);
 
     expect(paths).toContain('dist/src/index.mjs');

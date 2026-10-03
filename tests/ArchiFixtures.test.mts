@@ -181,6 +181,21 @@ describe('Archi-produced models', () => {
     expect(archimate.getRelationship('695')?.accessType).toBe(1);
   });
 
+  it('should keep element and relationship types it does not know on save, as warnings', async () => {
+    const xml = await readFile(`${fixturesDir}/compatibility_test3.archimate`, 'utf8');
+    const archimate = Archimate.fromXml(xml);
+
+    expect(archimate.validateModel()).toEqual(expect.arrayContaining([
+      expect.objectContaining({ code: 'unknown-type', severity: 'warning', id: 'id-3fded24054d44e3f90889975746e5238' }),
+      expect.objectContaining({ code: 'unknown-type', severity: 'warning', id: 'id-f08fc3eed940450b9c066f5a2e066858' }),
+      expect.objectContaining({ code: 'unknown-type', severity: 'warning', id: 'id-e983ee9f5cbe4d51812734c3e0eae3e9' }),
+    ]));
+    expect(errors(archimate)).toEqual([]);
+
+    const parser = new XMLParser({ ignoreAttributes: false });
+    expect(parser.parse(archimate.toXml())).toEqual(parser.parse(xml));
+  });
+
   it('should expose the model name, id and version', async () => {
     const archimate = await parseFixture('Archisurance.archimate');
     expect(archimate.getName()).toBe('Archisurance');

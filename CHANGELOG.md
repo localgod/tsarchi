@@ -8,6 +8,10 @@ This project adheres to [Keep a CHANGELOG](http://keepachangelog.com/)
 
 ## [Unreleased]
 
+### Changed
+
+- `unknown-type` is a warning instead of an error, so a model with element or relationship types tsarchi does not know (from a newer Archi or a plugin) can be saved with `toXml()`, and those elements and relationships are written back unchanged. `upsertElement()` and `upsertRelationship()` still throw for an unknown type ([#449](https://github.com/localgod/tsarchi/issues/449)).
+
 ## [2.0.0] - 2026-10-02
 
 ### Added

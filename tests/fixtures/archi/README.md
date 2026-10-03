@@ -8,3 +8,4 @@ Unmodified models from the [Archi](https://github.com/archimatetool/archi) test 
 - `testDeleteHandler.archimate` — `tests/com.archimatetool.editor.tests/testdata/models/testDeleteHandler.archimate`
 - `Archisurance-xmlexchange.archimate` — `tests/org.opengroup.archimate.xmlexchange.tests/testdata/Archisurance.archimate`
 - `modelimporter-test.archimate` — `tests/com.archimatetool.modelimporter.tests/testdata/test.archimate`
+- `compatibility_test3.archimate` — `tests/com.archimatetool.editor.tests/testdata/models/compatibility_test3.archimate`

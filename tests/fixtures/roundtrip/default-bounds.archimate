@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<archimate:model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:archimate="http://www.archimatetool.com/archimate" name="default bounds" id="id-default-bounds-model" version="5.0.0">
+  <folder name="Strategy" id="id-bounds-strategy" type="strategy"/>
+  <folder name="Business" id="id-bounds-business" type="business">
+    <element xsi:type="archimate:BusinessActor" name="Customer" id="id-customer"/>
+  </folder>
+  <folder name="Application" id="id-bounds-application" type="application"/>
+  <folder name="Technology &amp; Physical" id="id-bounds-technology" type="technology"/>
+  <folder name="Motivation" id="id-bounds-motivation" type="motivation"/>
+  <folder name="Implementation &amp; Migration" id="id-bounds-implementation" type="implementation_migration"/>
+  <folder name="Other" id="id-bounds-other" type="other"/>
+  <folder name="Relations" id="id-bounds-relations" type="relations"/>
+  <folder name="Views" id="id-bounds-views" type="diagrams">
+    <element xsi:type="archimate:ArchimateDiagramModel" name="Default Bounds" id="id-default-bounds-view">
+      <child xsi:type="archimate:Note" id="id-origin-note" textAlignment="1">
+        <bounds width="193" height="85"/>
+        <content>This note sits at x, y 0.</content>
+      </child>
+      <child xsi:type="archimate:DiagramObject" id="id-default-size-object" archimateElement="id-customer">
+        <bounds x="240" y="12"/>
+      </child>
+      <child xsi:type="archimate:Group" id="id-default-group" name="Default size at origin">
+        <bounds/>
+      </child>
+    </element>
+  </folder>
+</archimate:model>

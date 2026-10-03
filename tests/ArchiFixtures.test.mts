@@ -116,6 +116,15 @@ describe('Archi-produced models', () => {
       .toEqual(expect.arrayContaining(['01707f8e', '807d8f49', 'b0b06ebb', '80ce8eea', 'b5266c15', '8faa57ef']));
   });
 
+  it('should not write default bounds Archi omits', async () => {
+    const archimate = await parseFixture('testmodel1.archimate');
+    expect(findChild(archimate, '23c519cc', 'b8013607')?.bounds).toEqual({ x: 0, y: 0, width: 193, height: 85 });
+
+    const xml = archimate.toXml();
+    expect(xml).toContain('<bounds width="193" height="85"/>');
+    expect(xml).not.toMatch(/<bounds x="0"/);
+  });
+
   it('should keep all namespace declarations on the model root', async () => {
     const archimate = await parseFixture('test.archimate');
     const model = archimate.serialize()['archimate:model'];

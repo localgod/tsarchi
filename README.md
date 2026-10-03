@@ -188,6 +188,12 @@ model.upsertRelationship({
 });
 ```
 
+`updateElement` changes an element, relationship or view by id. Keys left out are unchanged, and a key set to `undefined` removes that field (a removed `name` becomes empty, which is saved without a `name` attribute, as Archi does). `properties` is merged into the existing properties:
+
+```typescript
+model.updateElement("relationship-id", { name: undefined, documentation: undefined });
+```
+
 The model's name is available through `model.getName()` and `model.setName(name)`, and its id and file format version through `model.getId()` and `model.getVersion()`. The model's purpose text is available through `model.getPurpose()` and `model.setPurpose(text)`.
 
 Model-level properties, metadata and specializations (profiles) are available the same way:

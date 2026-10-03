@@ -8,6 +8,8 @@ This project adheres to [Keep a CHANGELOG](http://keepachangelog.com/)
 
 ## [Unreleased]
 
+## [2.2.0] - 2026-10-03
+
 ### Added
 
 - `upsertElement()` returns the inserted or updated element, as stored in the model, instead of `void` ([#460](https://github.com/localgod/tsarchi/issues/460)).
@@ -150,7 +152,8 @@ Unpublished from npm. Its changes were released in 1.0.2.
 - A `sync` command-line script that loads a model from `-i` and saves it to `-o`.
 - The package contains the TypeScript sources only, without compiled JavaScript.
 
-[Unreleased]: https://github.com/localgod/tsarchi/compare/2.1.0...HEAD
+[Unreleased]: https://github.com/localgod/tsarchi/compare/2.2.0...HEAD
+[2.2.0]: https://github.com/localgod/tsarchi/compare/2.1.0...2.2.0
 [2.1.0]: https://github.com/localgod/tsarchi/compare/2.0.0...2.1.0
 [2.0.0]: https://github.com/localgod/tsarchi/compare/1.0.3...2.0.0
 [1.0.3]: https://github.com/localgod/tsarchi/releases/tag/1.0.3

@@ -350,6 +350,25 @@ describe('Archimate', () => {
       expect(archimate.updateElement('missing', { name: 'No-op' })).toBeNull();
     });
 
+    it('should remove fields set to undefined and keep fields left out', () => {
+      archimate.updateElement('app-a', { documentation: 'Docs', features: new Map([['f', 'v']]) });
+      const updated = archimate.updateElement('app-a', { documentation: undefined, properties: undefined });
+
+      expect(updated).not.toHaveProperty('documentation');
+      expect(updated).not.toHaveProperty('properties');
+      expect(updated?.features?.get('f')).toBe('v');
+      expect(updated?.name).toBe('App A');
+      expect(archimate.getElement('app-a')).toEqual(updated);
+    });
+
+    it('should clear the name and keep the id and type when they are set to undefined', () => {
+      const updated = archimate.updateElement('rel-a-b', { name: undefined, type: undefined, id: undefined } as any);
+
+      expect(updated?.name).toBe('');
+      expect(updated?.id).toBe('rel-a-b');
+      expect(updated?.type).toBe('FlowRelationship');
+    });
+
     it('should move an element when its type changes folder', () => {
       const updated = archimate.updateElement('app-a', {
         type: 'BusinessActor'

@@ -116,4 +116,23 @@ describe('Archimate.fromXml / toXml', () => {
     );
     expect(archimate.getElement('a')?.name).toBe('');
   });
+
+  it('omits an empty model name, as Archi does', () => {
+    expect(new Archimate().toXml()).toMatch(/<archimate:model [^>]*id="[^"]+" version="5\.0\.0">/);
+    expect(new Archimate().toXml()).not.toMatch(/<archimate:model [^>]*name=/);
+  });
+
+  it('keeps a model without a name unnamed on load and save', () => {
+    const input = '<archimate:model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ' +
+      'xmlns:archimate="http://www.archimatetool.com/archimate" id="m" version="5.0.0"/>';
+    const archimate = Archimate.fromXml(input);
+    expect(archimate.getName()).toBe('');
+    expect(archimate.toXml()).not.toMatch(/<archimate:model [^>]*name=/);
+  });
+
+  it('writes the model name before its id when it is set', () => {
+    const archimate = new Archimate();
+    archimate.setName('Named');
+    expect(archimate.toXml()).toMatch(/<archimate:model [^>]*name="Named" id="[^"]+" version="5\.0\.0">/);
+  });
 });

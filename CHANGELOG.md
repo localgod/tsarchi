@@ -8,8 +8,13 @@ This project adheres to [Keep a CHANGELOG](http://keepachangelog.com/)
 
 ## [Unreleased]
 
+### Changed
+
+- A model loaded without a `name` attribute has an empty name (`getName()` returns `''`) instead of `'Unnamed Model'`, so saving it no longer adds a name it did not have ([#456](https://github.com/localgod/tsarchi/issues/456)).
+
 ### Fixed
 
+- A model with an empty name is saved without a `name` attribute on `<archimate:model>` instead of with `name=""`, as Archi does ([#456](https://github.com/localgod/tsarchi/issues/456)).
 - An element or relationship with an empty name is saved without a `name` attribute instead of with `name=""`, as Archi does (`Nameable.name` defaults to `""`, and EMF does not write default values). An element or relationship loaded without a `name` attribute now has `name: ''` instead of `undefined`, matching its `string` type ([#455](https://github.com/localgod/tsarchi/issues/455)).
 
 ## [2.1.0] - 2026-10-03

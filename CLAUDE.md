@@ -6,7 +6,7 @@ TypeScript library that loads, edits, validates and saves Archi (`.archimate`) m
 
 - `npm test` — builds (`pretest`), then runs vitest. Tests import from `src`, but `prebuild` regenerates `src/index.mts`.
 - `npm run lint` / `npm run format` — oxlint and oxfmt (format only checks README, LICENSE, CHANGELOG, CONTRIBUTING). `.oxlintrc.json` keeps oxlint's default rules and adds `no-console` for `src/`: the library must not write to the console.
-- `.claude/settings.json` runs `.claude/hooks/oxlint.sh` after every Edit/Write of a `.mts`/`.ts`/`.mjs`/`.js` file and reports oxlint errors and warnings back to Claude.
+- `.claude/settings.json` runs `.claude/hooks/oxlint.sh` after every Edit/Write of a `.mts`/`.ts`/`.mjs`/`.js` file and reports oxlint errors and warnings back to Claude. `.claude/hooks/oxfmt.sh` formats README, LICENSE, CHANGELOG and CONTRIBUTING after an edit; code is not formatted yet (#462).
 - `npm run roundtrip:diff -- [file|dir ...]` — load → serialize → diff without validation, grouped by what was lost. Defaults to all fixtures. Use it before and after any parse/serialize change (see the `archi-roundtrip-diff` skill).
 - `npm run compare` — strict round-trip of `tests/fixtures/roundtrip` (same check as `RoundtripFixtures.test.mts`).
 

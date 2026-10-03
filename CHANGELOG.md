@@ -8,6 +8,10 @@ This project adheres to [Keep a CHANGELOG](http://keepachangelog.com/)
 
 ## [Unreleased]
 
+### Added
+
+- `upsertElement()` returns the inserted or updated element, as stored in the model, instead of `void` ([#460](https://github.com/localgod/tsarchi/issues/460)).
+
 ### Changed
 
 - `updateElement()` removes a field whose key is set to `undefined` in the patch, as `updateFolder()` does, so an optional field such as `documentation`, `properties` or `features` can be removed and a name can be cleared (`name: undefined` makes it empty). Keys left out are still unchanged, and `id` and `type` are kept. A patch that set keys to `undefined` used to leave those fields unchanged ([#454](https://github.com/localgod/tsarchi/issues/454)).
@@ -15,6 +19,7 @@ This project adheres to [Keep a CHANGELOG](http://keepachangelog.com/)
 
 ### Fixed
 
+- `upsertElement()` no longer writes `Added element …` or `Updated element …` to the console ([#460](https://github.com/localgod/tsarchi/issues/460)).
 - A model with an empty name is saved without a `name` attribute on `<archimate:model>` instead of with `name=""`, as Archi does ([#456](https://github.com/localgod/tsarchi/issues/456)).
 - An element or relationship with an empty name is saved without a `name` attribute instead of with `name=""`, as Archi does (`Nameable.name` defaults to `""`, and EMF does not write default values). An element or relationship loaded without a `name` attribute now has `name: ''` instead of `undefined`, matching its `string` type ([#455](https://github.com/localgod/tsarchi/issues/455)).
 

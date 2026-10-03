@@ -16,6 +16,7 @@ import { Parser } from './internal/Parser.mjs';
 import { parseArchimateXml, buildArchimateXml } from './internal/Xml.mjs';
 import { Serializer } from './internal/Serializer.mjs';
 import { ViewManager } from './ViewManager.mjs';
+import { removeFromNestedFolders } from './internal/NestedFolders.mjs';
 import {
   folderType,
   elementTypeToFolderKey,
@@ -290,7 +291,7 @@ export class Archimate {
       location.folder.elements![location.index] = updatedElement;
     } else {
       location.folder.elements!.splice(location.index, 1);
-      this.removeFromNestedFolders(location.folder.folders || [], elementId);
+      removeFromNestedFolders(location.folder.folders || [], new Set([elementId]));
       const nextFolder = this.model[nextFolderKey];
       if (!nextFolder.elements) nextFolder.elements = [];
       nextFolder.elements.push(updatedElement);
@@ -313,7 +314,7 @@ export class Archimate {
 
     const deletedElement = location.element;
     location.folder.elements!.splice(location.index, 1);
-    this.removeFromNestedFolders(location.folder.folders || [], elementId);
+    removeFromNestedFolders(location.folder.folders || [], new Set([elementId]));
 
     const removedRelationshipIds = new Set<string>();
     if (location.folderKey === 'relations') {
@@ -323,6 +324,7 @@ export class Archimate {
       removedRelationshipIds.add(relationship.id);
     }
     if (removedRelationshipIds.size > 0) {
+      removeFromNestedFolders(this.model.relations.folders || [], removedRelationshipIds);
       this.removeViewConnectionsForRelationships(removedRelationshipIds);
     }
     if (location.folderKey !== 'relations') {
@@ -965,7 +967,7 @@ export class Archimate {
       throw new Error(`Element "${elementId}" cannot be moved to a folder outside "${element.folder.name}".`);
     }
 
-    this.removeFromNestedFolders(element.folder.folders || [], elementId);
+    removeFromNestedFolders(element.folder.folders || [], new Set([elementId]));
     if (target.parent) {
       const folder = target.folder as Folder;
       folder.elementIds = [...(folder.elementIds || []), elementId];
@@ -1362,15 +1364,6 @@ export class Archimate {
 
   private foldersHaveId(folders: Folder[], id: string): boolean {
     return folders.some(folder => folder.id === id || this.foldersHaveId(folder.folders || [], id));
-  }
-
-  private removeFromNestedFolders(folders: Folder[], elementId: string): void {
-    for (const folder of folders) {
-      if (folder.elementIds) {
-        folder.elementIds = folder.elementIds.filter(id => id !== elementId);
-      }
-      this.removeFromNestedFolders(folder.folders || [], elementId);
-    }
   }
 
   private recordFolderIds(folders: Folder[], path: string, seenIds: Map<string, string>, issues: PendingIssue[]): void {

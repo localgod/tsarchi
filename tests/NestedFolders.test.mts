@@ -4,6 +4,9 @@ import { XMLParser } from 'fast-xml-parser';
 import { Archimate } from '../src/Archimate.mjs';
 import type { Schema } from '../src/interfaces/schema/Schema.mjs';
 import type { Folder as SchemaFolder } from '../src/interfaces/schema/Folder.mjs';
+import type { Folder } from '../src/interfaces/Folder.mjs';
+import type { FolderKey, Model } from '../src/interfaces/Model.mjs';
+import { ViewManager } from '../src/ViewManager.mjs';
 
 async function parseFile(path: string): Promise<Archimate> {
   const xml = await readFile(path, 'utf8');
@@ -20,6 +23,15 @@ function findSchemaFolder(folders: SchemaFolder | SchemaFolder[] | undefined, id
     if (nested) return nested;
   }
   return undefined;
+}
+
+/**
+ * The ids listed by the nested folders of a top-level folder, at any depth.
+ */
+function nestedFolderIds(archimate: Archimate, folderKey: FolderKey): string[] {
+  const collect = (folders: Folder[] = []): string[] =>
+    folders.flatMap(folder => [...(folder.elementIds ?? []), ...collect(folder.folders)]);
+  return collect(archimate.getFolders(folderKey));
 }
 
 function elementIds(folder: SchemaFolder | undefined): string[] {
@@ -98,6 +110,42 @@ describe('nested folders', () => {
     const legacy = findSchemaFolder(archimate.serialize()['archimate:model'].folder, 'id-folder-legacy');
     expect(legacy).toBeDefined();
     expect(elementIds(legacy)).toEqual([]);
+  });
+
+  it('should drop relationships deleted along with an element from their nested folder (Archisurance)', async () => {
+    const archimate = await parseFile('tests/fixtures/archi/Archisurance.archimate');
+    const element = archimate.listElements().find(element => archimate.findRelationshipsForElement(element.id).length > 3)!;
+    const removed = archimate.findRelationshipsForElement(element.id).map(relationship => relationship.id);
+    expect(nestedFolderIds(archimate, 'relations')).toEqual(expect.arrayContaining(removed));
+
+    archimate.deleteElement(element.id);
+
+    const remaining = nestedFolderIds(archimate, 'relations');
+    expect(removed.filter(id => remaining.includes(id))).toEqual([]);
+    expect(remaining.every(id => archimate.getRelationship(id))).toBe(true);
+  });
+
+  it('should drop a deleted view from its nested folder', async () => {
+    const archimate = await parseFile('tests/fixtures/roundtrip/nested-folders.archimate');
+    expect(nestedFolderIds(archimate, 'diagrams')).toContain('id-portal-view');
+
+    expect(archimate.deleteView('id-portal-view')).toBe(true);
+
+    expect(nestedFolderIds(archimate, 'diagrams')).toEqual([]);
+  });
+
+  it('should drop a view deleted through ViewManager from its nested folder', () => {
+    const diagrams = {
+      id: 'id-views',
+      name: 'Views',
+      elements: [{ id: 'id-view', name: 'View', type: 'ArchimateDiagramModel' }],
+      folders: [{ id: 'id-folder', name: 'Folder', elementIds: ['id-view'] }],
+    };
+
+    expect(new ViewManager({ diagrams } as unknown as Model).deleteView('id-view')).toBe(true);
+
+    expect(diagrams.elements).toEqual([]);
+    expect(diagrams.folders[0].elementIds).toEqual([]);
   });
 
   it('should keep elements in their nested folder when updated in place', async () => {

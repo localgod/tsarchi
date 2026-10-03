@@ -19,6 +19,7 @@ This project adheres to [Keep a CHANGELOG](http://keepachangelog.com/)
 
 ### Fixed
 
+- `deleteElement()` removes the relationships it deletes along with an element from the nested folders that list them, and `deleteView()` (on `Archimate` or `ViewManager`) removes the view from its nested folder, so `getFolders()` no longer reports ids of deleted relationships and views. `deleteFolder()` is fixed along with them ([#459](https://github.com/localgod/tsarchi/issues/459)).
 - `upsertElement()` no longer writes `Added element …` or `Updated element …` to the console ([#460](https://github.com/localgod/tsarchi/issues/460)).
 - A model with an empty name is saved without a `name` attribute on `<archimate:model>` instead of with `name=""`, as Archi does ([#456](https://github.com/localgod/tsarchi/issues/456)).
 - An element or relationship with an empty name is saved without a `name` attribute instead of with `name=""`, as Archi does (`Nameable.name` defaults to `""`, and EMF does not write default values). An element or relationship loaded without a `name` attribute now has `name: ''` instead of `undefined`, matching its `string` type ([#455](https://github.com/localgod/tsarchi/issues/455)).

@@ -3,7 +3,7 @@ import { builtinModules } from 'module';
 import { fileURLToPath } from 'url';
 import { build, type Plugin } from 'vite';
 
-const builtins = new Set(builtinModules.flatMap((name) => [name, `node:${name}`]));
+const builtins = new Set(builtinModules.flatMap(name => [name, `node:${name}`]));
 
 /** Records every Node built-in the bundle tries to import, instead of letting Vite stub it. */
 function recordNodeBuiltins(imported: string[]): Plugin {

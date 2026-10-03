@@ -1,4 +1,4 @@
-import type { ViewBendpoint } from "./View.mjs";
+import type { ViewBendpoint } from './View.mjs';
 
 export interface SourceConnection {
   type: string;
@@ -7,14 +7,14 @@ export interface SourceConnection {
   id: string;
   name?: string;
   /** Archi's numeric `type` attribute: line style and arrow head flags of sketch and note connections. */
-  lineStyle?: number
-  font?: string
-  fontColor?: string
-  lineWidth?: number
-  lineColor?: string
-  textAlignment?: number
-  textPosition?: number
-  locked?: boolean
+  lineStyle?: number;
+  font?: string;
+  fontColor?: string;
+  lineWidth?: number;
+  lineColor?: string;
+  textAlignment?: number;
+  textPosition?: number;
+  locked?: boolean;
   source: string;
   target: string;
   archimateRelationship?: string;

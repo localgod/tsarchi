@@ -1,4 +1,3 @@
-
 /**
  * `<bounds>` of a diagram object. Archi omits `x`/`y` when 0 and `width`/`height` when -1 (the EMF defaults).
  */

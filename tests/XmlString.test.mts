@@ -111,8 +111,8 @@ describe('Archimate.fromXml / toXml', () => {
   it('loads an element without a name as an empty name', () => {
     const archimate = Archimate.fromXml(
       '<archimate:model xmlns:archimate="http://www.archimatetool.com/archimate" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="M" id="m">' +
-      '<folder name="Business" id="f" type="business"><element xsi:type="archimate:BusinessActor" id="a"/></folder>' +
-      '</archimate:model>'
+        '<folder name="Business" id="f" type="business"><element xsi:type="archimate:BusinessActor" id="a"/></folder>' +
+        '</archimate:model>'
     );
     expect(archimate.getElement('a')?.name).toBe('');
   });
@@ -140,7 +140,8 @@ describe('Archimate.fromXml / toXml', () => {
   });
 
   it('keeps a model without a name unnamed on load and save', () => {
-    const input = '<archimate:model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ' +
+    const input =
+      '<archimate:model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ' +
       'xmlns:archimate="http://www.archimatetool.com/archimate" id="m" version="5.0.0"/>';
     const archimate = Archimate.fromXml(input);
     expect(archimate.getName()).toBe('');

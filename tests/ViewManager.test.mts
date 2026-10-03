@@ -12,26 +12,26 @@ describe('ViewManager', () => {
 
   beforeEach(() => {
     archimate = new Archimate();
-    
+
     // Add some test elements
     const appComponent1: Element = {
       id: 'app-1',
       type: 'ApplicationComponent',
       name: 'App Component 1',
-      properties: new Map([['version', '1.0']])
+      properties: new Map([['version', '1.0']]),
     };
-    
+
     const appComponent2: Element = {
       id: 'app-2',
       type: 'ApplicationComponent',
       name: 'App Component 2',
-      properties: new Map([['version', '2.0']])
+      properties: new Map([['version', '2.0']]),
     };
 
     const businessProcess: Element = {
       id: 'bp-1',
       type: 'BusinessProcess',
-      name: 'Business Process 1'
+      name: 'Business Process 1',
     };
 
     const relationship: Element = {
@@ -39,7 +39,7 @@ describe('ViewManager', () => {
       type: 'FlowRelationship',
       name: 'Flow',
       source: 'app-1',
-      target: 'app-2'
+      target: 'app-2',
     };
 
     archimate.upsertElement(appComponent1);
@@ -52,7 +52,7 @@ describe('ViewManager', () => {
     it('should create a new view with basic properties', () => {
       const view = archimate.createView('Test View', {
         documentation: 'Test documentation',
-        viewpoint: 'application'
+        viewpoint: 'application',
       });
 
       expect(view).toBeDefined();
@@ -66,7 +66,7 @@ describe('ViewManager', () => {
     it('should add the view to the diagrams folder', () => {
       const view = archimate.createView('Test View');
       const views = archimate.listViews();
-      
+
       expect(views).toHaveLength(1);
       expect(views[0].id).toBe(view.id);
       expect(views[0].name).toBe('Test View');
@@ -77,10 +77,10 @@ describe('ViewManager', () => {
     it('should add a diagram object to a view', () => {
       const view = archimate.createView('Test View');
       const bounds = { x: 100, y: 100, width: 120, height: 55 };
-      
+
       const diagramObject = archimate.addDiagramObject(view.id, 'app-1', bounds, {
         fillColor: '#ff0000',
-        textAlignment: 1
+        textAlignment: 1,
       });
 
       expect(diagramObject).toBeDefined();
@@ -94,7 +94,7 @@ describe('ViewManager', () => {
     it('should throw error for non-existent element', () => {
       const view = archimate.createView('Test View');
       const bounds = { x: 100, y: 100, width: 120, height: 55 };
-      
+
       expect(() => {
         archimate.addDiagramObject(view.id, 'non-existent', bounds);
       }).toThrow('Element with ID non-existent not found in model');
@@ -103,7 +103,7 @@ describe('ViewManager', () => {
     it('should return null for non-existent view', () => {
       const bounds = { x: 100, y: 100, width: 120, height: 55 };
       const result = archimate.addDiagramObject('non-existent-view', 'app-1', bounds);
-      
+
       expect(result).toBeNull();
     });
   });
@@ -112,10 +112,10 @@ describe('ViewManager', () => {
     it('should add a group to a view', () => {
       const view = archimate.createView('Test View');
       const bounds = { x: 50, y: 50, width: 300, height: 200 };
-      
+
       const group = archimate.addGroup(view.id, 'Test Group', bounds, {
         fillColor: '#0000ff',
-        documentation: 'Group documentation'
+        documentation: 'Group documentation',
       });
 
       expect(group).toBeDefined();
@@ -133,19 +133,14 @@ describe('ViewManager', () => {
       const view = archimate.createView('Test View');
       const groupBounds = { x: 50, y: 50, width: 300, height: 200 };
       const group = archimate.addGroup(view.id, 'Test Group', groupBounds);
-      
+
       const objectBounds = { x: 20, y: 20, width: 120, height: 55 };
-      const diagramObject = archimate.addDiagramObjectToGroup(
-        view.id, 
-        group!.id, 
-        'app-1', 
-        objectBounds
-      );
+      const diagramObject = archimate.addDiagramObjectToGroup(view.id, group!.id, 'app-1', objectBounds);
 
       expect(diagramObject).toBeDefined();
       expect(diagramObject?.archimateElement).toBe('app-1');
       expect(diagramObject?.bounds).toEqual(objectBounds);
-      
+
       // Verify the object is in the group
       const updatedView = archimate.getView(view.id);
       const updatedGroup = updatedView?.children?.[0] as any;
@@ -159,17 +154,11 @@ describe('ViewManager', () => {
       const view = archimate.createView('Test View');
       const bounds1 = { x: 100, y: 100, width: 120, height: 55 };
       const bounds2 = { x: 300, y: 100, width: 120, height: 55 };
-      
+
       const obj1 = archimate.addDiagramObject(view.id, 'app-1', bounds1);
       const obj2 = archimate.addDiagramObject(view.id, 'app-2', bounds2);
-      
-      const connection = archimate.addConnection(
-        view.id, 
-        obj1!.id, 
-        obj2!.id, 
-        'rel-1',
-        { lineColor: '#00ff00', lineWidth: 2 }
-      );
+
+      const connection = archimate.addConnection(view.id, obj1!.id, obj2!.id, 'rel-1', { lineColor: '#00ff00', lineWidth: 2 });
 
       expect(connection).toBeDefined();
       expect(connection?.type).toBe('Connection');
@@ -183,16 +172,15 @@ describe('ViewManager', () => {
 
   describe('generateViewFromElements', () => {
     it('should generate a view with grid layout', () => {
-      const view = archimate.generateViewFromElements(
-        'Generated View',
-        ['app-1', 'app-2', 'bp-1'],
-        { layoutType: 'grid', includeRelationships: true }
-      );
+      const view = archimate.generateViewFromElements('Generated View', ['app-1', 'app-2', 'bp-1'], {
+        layoutType: 'grid',
+        includeRelationships: true,
+      });
 
       expect(view).toBeDefined();
       expect(view?.name).toBe('Generated View');
       expect(view?.children).toHaveLength(3);
-      
+
       // Check that elements are positioned in grid
       const children = view?.children as any[];
       expect(children[0].bounds.x).toBe(50);
@@ -202,15 +190,11 @@ describe('ViewManager', () => {
     });
 
     it('should generate a view with circular layout', () => {
-      const view = archimate.generateViewFromElements(
-        'Circular View',
-        ['app-1', 'app-2'],
-        { layoutType: 'circular' }
-      );
+      const view = archimate.generateViewFromElements('Circular View', ['app-1', 'app-2'], { layoutType: 'circular' });
 
       expect(view).toBeDefined();
       expect(view?.children).toHaveLength(2);
-      
+
       // Check that elements are positioned in circle
       const children = view?.children as any[];
       // For 2 elements: radius = max(150, 2*20) = 150, center = 300
@@ -221,14 +205,10 @@ describe('ViewManager', () => {
     });
 
     it('should include relationship connections when requested', () => {
-      const view = archimate.generateViewFromElements(
-        'Connected View',
-        ['app-1', 'app-2'],
-        { includeRelationships: true }
-      );
+      const view = archimate.generateViewFromElements('Connected View', ['app-1', 'app-2'], { includeRelationships: true });
 
       expect(view).toBeDefined();
-      
+
       // Check that connections were created
       const children = view?.children as any[];
       const sourceObject = children.find(c => c.archimateElement === 'app-1');
@@ -244,7 +224,7 @@ describe('ViewManager', () => {
       expect(view).toBeDefined();
       expect(view?.name).toBe('Application Components');
       expect(view?.children).toHaveLength(2);
-      
+
       const children = view?.children as any[];
       const elementIds = children.map(c => c.archimateElement);
       expect(elementIds).toContain('app-1');
@@ -277,16 +257,16 @@ describe('ViewManager', () => {
       const view = archimate.createView('Test View');
       const bounds = { x: 100, y: 100, width: 120, height: 55 };
       const obj = archimate.addDiagramObject(view.id, 'app-1', bounds);
-      
+
       const newBounds = { x: 200, y: 200, width: 150, height: 75 };
       const success = archimate.updateDiagramObjectStyle(view.id, obj!.id, {
         fillColor: '#ffff00',
         bounds: newBounds,
-        textAlignment: 2
+        textAlignment: 2,
       });
 
       expect(success).toBe(true);
-      
+
       // Verify the changes
       const updatedView = archimate.getView(view.id);
       const updatedObj = updatedView?.children?.[0] as any;
@@ -300,7 +280,7 @@ describe('ViewManager', () => {
     it('should remove a view from the model', () => {
       const view = archimate.createView('Test View');
       expect(archimate.listViews()).toHaveLength(1);
-      
+
       const success = archimate.deleteView(view.id);
       expect(success).toBe(true);
       expect(archimate.listViews()).toHaveLength(0);
@@ -386,7 +366,7 @@ describe('listViews', () => {
     expect(archimate.listViews().map(v => [v.id, v.type])).toEqual([
       ['id-sketch', 'SketchModel'],
       ['id-canvas', 'CanvasModel'],
-      [view.id, 'ArchimateDiagramModel']
+      [view.id, 'ArchimateDiagramModel'],
     ]);
   });
 
@@ -423,6 +403,10 @@ describe('non-view elements in the Views folder', () => {
   });
 
   it('should leave non-view elements out of listViews', () => {
-    expect(load().listViews().map(v => v.id)).toEqual(['id-view']);
+    expect(
+      load()
+        .listViews()
+        .map(v => v.id)
+    ).toEqual(['id-view']);
   });
 });

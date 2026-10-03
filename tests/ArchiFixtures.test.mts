@@ -48,7 +48,7 @@ function errors(archimate: Archimate) {
 }
 
 describe('Archi-produced models', () => {
-  it('should report relationships Archi\'s matrix rejects as warnings', async () => {
+  it("should report relationships Archi's matrix rejects as warnings", async () => {
     const archimate = await parseFixture('testDeleteHandler.archimate');
 
     expect(archimate.validateModel()).toEqual([
@@ -58,17 +58,20 @@ describe('Archi-produced models', () => {
     expect(() => archimate.assertValidModel()).not.toThrow();
   });
 
-  it.each(['Archisurance.archimate', 'Archisurance-xmlexchange.archimate', 'modelimporter-test.archimate', 'test.archimate', 'testCopySnapshot.archimate'])(
-    'should find no relationship Archi\'s matrix rejects in %s',
-    async (name) => {
-      const archimate = await parseFixture(name);
-      expect(archimate.validateModel()).toEqual([]);
-    }
-  );
+  it.each([
+    'Archisurance.archimate',
+    'Archisurance-xmlexchange.archimate',
+    'modelimporter-test.archimate',
+    'test.archimate',
+    'testCopySnapshot.archimate',
+  ])("should find no relationship Archi's matrix rejects in %s", async name => {
+    const archimate = await parseFixture(name);
+    expect(archimate.validateModel()).toEqual([]);
+  });
 
   it.each(['Archisurance.archimate', 'testDeleteHandler.archimate'])(
     'should not report missing-name for unnamed relationships in %s',
-    async (name) => {
+    async name => {
       const archimate = await parseFixture(name);
       expect(archimate.validateModel().filter(issue => issue.code === 'missing-name')).toEqual([]);
     }
@@ -99,12 +102,9 @@ describe('Archi-produced models', () => {
     expect(connections.find(connection => connection['@_id'] === '9f83beb6')?.['@_targetConnections']).toBe('70635c80');
   });
 
-  it.each(['Archisurance.archimate', 'test.archimate', 'testCopySnapshot.archimate'])(
-    'should parse %s',
-    async (name) => {
-      await expect(parseFixture(name)).resolves.toBeInstanceOf(Archimate);
-    }
-  );
+  it.each(['Archisurance.archimate', 'test.archimate', 'testCopySnapshot.archimate'])('should parse %s', async name => {
+    await expect(parseFixture(name)).resolves.toBeInstanceOf(Archimate);
+  });
 
   it('should serialize connections without xsi:type without adding the attribute', async () => {
     const archimate = await parseFixture('testCopySnapshot.archimate');
@@ -112,8 +112,9 @@ describe('Archi-produced models', () => {
 
     expect(connections.length).toBeGreaterThan(0);
     expect(connections.every(connection => typeof connection['@_id'] === 'string')).toBe(true);
-    expect(connections.filter(connection => !('@_xsi:type' in connection)).map(connection => connection['@_id']))
-      .toEqual(expect.arrayContaining(['01707f8e', '807d8f49', 'b0b06ebb', '80ce8eea', 'b5266c15', '8faa57ef']));
+    expect(connections.filter(connection => !('@_xsi:type' in connection)).map(connection => connection['@_id'])).toEqual(
+      expect.arrayContaining(['01707f8e', '807d8f49', 'b0b06ebb', '80ce8eea', 'b5266c15', '8faa57ef'])
+    );
   });
 
   it('should not write default bounds Archi omits', async () => {
@@ -129,11 +130,7 @@ describe('Archi-produced models', () => {
     const archimate = await parseFixture('test.archimate');
     const model = archimate.serialize()['archimate:model'];
 
-    expect(Object.keys(model).filter(key => key.startsWith('@_xmlns:'))).toEqual([
-      '@_xmlns:xsi',
-      '@_xmlns:archimate',
-      '@_xmlns:canvas',
-    ]);
+    expect(Object.keys(model).filter(key => key.startsWith('@_xmlns:'))).toEqual(['@_xmlns:xsi', '@_xmlns:archimate', '@_xmlns:canvas']);
     expect(model['@_xmlns:canvas']).toBe('http://www.archimatetool.com/archimate/canvas');
   });
 
@@ -161,8 +158,10 @@ describe('Archi-produced models', () => {
 
     expect(connection).toMatchObject({ id: 'c1', type: 'Connection', implicitType: true });
     expect(SourceConnectionMapper.toSchemaSourceConnection(connection)).not.toHaveProperty('@_xsi:type');
-    expect(SourceConnectionMapper.toSchemaSourceConnection({ ...connection, type: 'DiagramModelReference' }))
-      .toHaveProperty('@_xsi:type', 'archimate:DiagramModelReference');
+    expect(SourceConnectionMapper.toSchemaSourceConnection({ ...connection, type: 'DiagramModelReference' })).toHaveProperty(
+      '@_xsi:type',
+      'archimate:DiagramModelReference'
+    );
   });
 
   it('should validate sketch and canvas views', async () => {
@@ -194,11 +193,13 @@ describe('Archi-produced models', () => {
     const xml = await readFile(`${fixturesDir}/compatibility_test3.archimate`, 'utf8');
     const archimate = Archimate.fromXml(xml);
 
-    expect(archimate.validateModel()).toEqual(expect.arrayContaining([
-      expect.objectContaining({ code: 'unknown-type', severity: 'warning', id: 'id-3fded24054d44e3f90889975746e5238' }),
-      expect.objectContaining({ code: 'unknown-type', severity: 'warning', id: 'id-f08fc3eed940450b9c066f5a2e066858' }),
-      expect.objectContaining({ code: 'unknown-type', severity: 'warning', id: 'id-e983ee9f5cbe4d51812734c3e0eae3e9' }),
-    ]));
+    expect(archimate.validateModel()).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: 'unknown-type', severity: 'warning', id: 'id-3fded24054d44e3f90889975746e5238' }),
+        expect.objectContaining({ code: 'unknown-type', severity: 'warning', id: 'id-f08fc3eed940450b9c066f5a2e066858' }),
+        expect.objectContaining({ code: 'unknown-type', severity: 'warning', id: 'id-e983ee9f5cbe4d51812734c3e0eae3e9' }),
+      ])
+    );
     expect(errors(archimate)).toEqual([]);
 
     const parser = new XMLParser({ ignoreAttributes: false });
@@ -215,12 +216,10 @@ describe('Archi-produced models', () => {
 
     it.each(['<element id="e1" name="E1"/>', '<element xsi:type="" id="e1" name="E1"/>'])(
       'should report a missing type as an error instead of inventing one: %s',
-      (element) => {
+      element => {
         const archimate = Archimate.fromXml(wrap(element));
 
-        expect(archimate.validateModel()).toEqual([
-          expect.objectContaining({ code: 'missing-type', severity: 'error', id: 'e1' }),
-        ]);
+        expect(archimate.validateModel()).toEqual([expect.objectContaining({ code: 'missing-type', severity: 'error', id: 'e1' })]);
         expect(() => archimate.toXml()).toThrow('Archimate model validation failed');
         expect(archimate.serialize()['archimate:model'].folder).not.toHaveProperty('element.@_xsi:type');
       }
@@ -234,7 +233,10 @@ describe('Archi-produced models', () => {
       const saved = new XMLParser({ ignoreAttributes: false }).parse(archimate.toXml());
       const business = saved['archimate:model'].folder.find((folder: { '@_type': string }) => folder['@_type'] === 'business');
       expect(business.element).toEqual({
-        '@_xsi:type': 'vendor:Widget', '@_xmlns:vendor': 'urn:example:vendor', '@_id': 'e1', '@_name': 'E1',
+        '@_xsi:type': 'vendor:Widget',
+        '@_xmlns:vendor': 'urn:example:vendor',
+        '@_id': 'e1',
+        '@_name': 'E1',
       });
     });
   });
@@ -283,7 +285,10 @@ describe('Archi-produced models', () => {
   });
 
   it('should remove diagram objects nested in other diagram objects when deleting their element', async () => {
-    for (const [elementId, objectId] of [['8ab84e91', 'c9fc8676'], ['8ecabfc2', '9fb7222b']]) {
+    for (const [elementId, objectId] of [
+      ['8ab84e91', 'c9fc8676'],
+      ['8ecabfc2', '9fb7222b'],
+    ]) {
       const archimate = await parseFixture('testDeleteHandler.archimate');
       expect(findChild(archimate, '12917bec', objectId)).toBeDefined();
 
@@ -304,7 +309,11 @@ describe('Archi-produced models', () => {
 
   it('should load connection features written by Archi into typed properties', async () => {
     const archimate = await parseFixture('modelimporter-test.archimate');
-    const connection = findChild(archimate, 'c6443ba3-18a6-4695-94ec-0e6845d0f42f', '6182a68e-5c80-48ac-9486-9fdf53f793c0')?.sourceConnection;
+    const connection = findChild(
+      archimate,
+      'c6443ba3-18a6-4695-94ec-0e6845d0f42f',
+      '6182a68e-5c80-48ac-9486-9fdf53f793c0'
+    )?.sourceConnection;
 
     expect(Array.isArray(connection) ? connection[0] : connection).toMatchObject({ nameVisible: false });
   });

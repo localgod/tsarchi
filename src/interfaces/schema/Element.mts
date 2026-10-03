@@ -1,9 +1,8 @@
-import type { Bounds } from "./Bounds.mjs";
-import type { Child } from "./Child.mjs";
-import type { Feature } from "./Feature.mjs";
-import type { Property } from "./Property.mjs";
-import type { SourceConnection } from "./SourceConnection.mjs";
-
+import type { Bounds } from './Bounds.mjs';
+import type { Child } from './Child.mjs';
+import type { Feature } from './Feature.mjs';
+import type { Property } from './Property.mjs';
+import type { SourceConnection } from './SourceConnection.mjs';
 
 export interface Element {
   '@_xsi:type'?: string;
@@ -22,7 +21,7 @@ export interface Element {
   '@_accessType'?: string;
   /** Junction type ('or'); only on Junction elements. */
   '@_type'?: string;
-  documentation?:string;
+  documentation?: string;
   property?: Array<Property> | Property;
   feature?: Feature | Feature[];
   child?: Child | Child[];

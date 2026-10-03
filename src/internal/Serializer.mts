@@ -1,14 +1,14 @@
-import type { Schema as ArchimateSchema } from "../interfaces/schema/Schema.mjs";
-import type { ModelAttributes } from "../interfaces/schema/Model.mjs";
-import type { XmlMetadata } from "../interfaces/schema/XmlMetadata.mjs";
-import type { Folder as SchemaFolder } from "../interfaces/schema/Folder.mjs";
-import type { Element as SchemaElement } from "../interfaces/schema/Element.mjs";
-import type { Element } from "../interfaces/Element.mjs";
-import type { Child as SchemaChild } from "../interfaces/schema/Child.mjs";
-import type { Property as SchemaProperty } from "../interfaces/schema/Property.mjs";
+import type { Schema as ArchimateSchema } from '../interfaces/schema/Schema.mjs';
+import type { ModelAttributes } from '../interfaces/schema/Model.mjs';
+import type { XmlMetadata } from '../interfaces/schema/XmlMetadata.mjs';
+import type { Folder as SchemaFolder } from '../interfaces/schema/Folder.mjs';
+import type { Element as SchemaElement } from '../interfaces/schema/Element.mjs';
+import type { Element } from '../interfaces/Element.mjs';
+import type { Child as SchemaChild } from '../interfaces/schema/Child.mjs';
+import type { Property as SchemaProperty } from '../interfaces/schema/Property.mjs';
 import type { Model, ModelContent, ModelFolder } from '../interfaces/Model.mjs';
 import type { Profile } from '../interfaces/Profile.mjs';
-import type { Profile as SchemaProfile } from "../interfaces/schema/Profile.mjs";
+import type { Profile as SchemaProfile } from '../interfaces/schema/Profile.mjs';
 import type { Folder } from '../interfaces/Folder.mjs';
 import type { Child } from '../interfaces/Child.mjs';
 import { BoundsMapper } from './BoundMapper.mjs';
@@ -17,9 +17,9 @@ import { folderType, toXsiType } from '../constants/archimate-mappings.mjs';
 import { DiagramAttributeMapper, childAttributes, childFeatures, childTextElements } from './DiagramAttributeMapper.mjs';
 
 export class Serializer {
-  private model: Model
-  private modelMetadata: ModelAttributes
-  private xmlMetadata: XmlMetadata
+  private model: Model;
+  private modelMetadata: ModelAttributes;
+  private xmlMetadata: XmlMetadata;
 
   constructor(model: Model) {
     this.model = model;
@@ -37,14 +37,12 @@ export class Serializer {
    * @param content Model-level content besides the folders, or just the model's purpose.
    */
   public serialize(modelMetadata: ModelAttributes | string, xmlMetadata?: XmlMetadata, content?: ModelContent | string): ArchimateSchema {
-    this.modelMetadata = typeof modelMetadata === 'string'
-      ? { ...this.modelMetadata, '@_name': modelMetadata }
-      : modelMetadata
-    this.xmlMetadata = xmlMetadata || this.xmlMetadata
-    const folders = Object.keys(this.model).map((key) => this.serializeTopLevelFolder(key as keyof Model));
+    this.modelMetadata = typeof modelMetadata === 'string' ? { ...this.modelMetadata, '@_name': modelMetadata } : modelMetadata;
+    this.xmlMetadata = xmlMetadata || this.xmlMetadata;
+    const folders = Object.keys(this.model).map(key => this.serializeTopLevelFolder(key as keyof Model));
     const schema: ArchimateSchema = this.createSchemaModel(folders);
 
-    this.storeModelContent(schema, typeof content === 'string' ? { purpose: content } : content ?? {});
+    this.storeModelContent(schema, typeof content === 'string' ? { purpose: content } : (content ?? {}));
 
     return schema;
   }
@@ -67,7 +65,7 @@ export class Serializer {
       model.metadata = content.metadata.size > 0 ? { entry: this.serializeProperties(content.metadata) } : '';
     }
     if (content.profiles && content.profiles.length > 0) {
-      model.profile = content.profiles.map((profile) => this.serializeProfile(profile));
+      model.profile = content.profiles.map(profile => this.serializeProfile(profile));
     }
   }
 
@@ -115,17 +113,15 @@ export class Serializer {
     this.addFolderDetails(folder, folderModel);
 
     const elements = Array.isArray(folderModel.elements) ? folderModel.elements : [];
-    const elementsById = new Map(elements.map((el) => [el.id, el]));
+    const elementsById = new Map(elements.map(el => [el.id, el]));
     const placedIds = new Set<string>();
 
     if (folderModel.folders && folderModel.folders.length > 0) {
-      folder.folder = folderModel.folders.map((subfolder) => this.serializeFolder(subfolder, elementsById, placedIds));
+      folder.folder = folderModel.folders.map(subfolder => this.serializeFolder(subfolder, elementsById, placedIds));
     }
 
     // Elements not claimed by a nested folder stay at the top level.
-    folder.element = elements
-      .filter((el) => !placedIds.has(el.id))
-      .map((el) => this.serializeElement(el));
+    folder.element = elements.filter(el => !placedIds.has(el.id)).map(el => this.serializeElement(el));
     Object.assign(folder, folderModel.unrecognized);
 
     return folder;
@@ -139,7 +135,7 @@ export class Serializer {
     this.addFolderDetails(folder, folderModel);
 
     if (folderModel.folders && folderModel.folders.length > 0) {
-      folder.folder = folderModel.folders.map((subfolder) => this.serializeFolder(subfolder, elementsById, placedIds));
+      folder.folder = folderModel.folders.map(subfolder => this.serializeFolder(subfolder, elementsById, placedIds));
     }
 
     // Ids of elements that were deleted, moved to another top-level folder, or already placed are skipped.
@@ -241,7 +237,7 @@ export class Serializer {
   }
 
   private saveChildren(children: Child[]): SchemaChild[] {
-    return children.map((child) => this.serializeChild(child));
+    return children.map(child => this.serializeChild(child));
   }
 
   /**
@@ -254,11 +250,11 @@ export class Serializer {
       '@_xsi:type': toXsiType(child.type),
       '@_id': child.id,
       ...DiagramAttributeMapper.writeAttributes(child, childAttributes),
-      bounds: BoundsMapper.boundsToSchemaBounds(child.bounds)
-    }
+      bounds: BoundsMapper.boundsToSchemaBounds(child.bounds),
+    };
 
     if (child.sourceConnection) {
-      schemaChild.sourceConnection = SourceConnectionMapper.toSchemaSourceConnections(child.sourceConnection)
+      schemaChild.sourceConnection = SourceConnectionMapper.toSchemaSourceConnections(child.sourceConnection);
     }
 
     if (child.child && Array.isArray(child.child)) {
@@ -276,9 +272,7 @@ export class Serializer {
       schemaChild.property = property;
     }
 
-    const feature = DiagramAttributeMapper.featuresToSchema(
-      DiagramAttributeMapper.writeFeatures(child, child.features, childFeatures),
-    );
+    const feature = DiagramAttributeMapper.featuresToSchema(DiagramAttributeMapper.writeFeatures(child, child.features, childFeatures));
     if (feature) {
       schemaChild.feature = feature;
     }

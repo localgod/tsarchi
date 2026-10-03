@@ -8,7 +8,7 @@ describe('BoundsMapper', () => {
       '@_x': '10',
       '@_y': '20',
       '@_width': '100',
-      '@_height': '50'
+      '@_height': '50',
     };
 
     const result = BoundsMapper.schemaBoundsToBounds(schemaBounds);
@@ -17,7 +17,7 @@ describe('BoundsMapper', () => {
       x: 10,
       y: 20,
       width: 100,
-      height: 50
+      height: 50,
     });
   });
 
@@ -28,7 +28,7 @@ describe('BoundsMapper', () => {
       x: 0,
       y: 0,
       width: 0,
-      height: 0
+      height: 0,
     });
   });
 
@@ -37,7 +37,7 @@ describe('BoundsMapper', () => {
       '@_x': 'invalid',
       '@_y': '',
       '@_width': '100',
-      '@_height': 'NaN'
+      '@_height': 'NaN',
     };
 
     const result = BoundsMapper.schemaBoundsToBounds(schemaBounds);
@@ -46,7 +46,7 @@ describe('BoundsMapper', () => {
       x: 0,
       y: 0,
       width: 100,
-      height: 0
+      height: 0,
     });
   });
 
@@ -55,7 +55,7 @@ describe('BoundsMapper', () => {
       x: 15,
       y: 25,
       width: 200,
-      height: 75
+      height: 75,
     };
 
     const result = BoundsMapper.boundsToSchemaBounds(bounds);
@@ -64,7 +64,7 @@ describe('BoundsMapper', () => {
       '@_x': '15',
       '@_y': '25',
       '@_width': '200',
-      '@_height': '75'
+      '@_height': '75',
     });
   });
 

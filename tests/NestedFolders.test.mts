@@ -47,11 +47,14 @@ describe('nested folders', () => {
   it('should load elements from nested folders (Archi testDeleteHandler model)', async () => {
     const archimate = await parseFile('tests/fixtures/archi/testDeleteHandler.archimate');
 
-    expect(archimate.findElementsByFolder('application').map(element => element.id))
-      .toEqual(['e836c6be', 'd1247cf1', 'b5742e18']);
-    expect(archimate.validateModel().filter(issue =>
-      ['relationship-missing-source', 'relationship-missing-target', 'diagram-object-missing-element'].includes(issue.code)
-    )).toEqual([]);
+    expect(archimate.findElementsByFolder('application').map(element => element.id)).toEqual(['e836c6be', 'd1247cf1', 'b5742e18']);
+    expect(
+      archimate
+        .validateModel()
+        .filter(issue =>
+          ['relationship-missing-source', 'relationship-missing-target', 'diagram-object-missing-element'].includes(issue.code)
+        )
+    ).toEqual([]);
   });
 
   it('should expose the folder tree with metadata', async () => {
@@ -174,7 +177,10 @@ describe('nested folder details', () => {
     });
 
     expect(details).toEqual(archimate.getFolderById('id-folder-legacy'));
-    const legacy = findSchemaFolder(archimate.serialize()['archimate:model'].folder, 'id-folder-legacy') as unknown as Record<string, unknown>;
+    const legacy = findSchemaFolder(archimate.serialize()['archimate:model'].folder, 'id-folder-legacy') as unknown as Record<
+      string,
+      unknown
+    >;
     expect(legacy['@_name']).toBe('Retired');
     expect(legacy.documentation).toBe('No longer used.');
     expect(legacy.property).toEqual([{ '@_key': 'owner', '@_value': 'ops' }]);
@@ -189,7 +195,10 @@ describe('nested folder details', () => {
     archimate.updateFolderById('id-folder-portals', { documentation: undefined, properties: new Map() });
 
     expect(archimate.getFolderById('id-folder-portals')).toEqual({ id: 'id-folder-portals', name: 'Portals' });
-    const portals = findSchemaFolder(archimate.serialize()['archimate:model'].folder, 'id-folder-portals') as unknown as Record<string, unknown>;
+    const portals = findSchemaFolder(archimate.serialize()['archimate:model'].folder, 'id-folder-portals') as unknown as Record<
+      string,
+      unknown
+    >;
     expect(portals.documentation).toBeUndefined();
     expect(portals.property).toBeUndefined();
     expect(elementIds(portals as SchemaFolder)).toEqual(['id-portal', 'id-portal-service']);
@@ -230,8 +239,7 @@ describe('creating, moving and deleting nested folders', () => {
       properties: new Map([['owner', 'mobile']]),
     });
     expect(archimate.getFolderById(created.id)).toEqual(created);
-    expect(archimate.getFolders('application')[0].folders?.map(folder => folder.id))
-      .toEqual(['id-folder-legacy', created.id]);
+    expect(archimate.getFolders('application')[0].folders?.map(folder => folder.id)).toEqual(['id-folder-legacy', created.id]);
     expect(archimate.validateModel()).toEqual([]);
     const saved = findSchemaFolder(archimate.serialize()['archimate:model'].folder, created.id);
     expect(saved).toMatchObject({ '@_name': 'Mobile', '@_id': created.id, documentation: 'Apps.' });
@@ -267,8 +275,11 @@ describe('creating, moving and deleting nested folders', () => {
     expect(elementIds(legacy)).toEqual(['id-old-portal']);
 
     archimate.moveFolder('id-folder-legacy', 'id-nested-application');
-    expect(archimate.getFolders('application').map(folder => folder.id))
-      .toEqual(['id-folder-portals', 'id-folder-empty', 'id-folder-legacy']);
+    expect(archimate.getFolders('application').map(folder => folder.id)).toEqual([
+      'id-folder-portals',
+      'id-folder-empty',
+      'id-folder-legacy',
+    ]);
   });
 
   it('should reject moves Archi does not allow', async () => {

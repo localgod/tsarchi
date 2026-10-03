@@ -1,14 +1,14 @@
-import { Archimate } from '../Archimate.mjs'
+import { Archimate } from '../Archimate.mjs';
 import { readFile, writeFile } from 'fs/promises';
 import type { PathLike } from 'fs';
 import type { Schema } from '../interfaces/schema/Schema.mjs';
 import { parseArchimateXml, buildArchimateXml } from '../internal/Xml.mjs';
 
 export class TsArchi {
-  private model: Archimate
+  private model: Archimate;
 
   constructor() {
-    this.model = new Archimate()
+    this.model = new Archimate();
   }
 
   /**
@@ -35,7 +35,7 @@ export class TsArchi {
   }
 
   public getModel(): Archimate {
-    return this.model
+    return this.model;
   }
 
   async save(path: PathLike, json: object) {

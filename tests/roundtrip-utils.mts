@@ -16,7 +16,7 @@ export function normalizeXml(xml: string): unknown {
     attributeNamePrefix: '',
     trimValues: true,
     parseTagValue: true,
-    allowBooleanAttributes: true
+    allowBooleanAttributes: true,
   }).parse(xml);
 }
 

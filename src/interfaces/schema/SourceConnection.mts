@@ -1,6 +1,6 @@
-import type { Bendpoint } from "./Bendpoint.mjs";
-import type { Feature } from "./Feature.mjs";
-import type { Property } from "./Property.mjs";
+import type { Bendpoint } from './Bendpoint.mjs';
+import type { Feature } from './Feature.mjs';
+import type { Property } from './Property.mjs';
 
 export interface SourceConnection {
   '@_xsi:type'?: string;

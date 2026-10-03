@@ -12,11 +12,20 @@ import type { Bounds } from './interfaces/Bounds.mjs';
 import { ArchimateValidationError } from './interfaces/ValidationIssue.mjs';
 import type { ValidationIssue, ValidationIssueCode } from './interfaces/ValidationIssue.mjs';
 import { ArchimateParseError } from './interfaces/ArchimateParseError.mjs';
-import { Parser } from './internal/Parser.mjs'
-import { parseArchimateXml, buildArchimateXml } from './internal/Xml.mjs'
-import { Serializer } from './internal/Serializer.mjs'
-import { ViewManager } from './ViewManager.mjs'
-import { folderType, elementTypeToFolderKey, isArchimateModelType, canvasModelTypes, archimateNamespace, canvasNamespace, allowedRelationshipTypes, resolveRelationshipType } from './constants/archimate-mappings.mjs';
+import { Parser } from './internal/Parser.mjs';
+import { parseArchimateXml, buildArchimateXml } from './internal/Xml.mjs';
+import { Serializer } from './internal/Serializer.mjs';
+import { ViewManager } from './ViewManager.mjs';
+import {
+  folderType,
+  elementTypeToFolderKey,
+  isArchimateModelType,
+  canvasModelTypes,
+  archimateNamespace,
+  canvasNamespace,
+  allowedRelationshipTypes,
+  resolveRelationshipType,
+} from './constants/archimate-mappings.mjs';
 import { relationshipMatrixKeys } from './constants/relationships-matrix.mjs';
 import type { ArchimateModelType, ArchimateRelationshipAliasType, ArchimateRelationshipType } from './constants/archimate-mappings.mjs';
 
@@ -61,24 +70,23 @@ type ViewValidationIds = {
 };
 
 export class Archimate {
-
   /** Model-level content besides the folders: purpose, properties, metadata, profiles and unrecognised content. */
-  private content: ModelContent
+  private content: ModelContent;
 
-  private xmlMetadata: XmlMetadata
+  private xmlMetadata: XmlMetadata;
 
-  private modelMetadata: ModelAttributes
+  private modelMetadata: ModelAttributes;
 
-  private model: Model
+  private model: Model;
 
-  private viewManager: ViewManager
+  private viewManager: ViewManager;
 
   public constructor() {
-    this.content = {}
-    this.xmlMetadata = this.defaultXmlMetadata()
-    this.modelMetadata = this.defaultModelMetadata()
-    this.model = this.init()
-    this.viewManager = new ViewManager(this.model, () => this.generateUniqueId())
+    this.content = {};
+    this.xmlMetadata = this.defaultXmlMetadata();
+    this.modelMetadata = this.defaultModelMetadata();
+    this.model = this.init();
+    this.viewManager = new ViewManager(this.model, () => this.generateUniqueId());
   }
 
   private defaultXmlMetadata(): XmlMetadata {
@@ -134,10 +142,10 @@ export class Archimate {
 
       for (const element of folder.elements || []) {
         if (element.id === id) return true;
-        if (element.child && this.childrenHaveId(
-          (Array.isArray(element.child) ? element.child : [element.child]) as StoredViewChild[],
-          id
-        )) {
+        if (
+          element.child &&
+          this.childrenHaveId((Array.isArray(element.child) ? element.child : [element.child]) as StoredViewChild[], id)
+        ) {
           return true;
         }
       }
@@ -349,18 +357,16 @@ export class Archimate {
 
     const existingIndex = relationship.id
       ? folder.elements.findIndex(el => el.id === relationship.id)
-      : folder.elements.findIndex(el =>
-        el.name === relationship.name &&
-        el.type === relationship.type &&
-        el.source === relationship.source &&
-        el.target === relationship.target
-      );
+      : folder.elements.findIndex(
+          el =>
+            el.name === relationship.name &&
+            el.type === relationship.type &&
+            el.source === relationship.source &&
+            el.target === relationship.target
+        );
 
     if (existingIndex >= 0) {
-      const updatedRelationship = this.mergeElementPatch(
-        folder.elements[existingIndex],
-        relationship
-      ) as Relationship;
+      const updatedRelationship = this.mergeElementPatch(folder.elements[existingIndex], relationship) as Relationship;
       folder.elements[existingIndex] = updatedRelationship;
       return updatedRelationship;
     }
@@ -403,7 +409,7 @@ export class Archimate {
    */
   public getRelationship(relationshipId: string): Relationship | null {
     const relationship = this.model.relations.elements?.find(el => el.id === relationshipId);
-    return relationship ? relationship as Relationship : null;
+    return relationship ? (relationship as Relationship) : null;
   }
 
   /**
@@ -420,15 +426,18 @@ export class Archimate {
   /**
    * Finds relationships between two elements.
    */
-  public findRelationshipsBetween(sourceElementId: string, targetElementId: string, options?: {
-    bidirectional?: boolean;
-    type?: ArchimateRelationshipType | ArchimateRelationshipAliasType;
-  }): Relationship[] {
+  public findRelationshipsBetween(
+    sourceElementId: string,
+    targetElementId: string,
+    options?: {
+      bidirectional?: boolean;
+      type?: ArchimateRelationshipType | ArchimateRelationshipAliasType;
+    }
+  ): Relationship[] {
     return (this.model.relations.elements || []).filter(relationship => {
       const directMatch = relationship.source === sourceElementId && relationship.target === targetElementId;
-      const reverseMatch = options?.bidirectional === true &&
-        relationship.source === targetElementId &&
-        relationship.target === sourceElementId;
+      const reverseMatch =
+        options?.bidirectional === true && relationship.source === targetElementId && relationship.target === sourceElementId;
       const typeMatch = options?.type ? relationship.type === resolveRelationshipType(options.type) : true;
 
       return typeMatch && (directMatch || reverseMatch);
@@ -546,8 +555,8 @@ export class Archimate {
   }
 
   public serialize(): ArchimateSchema {
-    const serializer = new Serializer(this.model)
-    return serializer.serialize(this.withRequiredNamespaces(this.modelMetadata), this.xmlMetadata, this.content)
+    const serializer = new Serializer(this.model);
+    return serializer.serialize(this.withRequiredNamespaces(this.modelMetadata), this.xmlMetadata, this.content);
   }
 
   /**
@@ -657,8 +666,9 @@ export class Archimate {
   private usesCanvasTypes(): boolean {
     const canvasTypes: readonly string[] = canvasModelTypes;
     const hasCanvasType = (children: Child[] | Child | undefined): boolean =>
-      (Array.isArray(children) ? children : children ? [children] : []).some(child =>
-        canvasTypes.includes(child.type) || hasCanvasType(child.child));
+      (Array.isArray(children) ? children : children ? [children] : []).some(
+        child => canvasTypes.includes(child.type) || hasCanvasType(child.child)
+      );
     return (this.model.diagrams.elements || []).some(view => canvasTypes.includes(view.type) || hasCanvasType(view.child));
   }
 
@@ -667,11 +677,14 @@ export class Archimate {
   /**
    * Creates a new view with the specified name and optional properties
    */
-  public createView(name: string, options?: {
-    viewpoint?: string;
-    background?: number;
-    documentation?: string;
-  }): View {
+  public createView(
+    name: string,
+    options?: {
+      viewpoint?: string;
+      background?: number;
+      documentation?: string;
+    }
+  ): View {
     return this.viewManager.createView(name, options);
   }
 
@@ -692,72 +705,102 @@ export class Archimate {
   /**
    * Adds a diagram object to a view, representing a model element
    */
-  public addDiagramObject(viewId: string, elementId: string, bounds: Bounds, options?: {
-    fillColor?: string;
-    lineColor?: string;
-    fontColor?: string;
-    textAlignment?: number;
-  }) {
+  public addDiagramObject(
+    viewId: string,
+    elementId: string,
+    bounds: Bounds,
+    options?: {
+      fillColor?: string;
+      lineColor?: string;
+      fontColor?: string;
+      textAlignment?: number;
+    }
+  ) {
     return this.viewManager.addDiagramObject(viewId, elementId, bounds, options);
   }
 
   /**
    * Creates a group in a view to organize diagram objects
    */
-  public addGroup(viewId: string, name: string, bounds: Bounds, options?: {
-    fillColor?: string;
-    lineColor?: string;
-    textAlignment?: number;
-    documentation?: string;
-  }) {
+  public addGroup(
+    viewId: string,
+    name: string,
+    bounds: Bounds,
+    options?: {
+      fillColor?: string;
+      lineColor?: string;
+      textAlignment?: number;
+      documentation?: string;
+    }
+  ) {
     return this.viewManager.addGroup(viewId, name, bounds, options);
   }
 
   /**
    * Adds a diagram object to a group within a view
    */
-  public addDiagramObjectToGroup(viewId: string, groupId: string, elementId: string, bounds: Bounds, options?: {
-    fillColor?: string;
-    lineColor?: string;
-    fontColor?: string;
-    textAlignment?: number;
-  }) {
+  public addDiagramObjectToGroup(
+    viewId: string,
+    groupId: string,
+    elementId: string,
+    bounds: Bounds,
+    options?: {
+      fillColor?: string;
+      lineColor?: string;
+      fontColor?: string;
+      textAlignment?: number;
+    }
+  ) {
     return this.viewManager.addDiagramObjectToGroup(viewId, groupId, elementId, bounds, options);
   }
 
   /**
    * Creates a connection between two diagram objects in a view
    */
-  public addConnection(viewId: string, sourceObjectId: string, targetObjectId: string, relationshipId?: string, options?: {
-    lineColor?: string;
-    lineWidth?: number;
-    fontColor?: string;
-    textPosition?: number;
-  }) {
+  public addConnection(
+    viewId: string,
+    sourceObjectId: string,
+    targetObjectId: string,
+    relationshipId?: string,
+    options?: {
+      lineColor?: string;
+      lineWidth?: number;
+      fontColor?: string;
+      textPosition?: number;
+    }
+  ) {
     return this.viewManager.addConnection(viewId, sourceObjectId, targetObjectId, relationshipId, options);
   }
 
   /**
    * Auto-generates a view based on elements and their relationships
    */
-  public generateViewFromElements(name: string, elementIds: string[], options?: {
-    includeRelationships?: boolean;
-    layoutType?: 'hierarchical' | 'circular' | 'grid';
-    viewpoint?: string;
-  }): View | null {
+  public generateViewFromElements(
+    name: string,
+    elementIds: string[],
+    options?: {
+      includeRelationships?: boolean;
+      layoutType?: 'hierarchical' | 'circular' | 'grid';
+      viewpoint?: string;
+    }
+  ): View | null {
     return this.viewManager.generateViewFromElements(name, elementIds, options);
   }
 
   /**
    * Updates visual properties of a diagram object
    */
-  public updateDiagramObjectStyle(viewId: string, objectId: string, style: {
-    fillColor?: string;
-    lineColor?: string;
-    fontColor?: string;
-    bounds?: Bounds;
-    textAlignment?: number;
-  }): boolean {
+  public updateDiagramObjectStyle(
+    viewId: string,
+    objectId: string,
+    style: {
+      fillColor?: string;
+      lineColor?: string;
+      fontColor?: string;
+      bounds?: Bounds;
+      textAlignment?: number;
+    }
+  ): boolean {
     return this.viewManager.updateDiagramObjectStyle(viewId, objectId, style);
   }
 
@@ -776,7 +819,7 @@ export class Archimate {
    */
   public findElementsByType(elementType: ArchimateModelType): Element[] {
     const results: Element[] = [];
-    
+
     for (const folderKey of Object.keys(this.model) as Array<keyof Model>) {
       const folder = this.model[folderKey];
       if (folder.elements) {
@@ -784,7 +827,7 @@ export class Archimate {
         results.push(...matchingElements);
       }
     }
-    
+
     return results;
   }
 
@@ -899,8 +942,7 @@ export class Archimate {
     location.parent.folders = location.parent.folders!.filter(folder => folder !== location.folder);
 
     const topLevelIds = new Set((this.model[location.folderKey].elements || []).map(element => element.id));
-    const collect = (folder: Folder): string[] =>
-      [...(folder.elementIds || []), ...(folder.folders || []).flatMap(collect)];
+    const collect = (folder: Folder): string[] => [...(folder.elementIds || []), ...(folder.folders || []).flatMap(collect)];
     for (const id of collect(location.folder as Folder)) {
       if (!topLevelIds.has(id)) continue;
       if (location.folderKey === 'diagrams') this.deleteView(id);
@@ -938,12 +980,14 @@ export class Archimate {
    * Finds a folder by id, with the key of its top-level folder, its parent (undefined for a top-level folder) and
    * the chain of folders from the top-level folder down to it.
    */
-  private locateFolder(folderId: string): {
-    folderKey: FolderKey;
-    folder: ModelFolder | Folder;
-    parent?: ModelFolder | Folder;
-    path: Array<ModelFolder | Folder>;
-  } | undefined {
+  private locateFolder(folderId: string):
+    | {
+        folderKey: FolderKey;
+        folder: ModelFolder | Folder;
+        parent?: ModelFolder | Folder;
+        path: Array<ModelFolder | Folder>;
+      }
+    | undefined {
     if (!folderId) return undefined;
     const search = (folders: Folder[], path: Array<ModelFolder | Folder>): Array<ModelFolder | Folder> | undefined => {
       for (const folder of folders) {
@@ -984,10 +1028,14 @@ export class Archimate {
   /**
    * Creates a view showing all elements of a specific type
    */
-  public createViewByElementType(viewName: string, elementType: ArchimateModelType, options?: {
-    layoutType?: 'hierarchical' | 'circular' | 'grid';
-    includeRelationships?: boolean;
-  }): View | null {
+  public createViewByElementType(
+    viewName: string,
+    elementType: ArchimateModelType,
+    options?: {
+      layoutType?: 'hierarchical' | 'circular' | 'grid';
+      includeRelationships?: boolean;
+    }
+  ): View | null {
     const elements = this.findElementsByType(elementType);
     if (elements.length === 0) return null;
 
@@ -998,10 +1046,14 @@ export class Archimate {
   /**
    * Creates a view showing all elements from a specific folder
    */
-  public createViewByFolder(viewName: string, folderKey: FolderKey, options?: {
-    layoutType?: 'hierarchical' | 'circular' | 'grid';
-    includeRelationships?: boolean;
-  }): View | null {
+  public createViewByFolder(
+    viewName: string,
+    folderKey: FolderKey,
+    options?: {
+      layoutType?: 'hierarchical' | 'circular' | 'grid';
+      includeRelationships?: boolean;
+    }
+  ): View | null {
     const elements = this.findElementsByFolder(folderKey);
     if (elements.length === 0) return null;
 
@@ -1121,7 +1173,7 @@ export class Archimate {
   private removeMatchingChildren(
     children: StoredViewChild[],
     shouldRemove: (child: StoredViewChild) => boolean,
-    removedIds: Set<string>,
+    removedIds: Set<string>
   ): StoredViewChild[] {
     const keptChildren: StoredViewChild[] = [];
 
@@ -1182,7 +1234,7 @@ export class Archimate {
   private removeViewConnectionsFromChildren(
     children: StoredViewChild[],
     relationshipIds: Set<string>,
-    removedConnectionIds: Set<string>,
+    removedConnectionIds: Set<string>
   ): boolean {
     let removedAny = false;
 
@@ -1210,7 +1262,7 @@ export class Archimate {
   private removeLoadedViewConnections(
     owner: { sourceConnection?: StoredViewConnection | StoredViewConnection[] },
     relationshipIds: Set<string>,
-    removedConnectionIds: Set<string>,
+    removedConnectionIds: Set<string>
   ): boolean {
     const sourceConnection = owner.sourceConnection;
     if (!sourceConnection) return false;
@@ -1235,12 +1287,13 @@ export class Archimate {
   private removeViewConnections<T extends ViewConnection>(
     connections: T[],
     relationshipIds: Set<string>,
-    removedConnectionIds: Set<string>,
+    removedConnectionIds: Set<string>
   ): T[] {
     return connections.filter(connection => {
-      const shouldRemove = (connection.archimateRelationship !== undefined && relationshipIds.has(connection.archimateRelationship))
-        || removedConnectionIds.has(connection.source)
-        || removedConnectionIds.has(connection.target);
+      const shouldRemove =
+        (connection.archimateRelationship !== undefined && relationshipIds.has(connection.archimateRelationship)) ||
+        removedConnectionIds.has(connection.source) ||
+        removedConnectionIds.has(connection.target);
       if (shouldRemove) {
         // Connections nested in a removed connection go with it.
         for (const removed of this.flattenConnections([connection as StoredViewConnection])) {
@@ -1261,10 +1314,7 @@ export class Archimate {
     }
   }
 
-  private removeTargetConnectionReference(
-    owner: { targetConnections?: string | string[] },
-    connectionIds: Set<string>,
-  ): void {
+  private removeTargetConnectionReference(owner: { targetConnections?: string | string[] }, connectionIds: Set<string>): void {
     if (Array.isArray(owner.targetConnections)) {
       owner.targetConnections = owner.targetConnections.filter(id => !connectionIds.has(id));
       return;
@@ -1323,12 +1373,7 @@ export class Archimate {
     }
   }
 
-  private recordFolderIds(
-    folders: Folder[],
-    path: string,
-    seenIds: Map<string, string>,
-    issues: PendingIssue[]
-  ): void {
+  private recordFolderIds(folders: Folder[], path: string, seenIds: Map<string, string>, issues: PendingIssue[]): void {
     for (const [index, folder] of folders.entries()) {
       const folderPath = `${path}.folders[${index}]`;
       this.recordId(folder.id, folderPath, seenIds, issues);
@@ -1398,12 +1443,7 @@ export class Archimate {
     }
   }
 
-  private recordId(
-    id: string | undefined,
-    path: string,
-    seenIds: Map<string, string>,
-    issues: PendingIssue[]
-  ): void {
+  private recordId(id: string | undefined, path: string, seenIds: Map<string, string>, issues: PendingIssue[]): void {
     if (!id) return;
 
     const firstPath = seenIds.get(id);
@@ -1457,9 +1497,16 @@ export class Archimate {
         });
       }
 
-      const typeIssue = source && target
-        ? this.relationshipTypeIssue(relationship, source, target, id => endpoints.get(id), id => relationshipsByEndpoint.get(id) || [])
-        : null;
+      const typeIssue =
+        source && target
+          ? this.relationshipTypeIssue(
+              relationship,
+              source,
+              target,
+              id => endpoints.get(id),
+              id => relationshipsByEndpoint.get(id) || []
+            )
+          : null;
       if (typeIssue) {
         issues.push({ ...typeIssue, path, id: relationship.id });
       }
@@ -1488,9 +1535,7 @@ export class Archimate {
     const type = relationship.type;
 
     const connects = (endpoint: Element, other: Element) =>
-      endpoint.id === relationship.id ||
-      (endpoint as Relationship).source === other.id ||
-      (endpoint as Relationship).target === other.id;
+      endpoint.id === relationship.id || (endpoint as Relationship).source === other.id || (endpoint as Relationship).target === other.id;
     if ((isRelationship(target) && connects(target, source)) || (isRelationship(source) && connects(source, target))) {
       return {
         code: 'relationship-endpoint-not-allowed',
@@ -1519,9 +1564,14 @@ export class Archimate {
 
       // Relationships on the other side of the Junction must be valid between the concepts it links.
       for (const other of others) {
-        const linked = side === 'source'
-          ? (other.target === junction.id ? lookup(other.source) : undefined)
-          : (other.source === junction.id ? lookup(other.target) : undefined);
+        const linked =
+          side === 'source'
+            ? other.target === junction.id
+              ? lookup(other.source)
+              : undefined
+            : other.source === junction.id
+              ? lookup(other.target)
+              : undefined;
         if (!linked) continue;
         const [from, to] = side === 'source' ? [linked, target] : [source, linked];
         if (!isAllowed(from, to)) {
@@ -1532,9 +1582,7 @@ export class Archimate {
         }
       }
 
-      const mismatch = others.find(other =>
-        !isGroupingOrLocationStructural(lookup(other.source), other.type) && other.type !== type
-      );
+      const mismatch = others.find(other => !isGroupingOrLocationStructural(lookup(other.source), other.type) && other.type !== type);
       if (mismatch) {
         return {
           code: 'junction-relationship-type-mismatch',
@@ -1604,12 +1652,7 @@ export class Archimate {
     }
   }
 
-  private validateViewChildren(
-    children: StoredViewChild[],
-    path: string,
-    ids: ViewValidationIds,
-    issues: PendingIssue[]
-  ): void {
+  private validateViewChildren(children: StoredViewChild[], path: string, ids: ViewValidationIds, issues: PendingIssue[]): void {
     const { modelElementIds, relationshipIds, viewIds, endpointIds, connectionIds } = ids;
     for (const [index, child] of children.entries()) {
       const childPath = `${path}.children[${index}]`;
@@ -1726,8 +1769,6 @@ export class Archimate {
   private getTargetConnectionIds(owner: { targetConnections?: string | string[] }): string[] {
     if (!owner.targetConnections) return [];
     // Archi stores multiple target connections as a single space-separated attribute.
-    return Array.isArray(owner.targetConnections)
-      ? owner.targetConnections
-      : owner.targetConnections.split(/\s+/).filter(Boolean);
+    return Array.isArray(owner.targetConnections) ? owner.targetConnections : owner.targetConnections.split(/\s+/).filter(Boolean);
   }
 }

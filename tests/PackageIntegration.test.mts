@@ -81,11 +81,11 @@ describe('package integration', () => {
     // npm 11 prints an array of packages, npm 12 an object keyed by package name.
     const packed = JSON.parse(stdout) as PackResult[] | Record<string, PackResult>;
     const [{ files }] = Array.isArray(packed) ? packed : Object.values(packed);
-    const paths = files.map((file) => file.path);
+    const paths = files.map(file => file.path);
 
     expect(paths).toContain('dist/src/index.mjs');
     expect(paths).toContain('dist/src/node/index.mjs');
-    expect(paths.filter((path) => !path.startsWith('dist/src/')).sort()).toEqual(['LICENSE.md', 'README.md', 'package.json']);
+    expect(paths.filter(path => !path.startsWith('dist/src/')).sort()).toEqual(['LICENSE.md', 'README.md', 'package.json']);
   });
 });
 

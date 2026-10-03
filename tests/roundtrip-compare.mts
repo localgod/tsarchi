@@ -6,7 +6,9 @@ async function main(): Promise<void> {
   const failedResults = results.filter(result => result.errors.length > 0);
 
   if (failedResults.length > 0) {
-    console.error(chalk.red.bold(`Roundtrip comparison failed for ${failedResults.length} fixture${failedResults.length === 1 ? '' : 's'}.`));
+    console.error(
+      chalk.red.bold(`Roundtrip comparison failed for ${failedResults.length} fixture${failedResults.length === 1 ? '' : 's'}.`)
+    );
 
     for (const result of failedResults) {
       console.error(chalk.red(`\n${result.fixturePath}`));

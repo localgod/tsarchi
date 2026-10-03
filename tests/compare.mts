@@ -1,6 +1,6 @@
-import * as fs from 'fs'
-import { XMLParser } from 'fast-xml-parser'
-import chalk from 'chalk'
+import * as fs from 'fs';
+import { XMLParser } from 'fast-xml-parser';
+import chalk from 'chalk';
 
 function parseArgs(args: string[]): { input: string; output: string } {
   const options: { input?: string; output?: string } = {};
@@ -35,16 +35,14 @@ function parseAndNormalizeXML(filePath: string): any {
     attributeNamePrefix: '',
     trimValues: true,
     parseTagValue: true,
-    allowBooleanAttributes: true
+    allowBooleanAttributes: true,
   });
 
   return { parsed: parser.parse(fileContent), raw: fileContent.split('\n') };
 }
 
 // Function to compare two XML objects and accumulate errors
-function compareXMLObjects(
-  inputXML: any, outputXML: any, path = '', errors: string[] = []
-): void {
+function compareXMLObjects(inputXML: any, outputXML: any, path = '', errors: string[] = []): void {
   if (typeof inputXML !== typeof outputXML) {
     errors.push(`Type mismatch at ${path}: ${typeof inputXML} vs ${typeof outputXML}`);
     return;
@@ -115,7 +113,7 @@ function findLineNumber(element: string, xmlLines: string[], value: string | nul
     compareXMLObjects(inputXMLData.parsed, outputXMLData.parsed, '', errors);
 
     if (errors.length > 0) {
-      console.error(chalk.red.bold("Test Failed: Errors found."));
+      console.error(chalk.red.bold('Test Failed: Errors found.'));
 
       for (const error of errors) {
         console.error(chalk.red(error));
@@ -143,10 +141,10 @@ function findLineNumber(element: string, xmlLines: string[], value: string | nul
         }
       }
     } else {
-      console.log(chalk.green.bold("Test Passed: XML files are identical."));
+      console.log(chalk.green.bold('Test Passed: XML files are identical.'));
     }
   } catch (error) {
-    const e = error as Error
-    console.error(chalk.red.bold("Test Failed: "), chalk.red(e.message));
+    const e = error as Error;
+    console.error(chalk.red.bold('Test Failed: '), chalk.red(e.message));
   }
 })();

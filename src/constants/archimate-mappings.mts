@@ -3,12 +3,7 @@
 import type { FolderKey } from '../interfaces/Model.mjs';
 import { relationshipMatrixKeys, relationshipsMatrix } from './relationships-matrix.mjs';
 
-export const archimateStrategyElementTypes = [
-  'Capability',
-  'CourseOfAction',
-  'Resource',
-  'ValueStream',
-] as const;
+export const archimateStrategyElementTypes = ['Capability', 'CourseOfAction', 'Resource', 'ValueStream'] as const;
 
 export const archimateBusinessElementTypes = [
   'BusinessActor',
@@ -79,14 +74,9 @@ export const archimateImplementationMigrationElementTypes = [
   'Gap',
 ] as const;
 
-export const archimateOtherElementTypes = [
-  'Location',
-  'Grouping',
-] as const;
+export const archimateOtherElementTypes = ['Location', 'Grouping'] as const;
 
-export const archimateConnectorTypes = [
-  'Junction',
-] as const;
+export const archimateConnectorTypes = ['Junction'] as const;
 
 export const archimateRelationshipTypes = [
   'AssignmentRelationship',
@@ -121,11 +111,7 @@ export const archimateRelationshipAliasTypes = [
   'Specialization',
 ] as const;
 
-export const archimateViewTypes = [
-  'ArchimateDiagramModel',
-  'SketchModel',
-  'CanvasModel',
-] as const;
+export const archimateViewTypes = ['ArchimateDiagramModel', 'SketchModel', 'CanvasModel'] as const;
 
 /**
  * Types that Archi writes in the canvas namespace (xsi:type="canvas:...") rather than the archimate namespace.
@@ -166,18 +152,18 @@ export const archimateModelTypes = [
   ...archimateViewTypes,
 ] as const;
 
-export type ArchimateStrategyElementType = typeof archimateStrategyElementTypes[number];
-export type ArchimateBusinessElementType = typeof archimateBusinessElementTypes[number];
-export type ArchimateApplicationElementType = typeof archimateApplicationElementTypes[number];
-export type ArchimateTechnologyElementType = typeof archimateTechnologyElementTypes[number];
-export type ArchimateMotivationElementType = typeof archimateMotivationElementTypes[number];
-export type ArchimateImplementationMigrationElementType = typeof archimateImplementationMigrationElementTypes[number];
-export type ArchimateOtherElementType = typeof archimateOtherElementTypes[number];
-export type ArchimateConnectorType = typeof archimateConnectorTypes[number];
-export type ArchimateRelationshipType = typeof archimateRelationshipTypes[number];
-export type ArchimateRelationshipAliasType = typeof archimateRelationshipAliasTypes[number];
-export type ArchimateViewType = typeof archimateViewTypes[number];
-export type CanvasModelType = typeof canvasModelTypes[number];
+export type ArchimateStrategyElementType = (typeof archimateStrategyElementTypes)[number];
+export type ArchimateBusinessElementType = (typeof archimateBusinessElementTypes)[number];
+export type ArchimateApplicationElementType = (typeof archimateApplicationElementTypes)[number];
+export type ArchimateTechnologyElementType = (typeof archimateTechnologyElementTypes)[number];
+export type ArchimateMotivationElementType = (typeof archimateMotivationElementTypes)[number];
+export type ArchimateImplementationMigrationElementType = (typeof archimateImplementationMigrationElementTypes)[number];
+export type ArchimateOtherElementType = (typeof archimateOtherElementTypes)[number];
+export type ArchimateConnectorType = (typeof archimateConnectorTypes)[number];
+export type ArchimateRelationshipType = (typeof archimateRelationshipTypes)[number];
+export type ArchimateRelationshipAliasType = (typeof archimateRelationshipAliasTypes)[number];
+export type ArchimateViewType = (typeof archimateViewTypes)[number];
+export type CanvasModelType = (typeof canvasModelTypes)[number];
 export type ArchimateElementType =
   | ArchimateStrategyElementType
   | ArchimateBusinessElementType
@@ -187,10 +173,7 @@ export type ArchimateElementType =
   | ArchimateImplementationMigrationElementType
   | ArchimateOtherElementType
   | ArchimateConnectorType;
-export type ArchimateModelType =
-  | ArchimateElementType
-  | ArchimateRelationshipType
-  | ArchimateViewType;
+export type ArchimateModelType = ArchimateElementType | ArchimateRelationshipType | ArchimateViewType;
 
 export function isArchimateModelType(type: string): type is ArchimateModelType {
   return elementTypeToFolderKey.has(type as ArchimateModelType);
@@ -269,8 +252,7 @@ export function toXsiType(type: string): string {
  * Returns null when either type is not in the matrix.
  */
 export function allowedRelationshipTypes(sourceType: string, targetType: string): ArchimateRelationshipType[] | null {
-  const concept = (type: string) =>
-    elementTypeToFolderKey.get(type as ArchimateModelType) === 'relations' ? 'Relationship' : type;
+  const concept = (type: string) => (elementTypeToFolderKey.get(type as ArchimateModelType) === 'relations' ? 'Relationship' : type);
   const targets = relationshipsMatrix[concept(sourceType)];
   if (!targets || !relationshipsMatrix[concept(targetType)]) return null;
   return [...(targets[concept(targetType)] || '')].map(key => relationshipMatrixKeys[key] as ArchimateRelationshipType);

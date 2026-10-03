@@ -1,8 +1,7 @@
-import type { Bounds } from "./Bounds.mjs";
-import type { Feature } from "./Feature.mjs";
-import type { Property } from "./Property.mjs";
-import type { SourceConnection } from "./SourceConnection.mjs";
-
+import type { Bounds } from './Bounds.mjs';
+import type { Feature } from './Feature.mjs';
+import type { Property } from './Property.mjs';
+import type { SourceConnection } from './SourceConnection.mjs';
 
 export interface Child {
   '@_xsi:type': string;

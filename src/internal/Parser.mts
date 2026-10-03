@@ -1,11 +1,11 @@
-import type { Model, ModelContent } from "../interfaces/Model.mjs";
-import type { Profile } from "../interfaces/Profile.mjs";
-import type { Profile as SchemaProfile } from "../interfaces/schema/Profile.mjs";
-import type { Schema as ArchimateSchema } from "../interfaces/schema/Schema.mjs";
-import type { Folder as SchemaFolder } from "../interfaces/schema/Folder.mjs";
-import type { Element as SchemaElement } from "../interfaces/schema/Element.mjs";
-import type { Child as SchemaChild } from "../interfaces/schema/Child.mjs";
-import type { Property as SchemaProperty } from "../interfaces/schema/Property.mjs";
+import type { Model, ModelContent } from '../interfaces/Model.mjs';
+import type { Profile } from '../interfaces/Profile.mjs';
+import type { Profile as SchemaProfile } from '../interfaces/schema/Profile.mjs';
+import type { Schema as ArchimateSchema } from '../interfaces/schema/Schema.mjs';
+import type { Folder as SchemaFolder } from '../interfaces/schema/Folder.mjs';
+import type { Element as SchemaElement } from '../interfaces/schema/Element.mjs';
+import type { Child as SchemaChild } from '../interfaces/schema/Child.mjs';
+import type { Property as SchemaProperty } from '../interfaces/schema/Property.mjs';
 import type { Element } from '../interfaces/Element.mjs';
 import type { Child } from '../interfaces/Child.mjs';
 import type { Folder } from '../interfaces/Folder.mjs';
@@ -24,35 +24,73 @@ export class Parser {
 
   public parse(input: object): Model {
     const data = this.validateInput(input);
-    Object.keys(this.model).forEach((key) => this.loadFolder(data, key as keyof Model));
+    Object.keys(this.model).forEach(key => this.loadFolder(data, key as keyof Model));
     return this.model;
   }
 
   /**
    * Keys of `<archimate:model>` that are mapped elsewhere: the model attributes, folders and the content below.
    */
-  private static readonly mappedModelKeys = new Set(['@_name', '@_id', '@_version', 'folder', 'purpose', 'property', 'metadata', 'profile']);
+  private static readonly mappedModelKeys = new Set([
+    '@_name',
+    '@_id',
+    '@_version',
+    'folder',
+    'purpose',
+    'property',
+    'metadata',
+    'profile',
+  ]);
 
   /**
    * Keys of a top-level `<folder>` that are mapped to `ModelFolder`. Nested folders have no mapped `type`.
    */
-  private static readonly mappedFolderKeys = new Set(['@_name', '@_id', '@_type', 'documentation', 'property', 'feature', 'folder', 'element']);
-  private static readonly mappedSubfolderKeys = new Set([...Parser.mappedFolderKeys].filter((key) => key !== '@_type'));
+  private static readonly mappedFolderKeys = new Set([
+    '@_name',
+    '@_id',
+    '@_type',
+    'documentation',
+    'property',
+    'feature',
+    'folder',
+    'element',
+  ]);
+  private static readonly mappedSubfolderKeys = new Set([...Parser.mappedFolderKeys].filter(key => key !== '@_type'));
 
   /**
    * Keys of an `<element>` (element, relationship or view) that are mapped to `Element`.
    */
   private static readonly mappedElementKeys = new Set([
-    '@_xsi:type', '@_name', '@_id', '@_profiles', '@_source', '@_target', '@_viewpoint', '@_background',
-    '@_connectionRouterType', '@_accessType', '@_type', 'documentation', 'property', 'feature', 'child',
+    '@_xsi:type',
+    '@_name',
+    '@_id',
+    '@_profiles',
+    '@_source',
+    '@_target',
+    '@_viewpoint',
+    '@_background',
+    '@_connectionRouterType',
+    '@_accessType',
+    '@_type',
+    'documentation',
+    'property',
+    'feature',
+    'child',
   ]);
 
   /**
    * Keys of a diagram `<child>` that are mapped to `Child`.
    */
   private static readonly mappedChildKeys = new Set([
-    '@_xsi:type', '@_id', ...childAttributes.map(([, attribute]) => `@_${attribute}`), ...childTextElements,
-    'bounds', 'sourceConnection', 'property', 'feature', 'child',
+    '@_xsi:type',
+    '@_id',
+    ...childAttributes.map(([, attribute]) => `@_${attribute}`),
+    ...childTextElements,
+    'bounds',
+    'sourceConnection',
+    'property',
+    'feature',
+    'child',
   ]);
 
   /**
@@ -62,16 +100,15 @@ export class Parser {
     const model = this.validateInput(input)['archimate:model'];
     if (!model) return {};
 
-    const unrecognized = Object.fromEntries(Object.entries(model).filter(([key]) =>
-      !Parser.mappedModelKeys.has(key) && !key.startsWith('@_xmlns:')));
+    const unrecognized = Object.fromEntries(
+      Object.entries(model).filter(([key]) => !Parser.mappedModelKeys.has(key) && !key.startsWith('@_xmlns:'))
+    );
     const metadata = model.metadata;
     const content: ModelContent = {
       purpose: model.purpose !== undefined ? String(model.purpose) : undefined,
       properties: this.createOptionalPropertiesMap(model),
-      metadata: metadata !== undefined
-        ? this.createPropertiesMap({ property: metadata === '' ? undefined : metadata.entry })
-        : undefined,
-      profiles: model.profile !== undefined ? this.ensureArray(model.profile).map((profile) => this.createProfile(profile)) : undefined,
+      metadata: metadata !== undefined ? this.createPropertiesMap({ property: metadata === '' ? undefined : metadata.entry }) : undefined,
+      profiles: model.profile !== undefined ? this.ensureArray(model.profile).map(profile => this.createProfile(profile)) : undefined,
       unrecognized: Object.keys(unrecognized).length > 0 ? unrecognized : undefined,
     };
     return this.cleanUndefinedProperties(content);
@@ -105,7 +142,7 @@ export class Parser {
   }
 
   private findFolder(data: ArchimateSchema, folderKey: keyof Model): SchemaFolder | undefined {
-    return this.ensureArray(data['archimate:model']?.folder).find((elm) => elm['@_type'] === folderKey);
+    return this.ensureArray(data['archimate:model']?.folder).find(elm => elm['@_type'] === folderKey);
   }
 
   private setFolderMetadata(folderKey: keyof Model, folder: SchemaFolder): void {
@@ -132,7 +169,7 @@ export class Parser {
    * top-level folder's flat element list.
    */
   private loadSubfolders(schemaFolders: SchemaFolder | SchemaFolder[] | undefined, elements: Element[]): Folder[] {
-    return this.ensureArray(schemaFolders).map((schemaFolder) => {
+    return this.ensureArray(schemaFolders).map(schemaFolder => {
       const folders = this.loadSubfolders(schemaFolder.folder, elements);
       const folderElements = this.createElements(schemaFolder.element);
       elements.push(...folderElements);
@@ -143,7 +180,7 @@ export class Parser {
         documentation: schemaFolder.documentation,
         properties: this.createOptionalPropertiesMap(schemaFolder),
         features: DiagramAttributeMapper.schemaToFeatures(schemaFolder.feature),
-        elementIds: folderElements.length > 0 ? folderElements.map((element) => element.id) : undefined,
+        elementIds: folderElements.length > 0 ? folderElements.map(element => element.id) : undefined,
         folders: folders.length > 0 ? folders : undefined,
         unrecognized: DiagramAttributeMapper.readUnrecognized(schemaFolder, Parser.mappedSubfolderKeys),
       } as Folder);
@@ -151,9 +188,9 @@ export class Parser {
   }
 
   private createElements(schemaElements: SchemaElement | SchemaElement[] | undefined): Element[] {
-    return this.ensureArray(schemaElements).map((element: SchemaElement | undefined) =>
-      element ? this.createElement(element) : undefined
-    ).filter((el): el is Element => el !== undefined)
+    return this.ensureArray(schemaElements)
+      .map((element: SchemaElement | undefined) => (element ? this.createElement(element) : undefined))
+      .filter((el): el is Element => el !== undefined);
   }
 
   private ensureArray<T>(element: T | T[] | undefined): T[] {
@@ -170,7 +207,7 @@ export class Parser {
       target: schemaElement['@_target'],
       documentation: schemaElement.documentation,
       properties: this.createPropertiesMap(schemaElement),
-      child: schemaElement.child ? this.loadChildren(schemaElement.child) : undefined
+      child: schemaElement.child ? this.loadChildren(schemaElement.child) : undefined,
     };
 
     const profiles = schemaElement['@_profiles'];
@@ -194,7 +231,7 @@ export class Parser {
   }
 
   private extractElementType(typeString: string | undefined): string {
-    return typeString ? typeFromXsiType(typeString) : 'Unknown'
+    return typeString ? typeFromXsiType(typeString) : 'Unknown';
   }
 
   private createOptionalPropertiesMap(source: { property?: SchemaProperty | SchemaProperty[] }): Map<string, string> | undefined {
@@ -206,18 +243,18 @@ export class Parser {
     const properties = new Map<string, string>();
     const propsArray = this.ensureArray(element.property);
 
-    propsArray.forEach((property) => {
+    propsArray.forEach(property => {
       if (property) {
-        properties.set(property['@_key'], property['@_value'])
+        properties.set(property['@_key'], property['@_value']);
       }
-    })
+    });
 
-    return properties
+    return properties;
   }
 
   private loadChildren(childElements: SchemaChild | SchemaChild[]): Child[] {
-    const children = this.ensureArray(childElements)
-    return children.map((child) => this.convertChildElementToChild(child))
+    const children = this.ensureArray(childElements);
+    return children.map(child => this.convertChildElementToChild(child));
   }
 
   private convertChildElementToChild(schemaChild: SchemaChild): Child {
@@ -234,7 +271,7 @@ export class Parser {
       properties: DiagramAttributeMapper.schemaToProperties(schemaChild.property),
       features,
       unrecognized: DiagramAttributeMapper.readUnrecognized(schemaChild, Parser.mappedChildKeys),
-    }
+    };
 
     for (const key of childTextElements) {
       const value = schemaChild[key];
@@ -246,9 +283,6 @@ export class Parser {
   }
 
   private cleanUndefinedProperties<T extends Record<string, any>>(obj: T): T {
-    return Object.fromEntries(
-      Object.entries(obj).filter(([, value]) => value !== undefined)
-    ) as T;
+    return Object.fromEntries(Object.entries(obj).filter(([, value]) => value !== undefined)) as T;
   }
-
 }

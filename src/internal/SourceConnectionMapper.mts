@@ -1,4 +1,4 @@
-import type { SourceConnection as SchemaSourceConnection } from "../interfaces/schema/SourceConnection.mjs";
+import type { SourceConnection as SchemaSourceConnection } from '../interfaces/schema/SourceConnection.mjs';
 import type { SourceConnection } from '../interfaces/SourceConnection.mjs';
 import { DiagramAttributeMapper, connectionAttributes, connectionFeatures } from './DiagramAttributeMapper.mjs';
 import { toXsiType, typeFromXsiType } from '../constants/archimate-mappings.mjs';
@@ -12,9 +12,17 @@ const DEFAULT_CONNECTION_TYPE = 'Connection';
  * Keys of a `<sourceConnection>` that are mapped to `SourceConnection`.
  */
 const mappedConnectionKeys = new Set([
-  '@_xsi:type', '@_id', '@_source', '@_target', '@_archimateRelationship',
+  '@_xsi:type',
+  '@_id',
+  '@_source',
+  '@_target',
+  '@_archimateRelationship',
   ...connectionAttributes.map(([, attribute]) => `@_${attribute}`),
-  'documentation', 'bendpoint', 'property', 'feature', 'sourceConnection',
+  'documentation',
+  'bendpoint',
+  'property',
+  'feature',
+  'sourceConnection',
 ]);
 
 export class SourceConnectionMapper {
@@ -64,9 +72,7 @@ export class SourceConnectionMapper {
     if (bendpoint) connection.bendpoint = bendpoint;
     const property = DiagramAttributeMapper.propertiesToSchema(b.properties);
     if (property) connection.property = property;
-    const feature = DiagramAttributeMapper.featuresToSchema(
-      DiagramAttributeMapper.writeFeatures(b, b.features, connectionFeatures),
-    );
+    const feature = DiagramAttributeMapper.featuresToSchema(DiagramAttributeMapper.writeFeatures(b, b.features, connectionFeatures));
     if (feature) connection.feature = feature;
     if (b.sourceConnection) {
       connection.sourceConnection = SourceConnectionMapper.toSchemaSourceConnections(b.sourceConnection);
@@ -78,19 +84,15 @@ export class SourceConnectionMapper {
     return { '@_xsi:type': toXsiType(b.type), ...connection };
   }
 
-  public static schemaToSourceConnections(
-    b: SchemaSourceConnection | SchemaSourceConnection[],
-  ): SourceConnection | SourceConnection[] {
+  public static schemaToSourceConnections(b: SchemaSourceConnection | SchemaSourceConnection[]): SourceConnection | SourceConnection[] {
     return Array.isArray(b)
-      ? b.map((connection) => SourceConnectionMapper.schemaToSourceConnection(connection))
+      ? b.map(connection => SourceConnectionMapper.schemaToSourceConnection(connection))
       : SourceConnectionMapper.schemaToSourceConnection(b);
   }
 
-  public static toSchemaSourceConnections(
-    b: SourceConnection | SourceConnection[],
-  ): SchemaSourceConnection | SchemaSourceConnection[] {
+  public static toSchemaSourceConnections(b: SourceConnection | SourceConnection[]): SchemaSourceConnection | SchemaSourceConnection[] {
     return Array.isArray(b)
-      ? b.map((connection) => SourceConnectionMapper.toSchemaSourceConnection(connection))
+      ? b.map(connection => SourceConnectionMapper.toSchemaSourceConnection(connection))
       : SourceConnectionMapper.toSchemaSourceConnection(b);
   }
 }

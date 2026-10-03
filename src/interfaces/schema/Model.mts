@@ -1,8 +1,7 @@
-import type { Folder } from "./Folder.mjs";
-import type { Metadata } from "./Metadata.mjs";
-import type { Profile } from "./Profile.mjs";
-import type { Property } from "./Property.mjs";
-
+import type { Folder } from './Folder.mjs';
+import type { Metadata } from './Metadata.mjs';
+import type { Profile } from './Profile.mjs';
+import type { Property } from './Property.mjs';
 
 export interface ModelAttributes {
   '@_xmlns:xsi': string;

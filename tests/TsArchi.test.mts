@@ -5,11 +5,10 @@ import type { Schema } from '../src/interfaces/schema/Schema.mjs';
 
 vi.mock('fs/promises', () => ({
   readFile: vi.fn(),
-  writeFile: vi.fn()
+  writeFile: vi.fn(),
 }));
 
-describe('TsArchi XML Parsing and Manipulation', () => { 
-
+describe('TsArchi XML Parsing and Manipulation', () => {
   const validArchimateXml = `
     <?xml version="1.0" encoding="UTF-8"?>
     <archimate:model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:archimate="http://www.archimatetool.com/archimate" name="Test Model" id="id-test-model" version="5.0.0">
@@ -33,7 +32,7 @@ describe('TsArchi XML Parsing and Manipulation', () => {
     (readFile as Mock).mockResolvedValue(validArchimateXml);
 
     const tsArchi = new TsArchi();
-    const parsedData = await tsArchi.load('dummy/path/to/model.xml') as Schema;
+    const parsedData = (await tsArchi.load('dummy/path/to/model.xml')) as Schema;
 
     expect(parsedData).toBeDefined();
     expect(parsedData).toHaveProperty('archimate:model');
@@ -41,16 +40,15 @@ describe('TsArchi XML Parsing and Manipulation', () => {
   });
 
   it('should contain specific folders within the archimate:model section', async () => {
-
     (readFile as Mock).mockResolvedValue(validArchimateXml);
 
     const tsArchi = new TsArchi();
-    const parsedData = await tsArchi.load('dummy/path/to/model.xml') as Schema;
+    const parsedData = (await tsArchi.load('dummy/path/to/model.xml')) as Schema;
 
     expect(parsedData['archimate:model']).toHaveProperty('folder');
     expect(Array.isArray(parsedData['archimate:model'].folder)).toBe(true);
     expect(parsedData['archimate:model'].folder.length).toBeGreaterThan(0);
- 
+
     const folders = parsedData['archimate:model'].folder;
     const businessFolder = folders.find((f: any) => f['@_type'] === 'business');
     const applicationFolder = folders.find((f: any) => f['@_type'] === 'application');
@@ -68,16 +66,14 @@ describe('TsArchi XML Parsing and Manipulation', () => {
     (readFile as Mock).mockResolvedValue(validArchimateXml);
 
     const tsArchi = new TsArchi();
-    const parsedData = await tsArchi.load('dummy/path/to/model.xml') as Schema;
+    const parsedData = (await tsArchi.load('dummy/path/to/model.xml')) as Schema;
     const folders = parsedData['archimate:model'].folder;
     const businessFolder = folders.find((f: any) => f['@_type'] === 'business');
 
     expect(businessFolder).toBeDefined();
     expect(businessFolder).toHaveProperty('element');
 
-    const elements = Array.isArray(businessFolder!.element)
-      ? businessFolder!.element
-      : [businessFolder!.element];
+    const elements = Array.isArray(businessFolder!.element) ? businessFolder!.element : [businessFolder!.element];
 
     expect(Array.isArray(elements)).toBe(true);
 
@@ -95,7 +91,7 @@ describe('TsArchi XML Parsing and Manipulation', () => {
 
     await expect(tsArchi.load('dummy/path/to/invalid.xml')).rejects.toMatchObject({
       name: 'ArchimateParseError',
-      kind: 'not-archimate'
+      kind: 'not-archimate',
     });
   });
 
@@ -107,7 +103,7 @@ describe('TsArchi XML Parsing and Manipulation', () => {
     await expect(tsArchi.loadModel('dummy/path/to/broken.archimate')).rejects.toMatchObject({
       name: 'ArchimateParseError',
       kind: 'not-xml',
-      line: 1
+      line: 1,
     });
   });
 
@@ -139,18 +135,18 @@ describe('TsArchi XML Parsing and Manipulation', () => {
     model.upsertElement({
       id: 'app-1',
       name: 'App 1',
-      type: 'ApplicationComponent'
+      type: 'ApplicationComponent',
     });
     model.upsertElement({
       id: 'broken-rel',
       name: 'Broken Relationship',
       type: 'FlowRelationship',
       source: 'app-1',
-      target: 'missing-target'
+      target: 'missing-target',
     });
 
     await expect(tsArchi.saveModel('dummy/path/to/output.archimate')).rejects.toMatchObject({
-      name: 'ArchimateValidationError'
+      name: 'ArchimateValidationError',
     });
     expect(writeFile).not.toHaveBeenCalled();
   });

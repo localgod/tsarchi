@@ -32,8 +32,8 @@
     "dev": "tsc --watch",
     "lint": "oxlint --ignore-path .gitignore .",
     "lintfix": "oxlint --fix --ignore-path .gitignore .",
-    "format": "oxfmt --check README.md LICENSE.md CHANGELOG.md CONTRIBUTING.md",
-    "formatfix": "oxfmt README.md LICENSE.md CHANGELOG.md CONTRIBUTING.md",
+    "format": "oxfmt --check src tests scripts README.md LICENSE.md CHANGELOG.md CONTRIBUTING.md",
+    "formatfix": "oxfmt src tests scripts README.md LICENSE.md CHANGELOG.md CONTRIBUTING.md",
     "prepublishOnly": "npm run build && npm test"
   },
   "repository": {

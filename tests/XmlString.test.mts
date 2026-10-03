@@ -117,6 +117,23 @@ describe('Archimate.fromXml / toXml', () => {
     expect(archimate.getElement('a')?.name).toBe('');
   });
 
+  it('restores the original XML when a name set by updateElement is removed again', () => {
+    const relationship = '<element xsi:type="archimate:AssignmentRelationship" id="x" source="a" target="b"/>';
+    const archimate = new Archimate();
+    archimate.upsertElement({ id: 'a', name: 'A', type: 'BusinessActor' });
+    archimate.upsertElement({ id: 'b', name: 'B', type: 'BusinessRole' });
+    archimate.upsertElement({ id: 'x', name: '', type: 'AssignmentRelationship', source: 'a', target: 'b' });
+    archimate.updateElement('x', { documentation: 'Docs' });
+    const original = archimate.toXml();
+    expect(original).toContain('<documentation>Docs</documentation>');
+
+    archimate.updateElement('x', { name: 'plays', documentation: undefined });
+    expect(archimate.toXml()).not.toContain('<documentation>');
+    archimate.updateElement('x', { name: undefined, documentation: 'Docs' });
+    expect(archimate.toXml()).toBe(original);
+    expect(archimate.toXml()).toContain(relationship.replace('/>', '>'));
+  });
+
   it('omits an empty model name, as Archi does', () => {
     expect(new Archimate().toXml()).toMatch(/<archimate:model [^>]*id="[^"]+" version="5\.0\.0">/);
     expect(new Archimate().toXml()).not.toMatch(/<archimate:model [^>]*name=/);

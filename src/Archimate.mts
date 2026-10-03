@@ -262,6 +262,8 @@ export class Archimate {
    *
    * If the type changes, the element is moved to the appropriate folder.
    * Relationship source/target and IDs are preserved unless explicitly patched.
+   * A key set to undefined removes that field (`name` becomes empty; `id` and `type` are kept); keys left out are unchanged.
+   * `properties` is merged into the existing properties, so set it to undefined to remove them all.
    */
   public updateElement(elementId: string, patch: Partial<Omit<Element, 'id'>>): Element | null {
     const location = this.findElementLocationById(elementId);
@@ -273,7 +275,7 @@ export class Archimate {
       throw new Error(`Unknown element type "${nextType}".`);
     }
 
-    const updatedElement = this.mergeElementPatch(location.element, patch);
+    const updatedElement = this.mergeElementPatch(location.element, patch, true);
 
     if (nextFolderKey === location.folderKey) {
       location.folder.elements![location.index] = updatedElement;
@@ -1029,11 +1031,19 @@ export class Archimate {
     return null;
   }
 
-  private mergeElementPatch(element: Element, patch: Partial<Omit<Element, 'id'>>): Element {
+  /**
+   * @param removeUndefined Whether a key set to undefined removes that field instead of being skipped.
+   */
+  private mergeElementPatch(element: Element, patch: Partial<Omit<Element, 'id'>>, removeUndefined = false): Element {
     const updatedElement: Element = { ...element };
 
     for (const [key, value] of Object.entries(patch)) {
-      if (value === undefined) continue;
+      if (value === undefined) {
+        if (!removeUndefined || key === 'id' || key === 'type') continue;
+        if (key === 'name') updatedElement.name = '';
+        else delete (updatedElement as any)[key];
+        continue;
+      }
 
       if (key === 'properties' && value instanceof Map) {
         updatedElement.properties = new Map(element.properties || []);

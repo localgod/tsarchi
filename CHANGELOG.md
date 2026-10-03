@@ -10,6 +10,7 @@ This project adheres to [Keep a CHANGELOG](http://keepachangelog.com/)
 
 ### Changed
 
+- `updateElement()` removes a field whose key is set to `undefined` in the patch, as `updateFolder()` does, so an optional field such as `documentation`, `properties` or `features` can be removed and a name can be cleared (`name: undefined` makes it empty). Keys left out are still unchanged, and `id` and `type` are kept. A patch that set keys to `undefined` used to leave those fields unchanged ([#454](https://github.com/localgod/tsarchi/issues/454)).
 - A model loaded without a `name` attribute has an empty name (`getName()` returns `''`) instead of `'Unnamed Model'`, so saving it no longer adds a name it did not have ([#456](https://github.com/localgod/tsarchi/issues/456)).
 
 ### Fixed

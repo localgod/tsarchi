@@ -163,7 +163,7 @@ export class Parser {
   private createElement(schemaElement: SchemaElement): Element {
     const element: Element = {
       id: schemaElement['@_id'],
-      name: schemaElement['@_name'],
+      name: schemaElement['@_name'] ?? '',
       // A missing or empty xsi:type stays empty, so validateModel reports missing-type instead of saving an invented type.
       type: (schemaElement['@_xsi:type'] ? typeFromXsiType(schemaElement['@_xsi:type']) : '') as ArchimateModelType,
       source: schemaElement['@_source'],

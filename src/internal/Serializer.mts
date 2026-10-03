@@ -174,7 +174,8 @@ export class Serializer {
   private serializeElement(el: Element): SchemaElement {
     const element: SchemaElement = {
       ...(el.type ? { '@_xsi:type': toXsiType(el.type) } : {}),
-      '@_name': el.name,
+      // Archi's Nameable.name defaults to "", and EMF does not write default values.
+      ...(el.name ? { '@_name': el.name } : {}),
       '@_id': el.id,
     };
 

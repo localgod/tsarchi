@@ -93,4 +93,27 @@ describe('Archimate.fromXml / toXml', () => {
     const reloaded = Archimate.fromXml(archimate.toXml());
     expect(reloaded.listElements().map(element => element.id)).toEqual(['app-1']);
   });
+
+  it('omits an empty name, as Archi does', () => {
+    const archimate = new Archimate();
+    archimate.upsertElement({ id: 'a', name: 'A', type: 'BusinessActor' });
+    archimate.upsertElement({ id: 'b', name: 'B', type: 'BusinessRole' });
+    archimate.upsertElement({ id: 'x', name: 'Assigned', type: 'AssignmentRelationship', source: 'a', target: 'b' });
+    archimate.updateElement('x', { name: '' });
+    archimate.updateElement('b', { name: '' });
+
+    const xml = archimate.toXml();
+    expect(xml).toContain('<element xsi:type="archimate:AssignmentRelationship" id="x" source="a" target="b"/>');
+    expect(xml).toContain('<element xsi:type="archimate:BusinessRole" id="b"/>');
+    expect(xml).not.toMatch(/<element [^>]*name=""/);
+  });
+
+  it('loads an element without a name as an empty name', () => {
+    const archimate = Archimate.fromXml(
+      '<archimate:model xmlns:archimate="http://www.archimatetool.com/archimate" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="M" id="m">' +
+      '<folder name="Business" id="f" type="business"><element xsi:type="archimate:BusinessActor" id="a"/></folder>' +
+      '</archimate:model>'
+    );
+    expect(archimate.getElement('a')?.name).toBe('');
+  });
 });

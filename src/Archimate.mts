@@ -168,8 +168,9 @@ export class Archimate {
    * element in the target folder.
    * Only provided properties are overwritten; others remain unchanged.
    * @param element Partial or full element data to insert or update.
+   * @returns The inserted or updated element as stored in the model.
    */
-  public upsertElement(element: Partial<Element> & Pick<Element, 'name' | 'type'>): void {
+  public upsertElement(element: Partial<Element> & Pick<Element, 'name' | 'type'>): Element {
     const folderKey = elementTypeToFolderKey.get(element.type);
 
     if (!folderKey) {
@@ -215,13 +216,13 @@ export class Archimate {
         }
       }
 
-      console.log(`Updated element "${existingElement.name}" (Type: ${existingElement.type}) in folder "${folderType.get(folderKey)}".`);
+      return existingElement;
     } else {
       if (!('id' in element) || !element.id) {
         element.id = this.generateUniqueId();
       }
       folder.elements.push(element as Element);
-      console.log(`Added element "${element.name}" (ID: ${element.id}, Type: ${element.type}) to folder "${folderType.get(folderKey)}".`);
+      return element as Element;
     }
   }
 

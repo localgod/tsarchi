@@ -75,15 +75,12 @@ const tsArchi = new TsArchi();
 // Load and parse an ArchiMate file
 const model = await tsArchi.loadModel("./path/to/model.archimate");
 
-// Add a new element
-const newElement = {
-  id: model.generateUniqueId(),
+// Add a new element; upsertElement returns the element as stored, with its id
+const element = model.upsertElement({
   type: "ApplicationComponent",
   name: "My New Component",
   properties: new Map([["version", "2.0"]]),
-};
-
-model.upsertElement(newElement);
+});
 
 // Read the model's name and contents
 console.log(

@@ -93,11 +93,13 @@ export class Serializer {
   }
 
   private createSchemaModel(folders: SchemaFolder[]): ArchimateSchema {
+    // Archi's Nameable.name defaults to "", and EMF does not write default values.
+    const { '@_name': name, ...attributes } = this.modelMetadata;
     return {
       '?xml': this.xmlMetadata,
       'archimate:model': {
         folder: folders,
-        ...this.modelMetadata,
+        ...(name ? this.modelMetadata : attributes),
       },
     };
   }

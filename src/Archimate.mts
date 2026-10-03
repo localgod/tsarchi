@@ -510,7 +510,7 @@ export class Archimate {
     this.modelMetadata = {
       ...defaultModelMetadata,
       ...namespaces,
-      '@_name': input['archimate:model']?.['@_name'] || 'Unnamed Model',
+      '@_name': input['archimate:model']?.['@_name'] ?? '',
       '@_id': input['archimate:model']?.['@_id'] || defaultModelMetadata['@_id'],
       '@_version': input['archimate:model']?.['@_version'] || defaultModelMetadata['@_version'],
     };
@@ -551,7 +551,7 @@ export class Archimate {
    * Returns the model's name.
    */
   public getName(): string {
-    return this.modelMetadata['@_name'];
+    return this.modelMetadata['@_name'] ?? '';
   }
 
   /**

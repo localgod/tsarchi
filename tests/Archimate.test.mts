@@ -1029,10 +1029,10 @@ describe('Archimate', () => {
       expect(archimate.getName()).toBe('Parsed Model');
     });
 
-    it('should default name to "Unnamed Model" if not provided', () => {
+    it('should default name to an empty name if not provided', () => {
       const input: any = {};
       archimate.parse(input);
-      expect(archimate.getName()).toBe('Unnamed Model');
+      expect(archimate.getName()).toBe('');
     });
   });
 

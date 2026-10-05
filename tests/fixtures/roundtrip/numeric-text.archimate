@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<archimate:model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:archimate="http://www.archimatetool.com/archimate" name="numeric text" id="id-numeric-model" version="5.0.0">
+  <folder name="Strategy" id="id-numeric-strategy" type="strategy"/>
+  <folder name="Business" id="id-numeric-business" type="business">
+    <folder name="Release 1.0" id="id-numeric-subfolder">
+      <documentation>2.0</documentation>
+      <element xsi:type="archimate:BusinessRole" name="Insurant" id="id-insurant">
+        <documentation>true</documentation>
+      </element>
+    </folder>
+    <documentation>007</documentation>
+    <element xsi:type="archimate:BusinessActor" name="Customer" id="id-customer">
+      <documentation>1.50</documentation>
+    </element>
+    <element xsi:type="archimate:BusinessObject" name="Policy" id="id-policy">
+      <documentation>0x1A</documentation>
+    </element>
+  </folder>
+  <folder name="Application" id="id-numeric-application" type="application"/>
+  <folder name="Technology &amp; Physical" id="id-numeric-technology" type="technology"/>
+  <folder name="Motivation" id="id-numeric-motivation" type="motivation"/>
+  <folder name="Implementation &amp; Migration" id="id-numeric-implementation" type="implementation_migration"/>
+  <folder name="Other" id="id-numeric-other" type="other"/>
+  <folder name="Relations" id="id-numeric-relations" type="relations">
+    <element xsi:type="archimate:AssignmentRelationship" id="id-rel-assignment" source="id-customer" target="id-insurant">
+      <documentation>1e3</documentation>
+    </element>
+  </folder>
+  <folder name="Views" id="id-numeric-views" type="diagrams">
+    <element xsi:type="archimate:ArchimateDiagramModel" name="Numbers" id="id-view-numbers">
+      <documentation>10.0</documentation>
+      <child xsi:type="archimate:DiagramObject" id="id-dmo-customer" archimateElement="id-customer">
+        <bounds x="24" y="24" width="120" height="55"/>
+        <sourceConnection xsi:type="archimate:Connection" id="id-conn-assignment" source="id-dmo-customer" target="id-dmo-insurant" archimateRelationship="id-rel-assignment">
+          <documentation>-0</documentation>
+        </sourceConnection>
+        <documentation>3.10</documentation>
+      </child>
+      <child xsi:type="archimate:DiagramObject" id="id-dmo-insurant" targetConnections="id-conn-assignment" archimateElement="id-insurant">
+        <bounds x="204" y="24" width="120" height="55"/>
+      </child>
+      <child xsi:type="archimate:Note" id="id-note">
+        <bounds x="24" y="120" width="185" height="80"/>
+        <content>0.10</content>
+      </child>
+    </element>
+  </folder>
+  <purpose>1.0</purpose>
+</archimate:model>

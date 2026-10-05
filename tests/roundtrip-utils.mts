@@ -3,7 +3,7 @@ import { tmpdir } from 'os';
 import { basename, join } from 'path';
 import { XMLParser } from 'fast-xml-parser';
 import { TsArchi } from '../src/node/TsArchi.mjs';
-import { removeIndentation } from '../src/internal/Xml.mjs';
+import { removeIndentation, xmlValueOptions } from '../src/internal/Xml.mjs';
 
 export interface RoundtripResult {
   fixturePath: string;
@@ -20,6 +20,8 @@ export function normalizeXml(xml: string): unknown {
     // Text stays as written, so "1.50" and "1.5" are different
     parseTagValue: false,
     allowBooleanAttributes: true,
+    // References are decoded as tsarchi reads them, so `&#xD;` and `&amp;#xD;` are different
+    ...xmlValueOptions,
   }).parse(xml);
   removeIndentation(parsed);
   return parsed;

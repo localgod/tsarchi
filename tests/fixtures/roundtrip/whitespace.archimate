@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<archimate:model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:archimate="http://www.archimatetool.com/archimate" name=" spaced model " id="id-ws-model" version="5.0.0">
+  <folder name="Strategy" id="id-ws-strategy" type="strategy"/>
+  <folder name="Business " id="id-ws-business" type="business">
+    <folder name=" Nested" id="id-ws-subfolder">
+      <documentation>
+Starts and ends with a line break
+</documentation>
+      <element xsi:type="archimate:BusinessRole" name="Insurant" id="id-insurant">
+        <documentation>   </documentation>
+      </element>
+    </folder>
+    <documentation>  indented first line
+second line  </documentation>
+    <element xsi:type="archimate:BusinessActor" name=" Customer " id="id-customer">
+      <documentation>Trailing spaces   </documentation>
+      <property key=" key " value=" 1.50 "/>
+    </element>
+  </folder>
+  <folder name="Application" id="id-ws-application" type="application"/>
+  <folder name="Technology &amp; Physical" id="id-ws-technology" type="technology"/>
+  <folder name="Motivation" id="id-ws-motivation" type="motivation"/>
+  <folder name="Implementation &amp; Migration" id="id-ws-implementation" type="implementation_migration"/>
+  <folder name="Other" id="id-ws-other" type="other"/>
+  <folder name="Relations" id="id-ws-relations" type="relations">
+    <element xsi:type="archimate:AssignmentRelationship" name=" assigned " id="id-rel-assignment" source="id-customer" target="id-insurant"/>
+  </folder>
+  <folder name="Views" id="id-ws-views" type="diagrams">
+    <element xsi:type="archimate:ArchimateDiagramModel" name="View " id="id-view-ws">
+      <child xsi:type="archimate:DiagramObject" id="id-dmo-customer" archimateElement="id-customer">
+        <bounds x="24" y="24" width="120" height="55"/>
+        <sourceConnection xsi:type="archimate:Connection" id="id-conn-assignment" name=" label " source="id-dmo-customer" target="id-dmo-insurant" archimateRelationship="id-rel-assignment">
+          <documentation> connection </documentation>
+        </sourceConnection>
+      </child>
+      <child xsi:type="archimate:DiagramObject" id="id-dmo-insurant" targetConnections="id-conn-assignment" archimateElement="id-insurant">
+        <bounds x="204" y="24" width="120" height="55"/>
+      </child>
+      <child xsi:type="archimate:Note" id="id-note">
+        <bounds x="24" y="120" width="185" height="80"/>
+        <content>
+  Note with an indented line
+</content>
+      </child>
+    </element>
+  </folder>
+  <property key="Owner" value="  EA  "/>
+  <purpose> purpose with spaces </purpose>
+</archimate:model>

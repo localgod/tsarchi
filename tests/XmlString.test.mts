@@ -55,9 +55,29 @@ describe('Archimate.fromXml / toXml', () => {
     expect(note.content).toBe('0.10');
   });
 
-  it('loads an empty <archimate:model> element', () => {
-    const archimate = Archimate.fromXml('<archimate:model></archimate:model>');
+  it.each(['<archimate:model></archimate:model>', '<archimate:model>\n  </archimate:model>'])('loads an empty <archimate:model> element: %j', xml => {
+    const archimate = Archimate.fromXml(xml);
     expect(archimate.listElements()).toEqual([]);
+  });
+
+  it('keeps leading and trailing whitespace in names, values and text', async () => {
+    const archimate = Archimate.fromXml(await readFile('tests/fixtures/roundtrip/whitespace.archimate', 'utf8'));
+    const [subfolder] = archimate.getFolders('business');
+    const note = archimate.getView('id-view-ws')!.children![2] as unknown as Child;
+
+    expect(archimate.getName()).toBe(' spaced model ');
+    expect(archimate.getPurpose()).toBe(' purpose with spaces ');
+    expect(archimate.getProperties()).toEqual(new Map([['Owner', '  EA  ']]));
+    expect(archimate.getFolder('business')).toMatchObject({ name: 'Business ', documentation: '  indented first line\nsecond line  ' });
+    expect(subfolder).toMatchObject({ name: ' Nested', documentation: '\nStarts and ends with a line break\n' });
+    expect(archimate.getElement('id-customer')).toMatchObject({
+      name: ' Customer ',
+      documentation: 'Trailing spaces   ',
+      properties: new Map([[' key ', ' 1.50 ']]),
+    });
+    expect(archimate.getElement('id-insurant')?.documentation).toBe('   ');
+    expect(archimate.getRelationship('id-rel-assignment')?.name).toBe(' assigned ');
+    expect(note.content).toBe('\n  Note with an indented line\n');
   });
 
   it('reports text that is not XML as not-xml, with its position', () => {

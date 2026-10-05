@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import { XMLParser } from 'fast-xml-parser';
+import { removeIndentation } from '../src/internal/Xml.mjs';
 import chalk from 'chalk';
 
 function parseArgs(args: string[]): { input: string; output: string } {
@@ -33,13 +34,16 @@ function parseAndNormalizeXML(filePath: string): any {
   const parser = new XMLParser({
     ignoreAttributes: false,
     attributeNamePrefix: '',
-    trimValues: true,
+    // Whitespace stays as written; the indentation between elements is removed below
+    trimValues: false,
     // Text stays as written, so "1.50" and "1.5" are different
     parseTagValue: false,
     allowBooleanAttributes: true,
   });
 
-  return { parsed: parser.parse(fileContent), raw: fileContent.split('\n') };
+  const parsed = parser.parse(fileContent);
+  removeIndentation(parsed);
+  return { parsed, raw: fileContent.split('\n') };
 }
 
 // Function to compare two XML objects and accumulate errors

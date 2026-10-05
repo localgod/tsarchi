@@ -60,6 +60,60 @@ describe('Archimate.fromXml / toXml', () => {
     expect(archimate.listElements()).toEqual([]);
   });
 
+  it('reads character references as the characters they stand for', async () => {
+    const archimate = Archimate.fromXml(await readFile('tests/fixtures/roundtrip/character-references.archimate', 'utf8'));
+    const note = archimate.getView('id-view-refs')!.children![0] as unknown as Child;
+
+    expect(archimate.getName()).toBe('character\treferences');
+    expect(archimate.getPurpose()).toBe('Purpose\r\nwith a Windows line break');
+    expect(archimate.getElement('id-customer')).toMatchObject({
+      name: 'Tab\tseparated',
+      documentation: 'Written by Archi on Windows\r\nsecond line\r\nthird line',
+      properties: new Map([['multi\nline', 'one\r\ntwo']]),
+    });
+    expect(archimate.getElement('id-insurant')).toMatchObject({
+      name: `Quotes "and" 'apostrophes' & <tags>`,
+      documentation: `Literal text &#xD; stays text, <b> too & "quotes" 'apostrophes'`,
+    });
+    expect(archimate.getElement('id-policy')).toMatchObject({
+      name: 'Decimal\rreference',
+      documentation: 'tab\tand line feed\nas decimal references',
+    });
+    expect(note.content).toBe('Note\r\non two lines');
+  });
+
+  it('reads literal line breaks and attribute whitespace as an XML parser does', () => {
+    const archimate = Archimate.fromXml(
+      '<archimate:model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:archimate="http://www.archimatetool.com/archimate" name="T" id="m">' +
+        '<folder name="Business" id="f" type="business">' +
+        '<element xsi:type="archimate:BusinessActor" name="tab\there\r\nand there" id="e"><documentation>one\r\ntwo\rthree</documentation></element>' +
+        '</folder></archimate:model>'
+    );
+
+    expect(archimate.getElement('e')).toMatchObject({ name: 'tab here and there', documentation: 'one\ntwo\nthree' });
+  });
+
+  it('writes tabs and line breaks so that Archi reads them back', () => {
+    const archimate = new Archimate();
+    archimate.upsertElement({
+      id: 'e',
+      name: 'Tab\tand\nline',
+      type: 'BusinessActor',
+      documentation: 'Windows\r\nline & <tag>',
+      properties: new Map([['key', 'a\r\nb']]),
+    });
+
+    const xml = archimate.toXml();
+    expect(xml).toContain('name="Tab&#x9;and&#xA;line"');
+    expect(xml).toContain('<documentation>Windows&#xD;\nline &amp; &lt;tag&gt;</documentation>');
+    expect(xml).toContain('value="a&#xD;&#xA;b"');
+    expect(Archimate.fromXml(xml).getElement('e')).toMatchObject({
+      name: 'Tab\tand\nline',
+      documentation: 'Windows\r\nline & <tag>',
+      properties: new Map([['key', 'a\r\nb']]),
+    });
+  });
+
   it('keeps leading and trailing whitespace in names, values and text', async () => {
     const archimate = Archimate.fromXml(await readFile('tests/fixtures/roundtrip/whitespace.archimate', 'utf8'));
     const [subfolder] = archimate.getFolders('business');

@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import { XMLParser } from 'fast-xml-parser';
-import { removeIndentation } from '../src/internal/Xml.mjs';
+import { removeIndentation, xmlValueOptions } from '../src/internal/Xml.mjs';
 import chalk from 'chalk';
 
 function parseArgs(args: string[]): { input: string; output: string } {
@@ -39,6 +39,8 @@ function parseAndNormalizeXML(filePath: string): any {
     // Text stays as written, so "1.50" and "1.5" are different
     parseTagValue: false,
     allowBooleanAttributes: true,
+    // References are decoded as tsarchi reads them, so `&#xD;` and `&amp;#xD;` are different
+    ...xmlValueOptions,
   });
 
   const parsed = parser.parse(fileContent);

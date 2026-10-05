@@ -3,7 +3,34 @@ import type { X2jOptions, XmlBuilderOptions } from 'fast-xml-parser';
 import { ArchimateParseError } from '../interfaces/ArchimateParseError.mjs';
 import type { Schema } from '../interfaces/schema/Schema.mjs';
 
+const predefinedEntities: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'" };
+
+/**
+ * Replaces the predefined entities and numeric character references (`&#xD;`, `&#13;`) in one pass, so that
+ * `&amp;#xD;` stays the text `&#xD;`. Other references are left as they are.
+ */
+function decodeReferences(raw: string): string {
+  return raw.replace(/&(?:#x([0-9a-fA-F]+)|#([0-9]+)|(amp|lt|gt|quot|apos));/g, (reference, hex, decimal, name) => {
+    if (name) return predefinedEntities[name];
+    const codePoint = hex ? parseInt(hex, 16) : Number(decimal);
+    return codePoint <= 0x10ffff ? String.fromCodePoint(codePoint) : reference;
+  });
+}
+
+/**
+ * Reads values as an XML parser such as Archi's does, which fast-xml-parser leaves to its caller: a literal line
+ * break in text is `\n`, literal whitespace in an attribute value is a space, and character references give the
+ * character itself. Archi writes a carriage return in text as `&#xD;` and tabs and line breaks in attribute values as
+ * `&#x9;`, `&#xA;` and `&#xD;` (EMF's `XMLSaveImpl.Escape`).
+ */
+export const xmlValueOptions = {
+  processEntities: false,
+  tagValueProcessor: (_name: string, value: string) => decodeReferences(value.replace(/\r\n?/g, '\n')),
+  attributeValueProcessor: (_name: string, value: string) => decodeReferences(value.replace(/\r\n|[\t\n\r]/g, ' ')),
+} satisfies Partial<X2jOptions>;
+
 const parseOptions: Partial<X2jOptions> = {
+  ...xmlValueOptions,
   ignoreAttributes: false,
   allowBooleanAttributes: true,
   // Text such as documentation stays as written: "1.50" is not read as the number 1.5.
@@ -12,7 +39,24 @@ const parseOptions: Partial<X2jOptions> = {
   trimValues: false,
 };
 
+const escapedCharacters: Record<string, string> = {
+  '&': '&amp;',
+  '<': '&lt;',
+  '>': '&gt;',
+  "'": '&apos;',
+  '"': '&quot;',
+  '\t': '&#x9;',
+  '\n': '&#xA;',
+  '\r': '&#xD;',
+};
+const escape = (value: string, characters: RegExp) => value.replace(characters, character => escapedCharacters[character]);
+
 const buildOptions: XmlBuilderOptions = {
+  // Values are escaped as Archi reads them back: a carriage return in text, and tabs and line breaks in attribute
+  // values, would otherwise be read as a line break or a space.
+  processEntities: false,
+  tagValueProcessor: (_name: string, value: unknown) => escape(String(value), /[&<>'"\r]/g),
+  attributeValueProcessor: (_name: string, value: unknown) => escape(String(value), /[&<>'"\t\n\r]/g),
   ignoreAttributes: false,
   format: true,
   suppressEmptyNode: true,

@@ -1,9 +1,8 @@
 import { readdir, readFile, stat } from 'fs/promises';
 import { join } from 'path';
-import { XMLBuilder } from 'fast-xml-parser';
-import type { XmlBuilderOptions } from 'fast-xml-parser';
 import chalk from 'chalk';
 import { TsArchi } from '../src/node/TsArchi.mjs';
+import { buildArchimateXml } from '../src/internal/Xml.mjs';
 import { compareObjects, normalizeXml } from './roundtrip-utils.mjs';
 
 /**
@@ -79,13 +78,8 @@ async function diffFile(file: string): Promise<FileReport> {
     validation[issue.code] = (validation[issue.code] ?? 0) + 1;
   }
 
-  const buildOptions: XmlBuilderOptions = {
-    ignoreAttributes: false,
-    format: true,
-    suppressEmptyNode: true,
-    suppressBooleanAttributes: false,
-  };
-  const outputXml = new XMLBuilder(buildOptions).build(archimate.serialize());
+  // Written as toXml() does, without its validation, so files with validation errors are compared too
+  const outputXml = buildArchimateXml(archimate.serialize());
   const inputXml = await readFile(file, 'utf8');
   const details = compareObjects(normalizeXml(inputXml), normalizeXml(outputXml));
 

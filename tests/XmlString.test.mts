@@ -3,6 +3,7 @@ import { readFile } from 'fs/promises';
 import { Archimate } from '../src/Archimate.mjs';
 import { ArchimateParseError } from '../src/interfaces/ArchimateParseError.mjs';
 import { ArchimateValidationError } from '../src/interfaces/ValidationIssue.mjs';
+import type { Child } from '../src/interfaces/Child.mjs';
 import { Parser } from '../src/internal/Parser.mjs';
 import { compareObjects, listRoundtripFixtures, normalizeXml } from './roundtrip-utils.mjs';
 
@@ -111,6 +112,43 @@ describe('Archimate.fromXml / toXml', () => {
 
     const reloaded = Archimate.fromXml(archimate.toXml());
     expect(reloaded.listElements().map(element => element.id)).toEqual(['app-1']);
+  });
+
+  it('writes a view built with the API, with grouped objects and connections, so that it loads again', () => {
+    const archimate = new Archimate();
+    const actor = archimate.upsertElement({ id: 'actor', name: 'Actor', type: 'BusinessActor' });
+    const role = archimate.upsertElement({ id: 'role', name: 'Role', type: 'BusinessRole' });
+    const service = archimate.upsertElement({ id: 'service', name: 'Service', type: 'BusinessService' });
+    archimate.upsertRelationship({ id: 'assignment', type: 'AssignmentRelationship', source: actor.id, target: role.id });
+    archimate.upsertRelationship({ id: 'serving', type: 'ServingRelationship', source: service.id, target: role.id });
+    const view = archimate.createView('Built');
+    const group = archimate.addGroup(view.id, 'Group', { x: 0, y: 0, width: 400, height: 300 })!;
+    const inGroup = archimate.addDiagramObjectToGroup(view.id, group.id, actor.id, { x: 10, y: 10, width: 120, height: 55 })!;
+    const roleObject = archimate.addDiagramObject(view.id, role.id, { x: 450, y: 10, width: 120, height: 55 })!;
+    const serviceObject = archimate.addDiagramObject(view.id, service.id, { x: 450, y: 200, width: 120, height: 55 })!;
+    const fromGroup = archimate.addConnection(view.id, inGroup.id, roleObject.id, 'assignment', { lineColor: '#ff0000' })!;
+    const serving = archimate.addConnection(view.id, serviceObject.id, roleObject.id, 'serving')!;
+
+    const xml = archimate.toXml();
+    const reloaded = Archimate.fromXml(xml);
+    const [groupChild, roleChild, serviceChild] = reloaded.getView(view.id)!.children as unknown as Child[];
+    const [nested] = groupChild.child!;
+
+    expect(reloaded.validateModel()).toEqual([]);
+    expect(groupChild).toMatchObject({ id: group.id, type: 'Group', name: 'Group' });
+    expect(nested).toMatchObject({ id: inGroup.id, type: 'DiagramObject', archimateElement: actor.id });
+    expect(nested.sourceConnection).toMatchObject({
+      id: fromGroup.id,
+      source: inGroup.id,
+      target: roleObject.id,
+      archimateRelationship: 'assignment',
+      lineColor: '#ff0000',
+    });
+    expect(serviceChild.sourceConnection).toMatchObject({ id: serving.id, archimateRelationship: 'serving' });
+    // Archi stores the ids of the connections ending on an object in one space-separated attribute
+    expect(roleChild.targetConnections).toBe(`${fromGroup.id} ${serving.id}`);
+    expect(xml).not.toContain('targetConnections=""');
+    expect(Archimate.fromXml(reloaded.toXml()).toXml()).toBe(reloaded.toXml());
   });
 
   it('omits an empty name, as Archi does', () => {

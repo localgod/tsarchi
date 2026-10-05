@@ -10,7 +10,6 @@ import type { Profile } from '../interfaces/Profile.mjs';
 import type { Profile as SchemaProfile } from '../interfaces/schema/Profile.mjs';
 import type { Folder } from '../interfaces/Folder.mjs';
 import type { Child } from '../interfaces/Child.mjs';
-import type { SourceConnection } from '../interfaces/SourceConnection.mjs';
 import { BoundsMapper } from './BoundMapper.mjs';
 import { SourceConnectionMapper } from './SourceConnectionMapper.mjs';
 import { folderType, toXsiType } from '../constants/archimate-mappings.mjs';
@@ -23,18 +22,6 @@ import {
   viewAttributes,
 } from './DiagramAttributeMapper.mjs';
 import { toArray } from './Arrays.mjs';
-
-/**
- * A diagram child as stored in a view. Children loaded from a file nest objects in `child`, connections in
- * `sourceConnection` and keep `targetConnections` as space-separated ids. Children added through ViewManager have
- * the public `ViewChild` shape instead: `children`, `sourceConnections` and an array of `targetConnections`.
- */
-type StoredChild = Omit<Child, 'child' | 'targetConnections'> & {
-  child?: StoredChild[];
-  children?: StoredChild[];
-  sourceConnections?: SourceConnection[];
-  targetConnections?: string | string[];
-};
 
 export class Serializer {
   private model: Model;
@@ -222,7 +209,7 @@ export class Serializer {
     return element;
   }
 
-  private saveChildren(children: StoredChild[]): SchemaChild[] {
+  private saveChildren(children: Child[]): SchemaChild[] {
     return children.map(child => this.serializeChild(child));
   }
 
@@ -231,16 +218,7 @@ export class Serializer {
    *
    * For testability it is important that optional properties are only added if they are set and in the correct order.
    */
-  private serializeChild(stored: StoredChild): SchemaChild {
-    const { children, sourceConnections, targetConnections, ...rest } = stored;
-    const child: Child = {
-      ...rest,
-      // Archi writes the ids of the connections ending on an object in one space-separated attribute
-      targetConnections: Array.isArray(targetConnections) ? targetConnections.join(' ') || undefined : targetConnections,
-    } as Child;
-    const nested = children?.length ? [...(stored.child ?? []), ...children] : stored.child;
-    const connections = sourceConnections?.length ? [...toArray(stored.sourceConnection), ...sourceConnections] : stored.sourceConnection;
-
+  private serializeChild(child: Child): SchemaChild {
     const schemaChild: SchemaChild = {
       '@_xsi:type': toXsiType(child.type),
       '@_id': child.id,
@@ -248,12 +226,12 @@ export class Serializer {
       bounds: BoundsMapper.boundsToSchemaBounds(child.bounds),
     };
 
-    if (connections) {
-      schemaChild.sourceConnection = SourceConnectionMapper.toSchemaSourceConnections(connections);
+    if (child.sourceConnection) {
+      schemaChild.sourceConnection = SourceConnectionMapper.toSchemaSourceConnections(child.sourceConnection);
     }
 
-    if (nested && Array.isArray(nested)) {
-      schemaChild.child = this.saveChildren(nested);
+    if (child.child) {
+      schemaChild.child = this.saveChildren(child.child);
     }
 
     for (const key of childTextElements) {

@@ -1,13 +1,20 @@
 import type { View, ViewGroup, ViewDiagramObject, ViewConnection } from './interfaces/View.mjs';
-import type { ViewChild } from './interfaces/ViewChild.mjs';
 import type { Element } from './interfaces/Element.mjs';
+import type { Child } from './interfaces/Child.mjs';
+import type { SourceConnection } from './interfaces/SourceConnection.mjs';
 import type { Model } from './interfaces/Model.mjs';
 import type { Bounds } from './interfaces/Bounds.mjs';
 import { isArchimateViewType } from './constants/archimate-mappings.mjs';
 import { removeFromNestedFolders } from './internal/NestedFolders.mjs';
 import { toArray } from './internal/Arrays.mjs';
 import { randomArchiId } from './internal/Ids.mjs';
+import { splitIds, toViewChild, toViewConnection } from './internal/ViewChildMapper.mjs';
 
+/**
+ * Creates, reads and edits views. Views are stored in the shape they have in the file (`Child`, with nested `child`,
+ * `sourceConnection` and space-separated `targetConnections`), whether they were loaded or built here. The methods
+ * return copies in the `View` shape, so change a view through these methods rather than through what they return.
+ */
 export class ViewManager {
   private model: Model;
   private generateUniqueId: () => string;
@@ -28,30 +35,25 @@ export class ViewManager {
       documentation?: string;
     }
   ): View {
-    const view: View = {
-      id: this.generateUniqueId(),
-      name,
-      type: 'ArchimateDiagramModel',
-      children: [],
-      ...options,
-    };
+    const element: Element = { id: this.generateUniqueId(), name, type: 'ArchimateDiagramModel', child: [] };
+    if (options?.viewpoint !== undefined) element.viewpoint = options.viewpoint;
+    if (options?.background !== undefined) element.background = options.background;
+    if (options?.documentation !== undefined) element.documentation = options.documentation;
 
     if (!this.model.diagrams.elements) {
       this.model.diagrams.elements = [];
     }
-    this.model.diagrams.elements.push(this.viewToElement(view));
+    this.model.diagrams.elements.push(element);
 
-    return view;
+    return this.elementToView(element);
   }
 
   /**
    * Retrieves a view by ID
    */
   getView(viewId: string): View | null {
-    const viewElement = this.model.diagrams.elements?.find(el => el.id === viewId);
-    if (!viewElement || !isArchimateViewType(viewElement.type)) return null;
-
-    return this.elementToView(viewElement);
+    const viewElement = this.findView(viewId);
+    return viewElement ? this.elementToView(viewElement) : null;
   }
 
   /**
@@ -79,30 +81,12 @@ export class ViewManager {
       textAlignment?: number;
     }
   ): ViewDiagramObject | null {
-    const view = this.getView(viewId);
-    if (!view) return null;
+    const viewElement = this.findView(viewId);
+    if (!viewElement) return null;
 
-    // Verify the element exists in the model
-    const element = this.findElementById(elementId);
-    if (!element) {
-      throw new Error(`Element with ID ${elementId} not found in model`);
-    }
-
-    const diagramObject: ViewDiagramObject = {
-      id: this.generateUniqueId(),
-      type: 'DiagramObject',
-      archimateElement: elementId,
-      bounds,
-      targetConnections: [],
-      sourceConnections: [],
-      ...options,
-    };
-
-    if (!view.children) view.children = [];
-    view.children.push(diagramObject);
-
-    this.updateViewInModel(view);
-    return diagramObject;
+    const diagramObject = this.newDiagramObject(elementId, bounds, options);
+    this.childrenOf(viewElement).push(diagramObject);
+    return toViewChild(diagramObject) as ViewDiagramObject;
   }
 
   /**
@@ -119,23 +103,12 @@ export class ViewManager {
       documentation?: string;
     }
   ): ViewGroup | null {
-    const view = this.getView(viewId);
-    if (!view) return null;
+    const viewElement = this.findView(viewId);
+    if (!viewElement) return null;
 
-    const group: ViewGroup = {
-      id: this.generateUniqueId(),
-      type: 'Group',
-      name,
-      bounds,
-      children: [],
-      ...options,
-    };
-
-    if (!view.children) view.children = [];
-    view.children.push(group);
-
-    this.updateViewInModel(view);
-    return group;
+    const group: Child = { id: this.generateUniqueId(), type: 'Group', name, bounds: { ...bounds }, ...options };
+    this.childrenOf(viewElement).push(group);
+    return toViewChild(group) as ViewGroup;
   }
 
   /**
@@ -153,35 +126,17 @@ export class ViewManager {
       textAlignment?: number;
     }
   ): ViewDiagramObject | null {
-    const view = this.getView(viewId);
-    if (!view) return null;
+    const viewElement = this.findView(viewId);
+    if (!viewElement) return null;
 
-    const group = this.findChildById(view.children, groupId) as ViewGroup;
+    const group = this.findChild(this.childrenOf(viewElement), groupId);
     if (!group || group.type !== 'Group') {
       throw new Error(`Group with ID ${groupId} not found in view`);
     }
 
-    // Verify the element exists in the model
-    const element = this.findElementById(elementId);
-    if (!element) {
-      throw new Error(`Element with ID ${elementId} not found in model`);
-    }
-
-    const diagramObject: ViewDiagramObject = {
-      id: this.generateUniqueId(),
-      type: 'DiagramObject',
-      archimateElement: elementId,
-      bounds,
-      targetConnections: [],
-      sourceConnections: [],
-      ...options,
-    };
-
-    if (!group.children) group.children = [];
-    group.children.push(diagramObject);
-
-    this.updateViewInModel(view);
-    return diagramObject;
+    const diagramObject = this.newDiagramObject(elementId, bounds, options);
+    group.child = [...(group.child ?? []), diagramObject];
+    return toViewChild(diagramObject) as ViewDiagramObject;
   }
 
   /**
@@ -199,11 +154,12 @@ export class ViewManager {
       textPosition?: number;
     }
   ): ViewConnection | null {
-    const view = this.getView(viewId);
-    if (!view) return null;
+    const viewElement = this.findView(viewId);
+    if (!viewElement) return null;
 
-    const sourceObject = this.findChildById(view.children, sourceObjectId) as ViewDiagramObject;
-    const targetObject = this.findChildById(view.children, targetObjectId) as ViewDiagramObject;
+    const children = this.childrenOf(viewElement);
+    const sourceObject = this.findChild(children, sourceObjectId);
+    const targetObject = this.findChild(children, targetObjectId);
 
     if (!sourceObject || !targetObject) {
       throw new Error('Source or target diagram object not found in view');
@@ -217,23 +173,19 @@ export class ViewManager {
       }
     }
 
-    const connection: ViewConnection = {
+    const connection: SourceConnection = {
       id: this.generateUniqueId(),
       type: 'Connection',
       source: sourceObjectId,
       target: targetObjectId,
-      archimateRelationship: relationshipId,
+      ...(relationshipId !== undefined && { archimateRelationship: relationshipId }),
       ...options,
     };
 
-    if (!sourceObject.sourceConnections) sourceObject.sourceConnections = [];
-    sourceObject.sourceConnections.push(connection);
+    sourceObject.sourceConnection = [...toArray(sourceObject.sourceConnection), connection];
+    targetObject.targetConnections = [...splitIds(targetObject.targetConnections), connection.id].join(' ');
 
-    if (!targetObject.targetConnections) targetObject.targetConnections = [];
-    targetObject.targetConnections.push(connection.id);
-
-    this.updateViewInModel(view);
-    return connection;
+    return toViewConnection(connection);
   }
 
   /**
@@ -268,7 +220,7 @@ export class ViewManager {
       this.addRelationshipConnections(view.id, elementIds, diagramObjects);
     }
 
-    return view;
+    return this.getView(view.id);
   }
 
   /**
@@ -285,14 +237,13 @@ export class ViewManager {
       textAlignment?: number;
     }
   ): boolean {
-    const view = this.getView(viewId);
-    if (!view) return false;
+    const viewElement = this.findView(viewId);
+    if (!viewElement) return false;
 
-    const diagramObject = this.findChildById(view.children, objectId);
+    const diagramObject = this.findChild(this.childrenOf(viewElement), objectId);
     if (!diagramObject) return false;
 
-    Object.assign(diagramObject, style);
-    this.updateViewInModel(view);
+    Object.assign(diagramObject, style, style.bounds && { bounds: { ...style.bounds } });
     return true;
   }
 
@@ -312,6 +263,40 @@ export class ViewManager {
 
   // Private helper methods
 
+  private findView(viewId: string): Element | null {
+    const viewElement = this.model.diagrams.elements?.find(el => el.id === viewId);
+    return viewElement && isArchimateViewType(viewElement.type) ? viewElement : null;
+  }
+
+  /**
+   * The view's top-level children, stored as an array so they can be added to.
+   */
+  private childrenOf(viewElement: Element): Child[] {
+    const children = toArray(viewElement.child);
+    viewElement.child = children;
+    return children;
+  }
+
+  /**
+   * Finds a diagram child at any depth.
+   */
+  private findChild(children: Child[] | undefined, childId: string): Child | null {
+    for (const child of children ?? []) {
+      if (child.id === childId) return child;
+      const found = this.findChild(child.child, childId);
+      if (found) return found;
+    }
+    return null;
+  }
+
+  private newDiagramObject(elementId: string, bounds: Bounds, options: Partial<Child> | undefined): Child {
+    // Verify the element exists in the model
+    if (!this.findElementById(elementId)) {
+      throw new Error(`Element with ID ${elementId} not found in model`);
+    }
+    return { id: this.generateUniqueId(), type: 'DiagramObject', archimateElement: elementId, bounds: { ...bounds }, ...options };
+  }
+
   private elementToView(element: Element): View {
     const { type } = element;
     if (!isArchimateViewType(type)) {
@@ -322,44 +307,15 @@ export class ViewManager {
       name: element.name,
       type,
       documentation: element.documentation,
-      children: toArray(element.child) as ViewChild[],
-      properties: element.properties,
+      children: toArray(element.child).map(toViewChild),
+      properties: element.properties && new Map(element.properties),
     };
     if (element.viewpoint !== undefined) view.viewpoint = element.viewpoint;
     if (element.background !== undefined) view.background = element.background;
     if (element.connectionRouterType !== undefined) view.connectionRouterType = element.connectionRouterType;
-    if (element.features !== undefined) view.features = element.features;
-    if (element.unrecognized !== undefined) view.unrecognized = element.unrecognized;
+    if (element.features !== undefined) view.features = new Map(element.features);
+    if (element.unrecognized !== undefined) view.unrecognized = structuredClone(element.unrecognized);
     return view;
-  }
-
-  /**
-   * Converts a view to the Element stored in the diagrams folder
-   */
-  private viewToElement(view: View): Element {
-    const element: Element = {
-      id: view.id,
-      name: view.name,
-      type: view.type,
-      documentation: view.documentation,
-      child: view.children,
-      properties: view.properties,
-    };
-    if (view.viewpoint !== undefined) element.viewpoint = view.viewpoint;
-    if (view.background !== undefined) element.background = view.background;
-    if (view.connectionRouterType !== undefined) element.connectionRouterType = view.connectionRouterType;
-    if (view.features !== undefined) element.features = view.features;
-    if (view.unrecognized !== undefined) element.unrecognized = view.unrecognized;
-    return element;
-  }
-
-  private updateViewInModel(view: View): void {
-    if (!this.model.diagrams.elements) return;
-
-    const index = this.model.diagrams.elements.findIndex(el => el.id === view.id);
-    if (index !== -1) {
-      this.model.diagrams.elements[index] = this.viewToElement(view);
-    }
   }
 
   private findElementById(elementId: string): Element | null {
@@ -368,24 +324,6 @@ export class ViewManager {
       if (folder.elements) {
         const element = folder.elements.find(el => el.id === elementId);
         if (element) return element;
-      }
-    }
-    return null;
-  }
-
-  private findChildById(children: ViewChild[] | undefined, childId: string): ViewChild | null {
-    if (!children) return null;
-
-    for (const child of children) {
-      if (child.id === childId) return child;
-
-      // Check if this is a group with children
-      if (child.type === 'Group') {
-        const group = child as ViewGroup;
-        if (group.children) {
-          const found = this.findChildById(group.children, childId);
-          if (found) return found;
-        }
       }
     }
     return null;

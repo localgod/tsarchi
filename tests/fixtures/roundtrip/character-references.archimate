@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<archimate:model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:archimate="http://www.archimatetool.com/archimate" name="character&#x9;references" id="id-ref-model" version="5.0.0">
+  <folder name="Strategy" id="id-ref-strategy" type="strategy"/>
+  <folder name="Business" id="id-ref-business" type="business">
+    <element xsi:type="archimate:BusinessActor" name="Tab&#x9;separated" id="id-customer">
+      <documentation>Written by Archi on Windows&#xD;
+second line&#xD;
+third line</documentation>
+      <property key="multi&#xA;line" value="one&#xD;&#xA;two"/>
+    </element>
+    <element xsi:type="archimate:BusinessRole" name="Quotes &quot;and&quot; &apos;apostrophes&apos; &amp; &lt;tags&gt;" id="id-insurant">
+      <documentation>Literal text &amp;#xD; stays text, &lt;b&gt; too &amp; "quotes" 'apostrophes'</documentation>
+    </element>
+    <element xsi:type="archimate:BusinessObject" name="Decimal&#13;reference" id="id-policy">
+      <documentation>tab&#9;and line feed&#10;as decimal references</documentation>
+    </element>
+  </folder>
+  <folder name="Application" id="id-ref-application" type="application"/>
+  <folder name="Technology &amp; Physical" id="id-ref-technology" type="technology"/>
+  <folder name="Motivation" id="id-ref-motivation" type="motivation"/>
+  <folder name="Implementation &amp; Migration" id="id-ref-implementation" type="implementation_migration"/>
+  <folder name="Other" id="id-ref-other" type="other"/>
+  <folder name="Relations" id="id-ref-relations" type="relations"/>
+  <folder name="Views" id="id-ref-views" type="diagrams">
+    <element xsi:type="archimate:ArchimateDiagramModel" name="View" id="id-view-refs">
+      <child xsi:type="archimate:Note" id="id-note">
+        <bounds x="24" y="24" width="185" height="80"/>
+        <content>Note&#xD;
+on two lines</content>
+      </child>
+    </element>
+  </folder>
+  <purpose>Purpose&#xD;
+with a Windows line break</purpose>
+</archimate:model>

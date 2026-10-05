@@ -19,8 +19,6 @@ export const archimateBusinessElementTypes = [
   'Contract',
   'Representation',
   'Product',
-  'Meaning',
-  'Value',
 ] as const;
 
 export const archimateApplicationElementTypes = [
@@ -64,6 +62,8 @@ export const archimateMotivationElementTypes = [
   'Principle',
   'Requirement',
   'Constraint',
+  'Meaning',
+  'Value',
 ] as const;
 
 export const archimateImplementationMigrationElementTypes = [

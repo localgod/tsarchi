@@ -189,6 +189,19 @@ describe('Archi-produced models', () => {
     expect(archimate.getRelationship('695')?.accessType).toBe(1);
   });
 
+  it('should file new Meaning and Value elements in the motivation folder, where Archi keeps them', async () => {
+    const archimate = await parseFixture('Archisurance.archimate');
+    const motivationIds = () => archimate.findElementsByFolder('motivation').map(e => e.id);
+
+    expect(motivationIds()).toContain('1250');
+
+    const meaning = archimate.upsertElement({ type: 'Meaning', name: 'New meaning' });
+    archimate.updateElement('1250', { type: 'Meaning' });
+
+    expect(motivationIds()).toEqual(expect.arrayContaining([meaning.id, '1250']));
+    expect(archimate.findElementsByFolder('business').map(e => e.type)).not.toContain('Meaning');
+  });
+
   it('should keep element and relationship types it does not know on save, as warnings', async () => {
     const xml = await readFile(`${fixturesDir}/compatibility_test3.archimate`, 'utf8');
     const archimate = Archimate.fromXml(xml);

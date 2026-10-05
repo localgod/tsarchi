@@ -34,7 +34,8 @@ function parseAndNormalizeXML(filePath: string): any {
     ignoreAttributes: false,
     attributeNamePrefix: '',
     trimValues: true,
-    parseTagValue: true,
+    // Text stays as written, so "1.50" and "1.5" are different
+    parseTagValue: false,
     allowBooleanAttributes: true,
   });
 

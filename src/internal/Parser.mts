@@ -26,6 +26,12 @@ import { toArray } from './Arrays.mjs';
 
 const attributeKeys = (specs: readonly AttributeSpec[]) => specs.map(([, attribute]) => `@_${attribute}`);
 
+/**
+ * Text content as a string. `parseArchimateXml` keeps text as written, but `parse()` also accepts schema objects
+ * read with fast-xml-parser's defaults, which turn text such as `1.50` into a number.
+ */
+const text = (value: unknown): string | undefined => (value === undefined ? undefined : String(value));
+
 export class Parser {
   private model: Model;
 
@@ -113,7 +119,7 @@ export class Parser {
     );
     const metadata = model.metadata;
     const content: ModelContent = {
-      purpose: model.purpose !== undefined ? String(model.purpose) : undefined,
+      purpose: text(model.purpose),
       properties: this.createOptionalPropertiesMap(model),
       metadata: metadata !== undefined ? this.createPropertiesMap({ property: metadata === '' ? undefined : metadata.entry }) : undefined,
       profiles: model.profile !== undefined ? toArray(model.profile).map(profile => this.createProfile(profile)) : undefined,
@@ -164,7 +170,7 @@ export class Parser {
     return {
       id: folder['@_id'] || '',
       name: folder['@_name'] || '',
-      documentation: folder.documentation,
+      documentation: text(folder.documentation),
       properties: this.createOptionalPropertiesMap(folder),
       features: DiagramAttributeMapper.schemaToFeatures(folder.feature),
       unrecognized: DiagramAttributeMapper.readUnrecognized(folder, mappedKeys),
@@ -212,7 +218,7 @@ export class Parser {
       type: (schemaElement['@_xsi:type'] ? typeFromXsiType(schemaElement['@_xsi:type']) : '') as ArchimateModelType,
       source: schemaElement['@_source'],
       target: schemaElement['@_target'],
-      documentation: schemaElement.documentation,
+      documentation: text(schemaElement.documentation),
       properties: this.createPropertiesMap(schemaElement),
       child: schemaElement.child ? this.loadChildren(schemaElement.child) : undefined,
     };

@@ -6,6 +6,8 @@ import type { Schema } from '../interfaces/schema/Schema.mjs';
 const parseOptions: Partial<X2jOptions> = {
   ignoreAttributes: false,
   allowBooleanAttributes: true,
+  // Text such as documentation stays as written: "1.50" is not read as the number 1.5.
+  parseTagValue: false,
 };
 
 const buildOptions: XmlBuilderOptions = {

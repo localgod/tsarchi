@@ -8,6 +8,10 @@ This project adheres to [Keep a CHANGELOG](http://keepachangelog.com/)
 
 ## [Unreleased]
 
+### Changed
+
+- `Meaning` and `Value` are motivation elements, as in Archi (and ArchiMate since 3.1): `upsertElement()` files new ones in the Motivation folder instead of Business, and `updateElement()` moves an element changed to either type there. They move from `archimateBusinessElementTypes` and `ArchimateBusinessElementType` to `archimateMotivationElementTypes` and `ArchimateMotivationElementType`. Elements already in a file stay in the folder they were loaded from ([#474](https://github.com/localgod/tsarchi/issues/474)).
+
 ### Fixed
 
 - `updateElement()` updates an element or relationship of a type tsarchi does not know (such as `archimate:Bogus1`, kept from the file since 2.1) in place instead of throwing `Unknown element type`. Changing an element to an unknown type still throws. An element whose type is unchanged now stays in the folder it was loaded from, instead of moving to the default folder for its type ([#467](https://github.com/localgod/tsarchi/issues/467)).

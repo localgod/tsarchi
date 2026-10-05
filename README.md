@@ -49,7 +49,7 @@ The `tsarchi` entry point holds the model API and runs in Node.js and in the bro
 
 ## Upgrading from 2.x
 
-The next major version changes how views are read:
+Version 3.0.0 has breaking changes in how views are read and in the element type lists:
 
 - `getView()`, `listViews()`, `createView()`, `addDiagramObject()`, `addGroup()`, `addDiagramObjectToGroup()` and `addConnection()` return copies in one shape, for views loaded from a file and views built with the API alike. Nested objects are in `children`, connections in `sourceConnections`, and the ids of the connections ending on an object in `targetConnections` (an array). All three are always present, empty when there is nothing in them. Change a view through the view methods: changing a returned view no longer changes the model.
 - `ViewChild` and `ViewConnection` have every field of `Child` and `SourceConnection` (figure, features, documentation, content, …), and `ViewChild.type` is a string, as loaded views also contain types such as `DiagramModelReference` and `SketchModelSticky`.

@@ -8,6 +8,8 @@ This project adheres to [Keep a CHANGELOG](http://keepachangelog.com/)
 
 ## [Unreleased]
 
+## [3.0.0] - 2026-10-05
+
 ### Changed
 
 - ⚠️ `getView()`, `listViews()`, `createView()`, `addDiagramObject()`, `addGroup()`, `addDiagramObjectToGroup()` and `addConnection()` return copies in one shape for views loaded from a file and views built with the API: nested objects in `children`, connections in `sourceConnections` and the ids of connections ending on an object or connection in `targetConnections`, all three always present as arrays. Loaded views used to come back in the stored shape (`child`, `sourceConnection`, space-separated `targetConnections`), and changing a returned view no longer changes the model; use the view methods. The stored shape is still available through `getElement(viewId).child` ([#483](https://github.com/localgod/tsarchi/issues/483)).
@@ -169,7 +171,8 @@ Unpublished from npm. Its changes were released in 1.0.2.
 - A `sync` command-line script that loads a model from `-i` and saves it to `-o`.
 - The package contains the TypeScript sources only, without compiled JavaScript.
 
-[Unreleased]: https://github.com/localgod/tsarchi/compare/2.2.0...HEAD
+[Unreleased]: https://github.com/localgod/tsarchi/compare/3.0.0...HEAD
+[3.0.0]: https://github.com/localgod/tsarchi/compare/2.2.0...3.0.0
 [2.2.0]: https://github.com/localgod/tsarchi/compare/2.1.0...2.2.0
 [2.1.0]: https://github.com/localgod/tsarchi/compare/2.0.0...2.1.0
 [2.0.0]: https://github.com/localgod/tsarchi/compare/1.0.3...2.0.0

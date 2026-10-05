@@ -8,6 +8,8 @@ const parseOptions: Partial<X2jOptions> = {
   allowBooleanAttributes: true,
   // Text such as documentation stays as written: "1.50" is not read as the number 1.5.
   parseTagValue: false,
+  // Archi keeps leading and trailing whitespace in names, values and text; removeIndentation drops the formatting.
+  trimValues: false,
 };
 
 const buildOptions: XmlBuilderOptions = {
@@ -16,6 +18,22 @@ const buildOptions: XmlBuilderOptions = {
   suppressEmptyNode: true,
   suppressBooleanAttributes: false,
 };
+
+/**
+ * Removes the whitespace that indents child elements, which fast-xml-parser keeps as `#text` when `trimValues` is
+ * off. In Archi's format, an element with attributes or child elements never holds text, so whitespace-only text in
+ * one is formatting. The text of an element without attributes, such as `<documentation>`, is a string and is kept
+ * as written.
+ */
+export function removeIndentation(node: unknown): void {
+  if (Array.isArray(node)) {
+    node.forEach(removeIndentation);
+  } else if (node && typeof node === 'object') {
+    const record = node as Record<string, unknown>;
+    if (typeof record['#text'] === 'string' && record['#text'].trim() === '') delete record['#text'];
+    Object.values(record).forEach(removeIndentation);
+  }
+}
 
 /**
  * Parses the text of an .archimate file into its schema shape.
@@ -35,6 +53,7 @@ export function parseArchimateXml(input: string): Schema {
   }
 
   const parsed = new XMLParser(parseOptions).parse(text) as Record<string, unknown>;
+  removeIndentation(parsed);
   if (!parsed || !('archimate:model' in parsed)) {
     throw new ArchimateParseError('not-archimate', 'Not an Archi model: the XML has no <archimate:model> root element.');
   }
@@ -43,8 +62,8 @@ export function parseArchimateXml(input: string): Schema {
   if (Array.isArray(model)) {
     throw new ArchimateParseError('invalid-structure', 'The XML has more than one <archimate:model> element.');
   }
-  // An empty <archimate:model></archimate:model> parses to an empty string
-  if (model === '') {
+  // An empty <archimate:model></archimate:model> parses to an empty (or whitespace-only) string
+  if (typeof model === 'string' && model.trim() === '') {
     parsed['archimate:model'] = {};
   } else if (typeof model !== 'object' || model === null) {
     throw new ArchimateParseError('invalid-structure', 'The <archimate:model> element holds text instead of folders.');

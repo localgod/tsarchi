@@ -3,6 +3,7 @@ import { tmpdir } from 'os';
 import { basename, join } from 'path';
 import { XMLParser } from 'fast-xml-parser';
 import { TsArchi } from '../src/node/TsArchi.mjs';
+import { removeIndentation } from '../src/internal/Xml.mjs';
 
 export interface RoundtripResult {
   fixturePath: string;
@@ -11,14 +12,17 @@ export interface RoundtripResult {
 }
 
 export function normalizeXml(xml: string): unknown {
-  return new XMLParser({
+  const parsed = new XMLParser({
     ignoreAttributes: false,
     attributeNamePrefix: '',
-    trimValues: true,
+    // Whitespace stays as written; the indentation between elements is removed below
+    trimValues: false,
     // Text stays as written, so "1.50" and "1.5" are different
     parseTagValue: false,
     allowBooleanAttributes: true,
   }).parse(xml);
+  removeIndentation(parsed);
+  return parsed;
 }
 
 export function compareObjects(input: unknown, output: unknown, path = '', errors: string[] = []): string[] {

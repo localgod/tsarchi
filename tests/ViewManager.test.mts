@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { Archimate } from '../src/Archimate.mjs';
 import type { Element } from '../src/interfaces/Element.mjs';
+import type { ViewChild } from '../src/interfaces/ViewChild.mjs';
 import { readFile } from 'fs/promises';
 import { XMLParser } from 'fast-xml-parser';
 import type { Schema } from '../src/interfaces/schema/Schema.mjs';
@@ -408,5 +409,88 @@ describe('non-view elements in the Views folder', () => {
         .listViews()
         .map(v => v.id)
     ).toEqual(['id-view']);
+  });
+});
+
+describe('views loaded from a file', () => {
+  const load = async () => Archimate.fromXml(await readFile('tests/fixtures/roundtrip/nested-diagram-objects.archimate', 'utf8'));
+  const findChild = (children: ViewChild[], id: string): ViewChild | undefined => {
+    for (const child of children) {
+      const found = child.id === id ? child : findChild(child.children, id);
+      if (found) return found;
+    }
+    return undefined;
+  };
+  const child = (archimate: Archimate, id: string) => findChild(archimate.getView('id-nested-view')!.children, id)!;
+  const errors = (archimate: Archimate) => archimate.validateModel().filter(issue => issue.severity === 'error');
+
+  it('returns children, connections and target connections as arrays, also when there are none', async () => {
+    const archimate = await load();
+
+    expect(child(archimate, 'id-db-object')).toMatchObject({
+      children: [],
+      sourceConnections: [],
+      targetConnections: ['id-api-to-db', 'id-note-to-db'],
+    });
+    expect(child(archimate, 'id-group').children.map(nested => nested.id)).toEqual(['id-group-api-object']);
+    expect(child(archimate, 'id-note').sourceConnections.map(connection => connection.id)).toEqual([
+      'id-note-to-api',
+      'id-note-to-connection',
+      'id-note-to-db',
+    ]);
+    expect(child(archimate, 'id-note').sourceConnections[0]).toMatchObject({ sourceConnections: [], targetConnections: [] });
+  });
+
+  it('connects to an object that already has target connections', async () => {
+    const archimate = await load();
+
+    const connection = archimate.addConnection('id-nested-view', 'id-group-api-object', 'id-db-object', 'id-rel-api-db')!;
+
+    expect(child(archimate, 'id-db-object').targetConnections).toEqual(['id-api-to-db', 'id-note-to-db', connection.id]);
+    expect(child(archimate, 'id-group-api-object').sourceConnections.map(c => c.id)).toEqual([connection.id]);
+    expect(errors(archimate)).toEqual([]);
+    expect(archimate.toXml()).toContain(`targetConnections="id-api-to-db id-note-to-db ${connection.id}"`);
+  });
+
+  it('finds and styles objects nested in a group or another object', async () => {
+    const archimate = await load();
+
+    expect(archimate.updateDiagramObjectStyle('id-nested-view', 'id-group-portal-object', { fillColor: '#ff0000' })).toBe(true);
+    expect(child(archimate, 'id-group-portal-object').fillColor).toBe('#ff0000');
+    expect(Archimate.fromXml(archimate.toXml()).getView('id-nested-view')!.children).toEqual(archimate.getView('id-nested-view')!.children);
+  });
+
+  it('adds an object to a loaded group next to the objects already in it', async () => {
+    const archimate = await load();
+
+    const added = archimate.addDiagramObjectToGroup('id-nested-view', 'id-group', 'id-db', { x: 300, y: 36, width: 80, height: 40 })!;
+
+    expect(child(archimate, 'id-group').children.map(nested => nested.id)).toEqual(['id-group-api-object', added.id]);
+    expect(archimate.hasId('id-group-portal-object')).toBe(true);
+    expect(errors(archimate)).toEqual([]);
+
+    // Deleting an element removes its diagram objects at any depth, including those loaded from the file
+    archimate.deleteElement('id-portal');
+    expect(child(archimate, 'id-group-portal-object')).toBeUndefined();
+    expect(child(archimate, 'id-group').children.map(nested => nested.id)).toEqual(['id-group-api-object', added.id]);
+    expect(errors(archimate)).toEqual([]);
+  });
+
+  it('returns copies, so changing a returned view does not change the model', async () => {
+    const archimate = await load();
+    const before = archimate.toXml();
+
+    const view = archimate.getView('id-nested-view')!;
+    const db = findChild(view.children, 'id-db-object')!;
+    db.fillColor = '#000000';
+    db.bounds.x = 999;
+    db.targetConnections.push('id-other');
+    view.children.pop();
+    archimate.addDiagramObject('id-nested-view', 'id-db', { x: 0, y: 0, width: 10, height: 10 })!.bounds.x = 5;
+
+    expect(child(archimate, 'id-db-object')).toMatchObject({ bounds: { x: 480 }, targetConnections: ['id-api-to-db', 'id-note-to-db'] });
+    expect(child(archimate, 'id-db-object').fillColor).toBeUndefined();
+    expect(archimate.toXml()).not.toContain('x="5"');
+    expect(archimate.toXml().length).toBeGreaterThan(before.length);
   });
 });

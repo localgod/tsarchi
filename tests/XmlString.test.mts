@@ -3,7 +3,6 @@ import { readFile } from 'fs/promises';
 import { Archimate } from '../src/Archimate.mjs';
 import { ArchimateParseError } from '../src/interfaces/ArchimateParseError.mjs';
 import { ArchimateValidationError } from '../src/interfaces/ValidationIssue.mjs';
-import type { Child } from '../src/interfaces/Child.mjs';
 import { Parser } from '../src/internal/Parser.mjs';
 import { compareObjects, listRoundtripFixtures, normalizeXml } from './roundtrip-utils.mjs';
 
@@ -39,8 +38,8 @@ describe('Archimate.fromXml / toXml', () => {
   it('keeps text that looks like a number or boolean as written', async () => {
     const archimate = Archimate.fromXml(await readFile('tests/fixtures/roundtrip/numeric-text.archimate', 'utf8'));
     const [subfolder] = archimate.getFolders('business');
-    const [dmoCustomer, , note] = archimate.getView('id-view-numbers')!.children as unknown as Record<string, unknown>[];
-    const [connection] = [dmoCustomer.sourceConnection].flat() as Record<string, unknown>[];
+    const [dmoCustomer, , note] = archimate.getView('id-view-numbers')!.children;
+    const [connection] = dmoCustomer.sourceConnections;
 
     expect(archimate.getPurpose()).toBe('1.0');
     expect(archimate.getFolder('business').documentation).toBe('007');
@@ -55,14 +54,17 @@ describe('Archimate.fromXml / toXml', () => {
     expect(note.content).toBe('0.10');
   });
 
-  it.each(['<archimate:model></archimate:model>', '<archimate:model>\n  </archimate:model>'])('loads an empty <archimate:model> element: %j', xml => {
-    const archimate = Archimate.fromXml(xml);
-    expect(archimate.listElements()).toEqual([]);
-  });
+  it.each(['<archimate:model></archimate:model>', '<archimate:model>\n  </archimate:model>'])(
+    'loads an empty <archimate:model> element: %j',
+    xml => {
+      const archimate = Archimate.fromXml(xml);
+      expect(archimate.listElements()).toEqual([]);
+    }
+  );
 
   it('reads character references as the characters they stand for', async () => {
     const archimate = Archimate.fromXml(await readFile('tests/fixtures/roundtrip/character-references.archimate', 'utf8'));
-    const note = archimate.getView('id-view-refs')!.children![0] as unknown as Child;
+    const note = archimate.getView('id-view-refs')!.children[0];
 
     expect(archimate.getName()).toBe('character\treferences');
     expect(archimate.getPurpose()).toBe('Purpose\r\nwith a Windows line break');
@@ -117,7 +119,7 @@ describe('Archimate.fromXml / toXml', () => {
   it('keeps leading and trailing whitespace in names, values and text', async () => {
     const archimate = Archimate.fromXml(await readFile('tests/fixtures/roundtrip/whitespace.archimate', 'utf8'));
     const [subfolder] = archimate.getFolders('business');
-    const note = archimate.getView('id-view-ws')!.children![2] as unknown as Child;
+    const note = archimate.getView('id-view-ws')!.children[2];
 
     expect(archimate.getName()).toBe(' spaced model ');
     expect(archimate.getPurpose()).toBe(' purpose with spaces ');
@@ -205,22 +207,25 @@ describe('Archimate.fromXml / toXml', () => {
 
     const xml = archimate.toXml();
     const reloaded = Archimate.fromXml(xml);
-    const [groupChild, roleChild, serviceChild] = reloaded.getView(view.id)!.children as unknown as Child[];
-    const [nested] = groupChild.child!;
+    const [groupChild, roleChild, serviceChild] = reloaded.getView(view.id)!.children;
+    const [nested] = groupChild.children;
 
     expect(reloaded.validateModel()).toEqual([]);
     expect(groupChild).toMatchObject({ id: group.id, type: 'Group', name: 'Group' });
     expect(nested).toMatchObject({ id: inGroup.id, type: 'DiagramObject', archimateElement: actor.id });
-    expect(nested.sourceConnection).toMatchObject({
-      id: fromGroup.id,
-      source: inGroup.id,
-      target: roleObject.id,
-      archimateRelationship: 'assignment',
-      lineColor: '#ff0000',
-    });
-    expect(serviceChild.sourceConnection).toMatchObject({ id: serving.id, archimateRelationship: 'serving' });
+    expect(nested.sourceConnections).toMatchObject([
+      {
+        id: fromGroup.id,
+        source: inGroup.id,
+        target: roleObject.id,
+        archimateRelationship: 'assignment',
+        lineColor: '#ff0000',
+      },
+    ]);
+    expect(serviceChild.sourceConnections).toMatchObject([{ id: serving.id, archimateRelationship: 'serving' }]);
+    expect(roleChild.targetConnections).toEqual([fromGroup.id, serving.id]);
     // Archi stores the ids of the connections ending on an object in one space-separated attribute
-    expect(roleChild.targetConnections).toBe(`${fromGroup.id} ${serving.id}`);
+    expect(xml).toContain(`targetConnections="${fromGroup.id} ${serving.id}"`);
     expect(xml).not.toContain('targetConnections=""');
     expect(Archimate.fromXml(reloaded.toXml()).toXml()).toBe(reloaded.toXml());
   });

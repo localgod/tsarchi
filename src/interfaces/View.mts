@@ -1,4 +1,5 @@
 import type { ViewChild } from './ViewChild.mjs';
+import type { SourceConnection } from './SourceConnection.mjs';
 import type { ArchimateViewType } from '../constants/archimate-mappings.mjs';
 
 export interface View {
@@ -11,7 +12,8 @@ export interface View {
   background?: number;
   /** Connection router: 0 manual (Archi's default, not written), 2 manhattan. */
   connectionRouterType?: number;
-  children?: ViewChild[];
+  /** The view's diagram children, a copy of what is stored. */
+  children: ViewChild[];
   properties?: Map<string, string>;
   /** `<feature>` entries (Archi's `IFeatures`), in file order. */
   features?: Map<string, string>;
@@ -24,30 +26,22 @@ export interface View {
 
 export interface ViewGroup extends ViewChild {
   type: 'Group';
-  name?: string;
-  children?: ViewChild[];
-  documentation?: string;
 }
 
 export interface ViewDiagramObject extends ViewChild {
   type: 'DiagramObject';
   archimateElement: string;
-  targetConnections?: string[];
-  sourceConnections?: ViewConnection[];
 }
 
-export interface ViewConnection {
-  id: string;
-  type: 'Connection';
-  source: string;
-  target: string;
-  archimateRelationship?: string;
-  bendpoints?: ViewBendpoint[];
-  lineColor?: string;
-  lineWidth?: number;
-  fontColor?: string;
-  font?: string;
-  textPosition?: number;
+/**
+ * A view connection as `getView()` and `listViews()` return it: every field of the stored `SourceConnection`, with
+ * the connections drawn onto it and its target connections as arrays.
+ */
+export interface ViewConnection extends Omit<SourceConnection, 'sourceConnection' | 'targetConnections'> {
+  /** Connections that start on this connection, e.g. a relationship drawn onto a relationship. */
+  sourceConnections: ViewConnection[];
+  /** Ids of the connections that end on this connection. */
+  targetConnections: string[];
 }
 
 export interface ViewBendpoint {

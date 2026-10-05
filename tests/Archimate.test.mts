@@ -1108,7 +1108,7 @@ describe('Archimate', () => {
               type: 'DiagramObject',
               archimateElement: 'missing-element',
               bounds: { x: 0, y: 0, width: 100, height: 50 },
-              sourceConnections: [
+              sourceConnection: [
                 {
                   id: 'broken-connection',
                   type: 'Connection',
@@ -1117,14 +1117,14 @@ describe('Archimate', () => {
                   archimateRelationship: 'missing-relationship',
                 },
               ],
-            } as any,
+            },
             {
               id: 'view-target',
               type: 'DiagramObject',
               archimateElement: 'duplicate-id',
-              targetConnections: ['missing-connection'],
+              targetConnections: 'missing-connection',
               bounds: { x: 200, y: 0, width: 100, height: 50 },
-            } as any,
+            },
           ],
         },
       ];

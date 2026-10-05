@@ -3,8 +3,6 @@ import { readFile } from 'fs/promises';
 import { XMLParser } from 'fast-xml-parser';
 import { Archimate } from '../src/Archimate.mjs';
 import type { Schema } from '../src/interfaces/schema/Schema.mjs';
-import type { Child } from '../src/interfaces/Child.mjs';
-import type { SourceConnection } from '../src/interfaces/SourceConnection.mjs';
 
 const fixture = 'tests/fixtures/roundtrip/features-and-unrecognized.archimate';
 
@@ -158,12 +156,12 @@ describe('unrecognised content', () => {
   it('should keep unrecognised content of diagram children and connections', async () => {
     const archimate = await parseFixture();
 
-    const child = archimate.getView('id-view')?.children?.[0] as unknown as Child;
+    const child = archimate.getView('id-view')!.children[0];
     expect(child.unrecognized).toEqual({
       '@_futureChildAttribute': 'child',
       futureChildElement: { '@_key': 'value' },
     });
-    expect((child.sourceConnection as SourceConnection).unrecognized).toEqual({
+    expect(child.sourceConnections[0].unrecognized).toEqual({
       '@_futureConnectionAttribute': 'connection',
       futureConnectionChild: { '@_key': 'value' },
     });
@@ -173,7 +171,7 @@ describe('unrecognised content', () => {
     const archimate = await parseFixture();
 
     expect(archimate.getElement('id-insurant')?.unrecognized).toBeUndefined();
-    const insurantObject = archimate.getView('id-view')?.children?.[1] as unknown as Child;
+    const insurantObject = archimate.getView('id-view')!.children[1];
     expect(insurantObject.unrecognized).toBeUndefined();
   });
 });

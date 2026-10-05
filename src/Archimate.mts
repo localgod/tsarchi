@@ -280,7 +280,8 @@ export class Archimate {
     if (!location) return null;
 
     const nextType = patch.type ?? location.element.type;
-    const nextFolderKey = elementTypeToFolderKey.get(nextType);
+    // An element of a type it does not know (kept from the file) stays in its folder unless its type changes
+    const nextFolderKey = nextType === location.element.type ? location.folderKey : elementTypeToFolderKey.get(nextType);
     if (!nextFolderKey) {
       throw new Error(`Unknown element type "${nextType}".`);
     }

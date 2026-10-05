@@ -8,6 +8,10 @@ This project adheres to [Keep a CHANGELOG](http://keepachangelog.com/)
 
 ## [Unreleased]
 
+### Fixed
+
+- `updateElement()` updates an element or relationship of a type tsarchi does not know (such as `archimate:Bogus1`, kept from the file since 2.1) in place instead of throwing `Unknown element type`. Changing an element to an unknown type still throws. An element whose type is unchanged now stays in the folder it was loaded from, instead of moving to the default folder for its type ([#467](https://github.com/localgod/tsarchi/issues/467)).
+
 ## [2.2.0] - 2026-10-03
 
 ### Added

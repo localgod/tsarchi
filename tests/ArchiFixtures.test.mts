@@ -206,6 +206,63 @@ describe('Archi-produced models', () => {
     expect(parser.parse(archimate.toXml())).toEqual(parser.parse(xml));
   });
 
+  it('should update elements and relationships of a type it does not know in place', async () => {
+    const archimate = await parseFixture('compatibility_test3.archimate');
+    const elementId = 'id-3fded24054d44e3f90889975746e5238';
+    const relationshipId = 'id-e983ee9f5cbe4d51812734c3e0eae3e9';
+
+    archimate.updateElement(elementId, { name: 'Renamed' });
+    archimate.updateElement(elementId, { type: 'Bogus1', documentation: 'Doc' });
+    archimate.updateElement(elementId, { properties: new Map([['k', 'v']]) });
+    archimate.updateElement(relationshipId, { name: 'Link' });
+
+    expect(archimate.findElementsByFolder('technology')[0]).toMatchObject({
+      id: elementId,
+      type: 'Bogus1',
+      name: 'Renamed',
+      documentation: 'Doc',
+      properties: new Map([['k', 'v']]),
+    });
+    expect(archimate.findElementsByFolder('relations')[0]).toMatchObject({ id: relationshipId, type: 'Bogus3', name: 'Link' });
+  });
+
+  it('should still reject changing an element to a type it does not know', async () => {
+    const archimate = await parseFixture('compatibility_test3.archimate');
+
+    expect(() => archimate.updateElement('id-3fded24054d44e3f90889975746e5238', { type: 'Bogus9' })).toThrow(
+      'Unknown element type "Bogus9".'
+    );
+    expect(() => archimate.updateElement('id-3fded24054d44e3f90889975746e5238', { type: 'Bogus2' })).toThrow(
+      'Unknown element type "Bogus2".'
+    );
+  });
+
+  it('should move an element of a type it does not know when it is given a known type', async () => {
+    const archimate = await parseFixture('compatibility_test3.archimate');
+    const elementId = 'id-3fded24054d44e3f90889975746e5238';
+
+    archimate.updateElement(elementId, { type: 'BusinessActor' });
+
+    expect(archimate.findElementsByFolder('technology').map(e => e.id)).not.toContain(elementId);
+    expect(archimate.findElementsByFolder('business')).toEqual([
+      expect.objectContaining({ id: elementId, type: 'BusinessActor', name: 'E1' }),
+    ]);
+  });
+
+  it('should keep an element in the folder it was loaded from when its type is unchanged', () => {
+    const archimate = Archimate.fromXml(`<?xml version="1.0" encoding="UTF-8"?>
+<archimate:model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:archimate="http://www.archimatetool.com/archimate" name="T" id="m" version="5.0.0">
+  <folder name="Motivation" id="f1" type="motivation">
+    <element xsi:type="archimate:Meaning" id="e1" name="E1"/>
+  </folder>
+</archimate:model>`);
+
+    archimate.updateElement('e1', { name: 'Renamed' });
+
+    expect(archimate.findElementsByFolder('motivation')).toEqual([expect.objectContaining({ id: 'e1', name: 'Renamed' })]);
+    expect(archimate.findElementsByFolder('business')).toEqual([]);
+  });
+
   describe('elements in a hand-written model', () => {
     const wrap = (element: string) => `<?xml version="1.0" encoding="UTF-8"?>
 <archimate:model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:archimate="http://www.archimatetool.com/archimate" name="T" id="m" version="5.0.0">

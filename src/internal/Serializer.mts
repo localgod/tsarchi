@@ -5,7 +5,6 @@ import type { Folder as SchemaFolder } from '../interfaces/schema/Folder.mjs';
 import type { Element as SchemaElement } from '../interfaces/schema/Element.mjs';
 import type { Element } from '../interfaces/Element.mjs';
 import type { Child as SchemaChild } from '../interfaces/schema/Child.mjs';
-import type { Property as SchemaProperty } from '../interfaces/schema/Property.mjs';
 import type { Model, ModelContent, ModelFolder } from '../interfaces/Model.mjs';
 import type { Profile } from '../interfaces/Profile.mjs';
 import type { Profile as SchemaProfile } from '../interfaces/schema/Profile.mjs';
@@ -14,35 +13,31 @@ import type { Child } from '../interfaces/Child.mjs';
 import { BoundsMapper } from './BoundMapper.mjs';
 import { SourceConnectionMapper } from './SourceConnectionMapper.mjs';
 import { folderType, toXsiType } from '../constants/archimate-mappings.mjs';
-import { DiagramAttributeMapper, childAttributes, childFeatures, childTextElements } from './DiagramAttributeMapper.mjs';
+import {
+  DiagramAttributeMapper,
+  childAttributes,
+  childFeatures,
+  childTextElements,
+  conceptAttributes,
+  viewAttributes,
+} from './DiagramAttributeMapper.mjs';
+import { toArray } from './Arrays.mjs';
 
 export class Serializer {
   private model: Model;
-  private modelMetadata: ModelAttributes;
-  private xmlMetadata: XmlMetadata;
 
   constructor(model: Model) {
     this.model = model;
-    this.xmlMetadata = { '@_version': '1.0', '@_encoding': 'UTF-8' };
-    this.modelMetadata = {
-      '@_xmlns:xsi': 'http://www.w3.org/2001/XMLSchema-instance',
-      '@_xmlns:archimate': 'http://www.archimatetool.com/archimate',
-      '@_name': '',
-      '@_id': 'id-d81fe19001de4c3cb53c05c2b757d35d',
-      '@_version': '5.0.0',
-    };
   }
 
   /**
-   * @param content Model-level content besides the folders, or just the model's purpose.
+   * @param content Model-level content besides the folders.
    */
-  public serialize(modelMetadata: ModelAttributes | string, xmlMetadata?: XmlMetadata, content?: ModelContent | string): ArchimateSchema {
-    this.modelMetadata = typeof modelMetadata === 'string' ? { ...this.modelMetadata, '@_name': modelMetadata } : modelMetadata;
-    this.xmlMetadata = xmlMetadata || this.xmlMetadata;
+  public serialize(modelMetadata: ModelAttributes, xmlMetadata: XmlMetadata, content: ModelContent): ArchimateSchema {
     const folders = Object.keys(this.model).map(key => this.serializeTopLevelFolder(key as keyof Model));
-    const schema: ArchimateSchema = this.createSchemaModel(folders);
+    const schema: ArchimateSchema = this.createSchemaModel(modelMetadata, xmlMetadata, folders);
 
-    this.storeModelContent(schema, typeof content === 'string' ? { purpose: content } : (content ?? {}));
+    this.storeModelContent(schema, content);
 
     return schema;
   }
@@ -55,14 +50,16 @@ export class Serializer {
     const model = schema['archimate:model'];
     Object.assign(model, content.unrecognized);
 
-    if (content.properties && content.properties.size > 0) {
-      model.property = this.serializeProperties(content.properties);
+    const property = DiagramAttributeMapper.propertiesToSchema(content.properties);
+    if (property) {
+      model.property = property;
     }
     if (content.purpose) {
       model.purpose = content.purpose;
     }
     if (content.metadata) {
-      model.metadata = content.metadata.size > 0 ? { entry: this.serializeProperties(content.metadata) } : '';
+      const entry = DiagramAttributeMapper.propertiesToSchema(content.metadata);
+      model.metadata = entry ? { entry } : '';
     }
     if (content.profiles && content.profiles.length > 0) {
       model.profile = content.profiles.map(profile => this.serializeProfile(profile));
@@ -90,14 +87,14 @@ export class Serializer {
     return schemaProfile;
   }
 
-  private createSchemaModel(folders: SchemaFolder[]): ArchimateSchema {
+  private createSchemaModel(modelMetadata: ModelAttributes, xmlMetadata: XmlMetadata, folders: SchemaFolder[]): ArchimateSchema {
     // Archi's Nameable.name defaults to "", and EMF does not write default values.
-    const { '@_name': name, ...attributes } = this.modelMetadata;
+    const { '@_name': name, ...attributes } = modelMetadata;
     return {
-      '?xml': this.xmlMetadata,
+      '?xml': xmlMetadata,
       'archimate:model': {
         folder: folders,
-        ...(name ? this.modelMetadata : attributes),
+        ...(name ? modelMetadata : attributes),
       },
     };
   }
@@ -106,7 +103,7 @@ export class Serializer {
     const folderModel = this.model[folderKey];
 
     const folder: SchemaFolder = {
-      '@_name': folderModel.name || folderType.get(folderKey) || 'Unknown Folder',
+      '@_name': folderModel.name || folderType.get(folderKey)!,
       '@_id': folderModel.id,
       '@_type': folderKey,
     };
@@ -164,8 +161,9 @@ export class Serializer {
       folder.documentation = documentation;
     }
 
-    if (properties && properties.size > 0) {
-      folder.property = this.serializeProperties(properties);
+    const property = DiagramAttributeMapper.propertiesToSchema(properties);
+    if (property) {
+      folder.property = property;
     }
   }
 
@@ -181,15 +179,7 @@ export class Serializer {
       element['@_profiles'] = el.profiles;
     }
 
-    if (el.viewpoint !== undefined) {
-      element['@_viewpoint'] = el.viewpoint;
-    }
-    if (el.background !== undefined) {
-      element['@_background'] = String(el.background);
-    }
-    if (el.connectionRouterType !== undefined) {
-      element['@_connectionRouterType'] = String(el.connectionRouterType);
-    }
+    Object.assign(element, DiagramAttributeMapper.writeAttributes(el, viewAttributes));
 
     const feature = DiagramAttributeMapper.featuresToSchema(el.features);
     if (feature) {
@@ -201,7 +191,7 @@ export class Serializer {
     }
 
     if (el.properties) {
-      element.property = this.serializeProperties(el.properties);
+      element.property = DiagramAttributeMapper.propertiesToSchema(el.properties) ?? [];
     }
 
     if (el.source && el.target) {
@@ -209,31 +199,14 @@ export class Serializer {
       element['@_target'] = el.target;
     }
 
-    if (el.accessType !== undefined) {
-      element['@_accessType'] = String(el.accessType);
-    }
-
-    if (el.junctionType !== undefined) {
-      element['@_type'] = el.junctionType;
-    }
+    Object.assign(element, DiagramAttributeMapper.writeAttributes(el, conceptAttributes));
 
     if (el.child) {
-      const children = Array.isArray(el.child) ? el.child : [el.child];
-      element.child = this.saveChildren(children);
+      element.child = this.saveChildren(toArray(el.child));
     }
 
     Object.assign(element, el.unrecognized);
     return element;
-  }
-
-  private serializeProperties(properties: Map<string, string>): SchemaProperty[] {
-    const propertyArray: SchemaProperty[] = [];
-
-    properties.forEach((value, key) => {
-      propertyArray.push({ '@_key': key, '@_value': value });
-    });
-
-    return propertyArray;
   }
 
   private saveChildren(children: Child[]): SchemaChild[] {

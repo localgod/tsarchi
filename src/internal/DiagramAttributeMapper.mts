@@ -2,6 +2,7 @@ import type { Bendpoint as SchemaBendpoint } from '../interfaces/schema/Bendpoin
 import type { Feature as SchemaFeature } from '../interfaces/schema/Feature.mjs';
 import type { Property as SchemaProperty } from '../interfaces/schema/Property.mjs';
 import type { ViewBendpoint } from '../interfaces/View.mjs';
+import { toArray } from './Arrays.mjs';
 
 type AttributeKind = 'string' | 'number' | 'boolean';
 
@@ -74,9 +75,30 @@ export const connectionFeatures: readonly AttributeSpec[] = [
 ];
 
 /**
+ * Attributes Archi writes on views, after `profiles` and before the source and target of a relationship.
+ */
+export const viewAttributes: readonly AttributeSpec[] = [
+  ['viewpoint', 'viewpoint', 'string'],
+  ['background', 'background', 'number'],
+  ['connectionRouterType', 'connectionRouterType', 'number'],
+];
+
+/**
+ * Attributes Archi writes on an Access relationship or a Junction, after the source and target of a relationship.
+ */
+export const conceptAttributes: readonly AttributeSpec[] = [
+  ['accessType', 'accessType', 'number'],
+  ['junctionType', 'type', 'string'],
+];
+
+/**
  * Text content Archi writes as child elements rather than attributes.
  */
 export const childTextElements = ['documentation', 'content', 'notes', 'hintContent'] as const;
+
+function readValue(raw: unknown, kind: AttributeKind): string | number | boolean {
+  return kind === 'number' ? Number(raw) : kind === 'boolean' ? String(raw) === 'true' : String(raw);
+}
 
 export class DiagramAttributeMapper {
   /**
@@ -88,7 +110,7 @@ export class DiagramAttributeMapper {
     for (const [property, attribute, kind] of specs) {
       const raw = source[`@_${attribute}`];
       if (raw === undefined || raw === null) continue;
-      result[property] = kind === 'number' ? Number(raw) : kind === 'boolean' ? String(raw) === 'true' : String(raw);
+      result[property] = readValue(raw, kind);
     }
     return result;
   }
@@ -109,8 +131,7 @@ export class DiagramAttributeMapper {
 
   public static schemaToProperties(property: SchemaProperty | SchemaProperty[] | undefined): Map<string, string> | undefined {
     if (!property) return undefined;
-    const list = Array.isArray(property) ? property : [property];
-    return new Map(list.map(p => [p['@_key'], p['@_value']]));
+    return new Map(toArray(property).map(p => [p['@_key'], p['@_value']]));
   }
 
   public static propertiesToSchema(properties: Map<string, string> | undefined): SchemaProperty[] | undefined {
@@ -120,8 +141,7 @@ export class DiagramAttributeMapper {
 
   public static schemaToFeatures(feature: SchemaFeature | SchemaFeature[] | undefined): Map<string, string> | undefined {
     if (!feature) return undefined;
-    const list = Array.isArray(feature) ? feature : [feature];
-    return new Map(list.map(f => [f['@_name'], String(f['@_value'])]));
+    return new Map(toArray(feature).map(f => [f['@_name'], String(f['@_value'])]));
   }
 
   public static featuresToSchema(features: Map<string, string> | undefined): SchemaFeature[] | undefined {
@@ -136,10 +156,12 @@ export class DiagramAttributeMapper {
     features: Map<string, string> | undefined,
     specs: readonly AttributeSpec[]
   ): Record<string, string | number | boolean> {
-    return DiagramAttributeMapper.readAttributes(
-      Object.fromEntries(Array.from(features ?? [], ([name, value]) => [`@_${name}`, value])),
-      specs
-    );
+    const result: Record<string, string | number | boolean> = {};
+    for (const [property, name, kind] of specs) {
+      const raw = features?.get(name);
+      if (raw !== undefined) result[property] = readValue(raw, kind);
+    }
+    return result;
   }
 
   /**
@@ -175,8 +197,7 @@ export class DiagramAttributeMapper {
 
   public static schemaToBendpoints(bendpoint: SchemaBendpoint | SchemaBendpoint[] | undefined): ViewBendpoint[] | undefined {
     if (!bendpoint) return undefined;
-    const list = Array.isArray(bendpoint) ? bendpoint : [bendpoint];
-    return list.map(b => ({
+    return toArray(bendpoint).map(b => ({
       startX: Number(b['@_startX']) || 0,
       startY: Number(b['@_startY']) || 0,
       endX: Number(b['@_endX']) || 0,

@@ -5,6 +5,8 @@ import type { Model } from './interfaces/Model.mjs';
 import type { Bounds } from './interfaces/Bounds.mjs';
 import { isArchimateViewType } from './constants/archimate-mappings.mjs';
 import { removeFromNestedFolders } from './internal/NestedFolders.mjs';
+import { toArray } from './internal/Arrays.mjs';
+import { randomArchiId } from './internal/Ids.mjs';
 
 export class ViewManager {
   private model: Model;
@@ -12,7 +14,7 @@ export class ViewManager {
 
   constructor(model: Model, generateUniqueId?: () => string) {
     this.model = model;
-    this.generateUniqueId = generateUniqueId || (() => this.generateId());
+    this.generateUniqueId = generateUniqueId || randomArchiId;
   }
 
   /**
@@ -310,19 +312,6 @@ export class ViewManager {
 
   // Private helper methods
 
-  private generateId(): string {
-    const characters = 'abcdef0123456789';
-    const idLength = 32;
-    let randomId = 'id-';
-
-    for (let i = 0; i < idLength; i++) {
-      const randomIndex = Math.floor(Math.random() * characters.length);
-      randomId += characters.charAt(randomIndex);
-    }
-
-    return randomId;
-  }
-
   private elementToView(element: Element): View {
     const { type } = element;
     if (!isArchimateViewType(type)) {
@@ -333,7 +322,7 @@ export class ViewManager {
       name: element.name,
       type,
       documentation: element.documentation,
-      children: Array.isArray(element.child) ? (element.child as ViewChild[]) : element.child ? [element.child as ViewChild] : [],
+      children: toArray(element.child) as ViewChild[],
       properties: element.properties,
     };
     if (element.viewpoint !== undefined) view.viewpoint = element.viewpoint;
@@ -448,13 +437,20 @@ export class ViewManager {
     if (!this.model.relations.elements) return;
 
     // Find relationships between the elements in the view
+    const ids = new Set(elementIds);
     const relationships = this.model.relations.elements.filter(
-      rel => rel.source && rel.target && elementIds.includes(rel.source) && elementIds.includes(rel.target)
+      rel => rel.source && rel.target && ids.has(rel.source) && ids.has(rel.target)
     );
 
+    // The first diagram object of an element is connected, as with find()
+    const objectsByElement = new Map<string, ViewDiagramObject>();
+    for (const object of diagramObjects) {
+      if (!objectsByElement.has(object.archimateElement)) objectsByElement.set(object.archimateElement, object);
+    }
+
     relationships.forEach(relationship => {
-      const sourceObject = diagramObjects.find(obj => obj.archimateElement === relationship.source);
-      const targetObject = diagramObjects.find(obj => obj.archimateElement === relationship.target);
+      const sourceObject = objectsByElement.get(relationship.source!);
+      const targetObject = objectsByElement.get(relationship.target!);
 
       if (sourceObject && targetObject) {
         this.addConnection(viewId, sourceObject.id, targetObject.id, relationship.id);

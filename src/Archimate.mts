@@ -17,6 +17,8 @@ import { parseArchimateXml, buildArchimateXml } from './internal/Xml.mjs';
 import { Serializer } from './internal/Serializer.mjs';
 import { ViewManager } from './ViewManager.mjs';
 import { removeFromNestedFolders } from './internal/NestedFolders.mjs';
+import { toArray } from './internal/Arrays.mjs';
+import { randomArchiId } from './internal/Ids.mjs';
 import {
   folderType,
   elementTypeToFolderKey,
@@ -44,6 +46,9 @@ const warningIssueCodes = new Set<ValidationIssueCode>([
 ]);
 
 type PendingIssue = Omit<ValidationIssue, 'severity'>;
+
+/** Relationship types the relationships matrix has rules for. */
+const matrixRelationshipTypes: ReadonlySet<string> = new Set(Object.values(relationshipMatrixKeys));
 
 type StoredViewChild = Omit<Child, 'child' | 'targetConnections'> & {
   archimateElement?: string;
@@ -82,6 +87,9 @@ export class Archimate {
 
   private viewManager: ViewManager;
 
+  /** Every id in the model while a bulk operation runs, so generateUniqueId does not walk the model for each new id. */
+  private idScope?: Set<string>;
+
   public constructor() {
     this.content = {};
     this.xmlMetadata = this.defaultXmlMetadata();
@@ -116,16 +124,7 @@ export class Archimate {
   }
 
   public generateRandomId(): string {
-    const characters = 'abcdef0123456789';
-    const idLength = 32;
-    let randomId = 'id-';
-
-    for (let i = 0; i < idLength; i++) {
-      const randomIndex = Math.floor(Math.random() * characters.length);
-      randomId += characters.charAt(randomIndex);
-    }
-
-    return randomId;
+    return randomArchiId();
   }
 
   /**
@@ -134,24 +133,9 @@ export class Archimate {
    */
   public hasId(id: string): boolean {
     if (!id) return false;
-    if (this.content.profiles?.some(profile => profile.id === id)) return true;
-
-    for (const folderKey of Object.keys(this.model) as FolderKey[]) {
-      const folder = this.model[folderKey];
-      if (folder.id === id) return true;
-      if (this.foldersHaveId(folder.folders || [], id)) return true;
-
-      for (const element of folder.elements || []) {
-        if (element.id === id) return true;
-        if (
-          element.child &&
-          this.childrenHaveId((Array.isArray(element.child) ? element.child : [element.child]) as StoredViewChild[], id)
-        ) {
-          return true;
-        }
-      }
+    for (const usedId of this.modelIds()) {
+      if (usedId === id) return true;
     }
-
     return false;
   }
 
@@ -161,11 +145,56 @@ export class Archimate {
   public generateUniqueId(): string {
     let id = this.generateRandomId();
 
-    while (this.hasId(id)) {
+    while (this.idScope ? this.idScope.has(id) : this.hasId(id)) {
       id = this.generateRandomId();
     }
 
+    this.idScope?.add(id);
     return id;
+  }
+
+  /**
+   * Runs a bulk operation with the model's ids collected once. Only use it for operations that add ids through
+   * generateUniqueId.
+   */
+  private withIdScope<T>(run: () => T): T {
+    if (this.idScope) return run();
+    this.idScope = new Set(this.modelIds());
+    try {
+      return run();
+    } finally {
+      this.idScope = undefined;
+    }
+  }
+
+  /**
+   * The ids hasId checks: profiles, folders, elements, relationships, views, diagram children and view connections.
+   */
+  private *modelIds(): Generator<string> {
+    for (const profile of this.content.profiles ?? []) yield profile.id;
+    for (const folder of Object.values(this.model)) {
+      yield folder.id;
+      yield* Archimate.folderIds(folder.folders || []);
+      for (const element of folder.elements || []) {
+        yield element.id;
+        yield* this.viewChildIds(toArray(element.child) as StoredViewChild[]);
+      }
+    }
+  }
+
+  private static *folderIds(folders: Folder[]): Generator<string> {
+    for (const folder of folders) {
+      yield folder.id;
+      yield* Archimate.folderIds(folder.folders || []);
+    }
+  }
+
+  private *viewChildIds(children: StoredViewChild[]): Generator<string> {
+    for (const child of children) {
+      yield child.id;
+      for (const connection of this.getSourceConnections(child)) yield connection.id;
+      yield* this.viewChildIds(this.getNestedChildren(child));
+    }
   }
 
   /**
@@ -203,29 +232,9 @@ export class Archimate {
     }
 
     if (existingIndex >= 0) {
+      // The element is updated in place; its id is the one matched or, when matched by name, left out.
       const existingElement = folder.elements[existingIndex];
-
-      for (const [key, value] of Object.entries(element)) {
-        if (value === undefined) continue;
-
-        if (key === 'id') {
-          // Always keep the original id
-          continue;
-        }
-
-        if (key === 'properties' && value instanceof Map) {
-          if (!(existingElement.properties instanceof Map)) {
-            existingElement.properties = new Map();
-          }
-          for (const [propKey, propValue] of value.entries()) {
-            existingElement.properties.set(propKey, propValue);
-          }
-        } else {
-          (existingElement as any)[key] = value;
-        }
-      }
-
-      return existingElement;
+      return Object.assign(existingElement, this.mergeElementPatch(existingElement, element));
     } else {
       if (!('id' in element) || !element.id) {
         element.id = this.generateUniqueId();
@@ -257,14 +266,7 @@ export class Archimate {
    * Finds all elements with a matching name across all folders.
    */
   public findElementsByName(elementName: string): Element[] {
-    const results: Element[] = [];
-
-    for (const folderKey of Object.keys(this.model) as FolderKey[]) {
-      const folder = this.model[folderKey];
-      results.push(...(folder.elements || []).filter(el => el.name === elementName));
-    }
-
-    return results;
+    return this.allElements().filter(el => el.name === elementName);
   }
 
   /**
@@ -313,26 +315,32 @@ export class Archimate {
     const location = this.findElementLocationById(elementId);
     if (!location) return false;
 
-    const deletedElement = location.element;
     location.folder.elements!.splice(location.index, 1);
-    removeFromNestedFolders(location.folder.folders || [], new Set([elementId]));
+    this.removeWithDeletedElements(location.folderKey, new Set([elementId]));
+    return true;
+  }
 
-    const removedRelationshipIds = new Set<string>();
-    if (location.folderKey === 'relations') {
-      removedRelationshipIds.add(deletedElement.id);
-    }
-    for (const relationship of this.removeRelationshipsForElement(elementId)) {
+  /**
+   * Removes what goes with elements or relationships deleted from a top-level folder: their places in nested
+   * folders, the relationships attached to them (transitively), and the diagram objects and view connections
+   * that show any of them.
+   */
+  private removeWithDeletedElements(folderKey: FolderKey, deletedIds: ReadonlySet<string>): void {
+    removeFromNestedFolders(this.model[folderKey].folders || [], deletedIds);
+
+    const removedRelationshipIds = new Set<string>(folderKey === 'relations' ? deletedIds : []);
+    for (const relationship of this.removeRelationshipsForElements(deletedIds)) {
       removedRelationshipIds.add(relationship.id);
     }
     if (removedRelationshipIds.size > 0) {
       removeFromNestedFolders(this.model.relations.folders || [], removedRelationshipIds);
       this.removeViewConnectionsForRelationships(removedRelationshipIds);
     }
-    if (location.folderKey !== 'relations') {
-      this.removeDiagramObjectsForElement(elementId);
+    if (folderKey !== 'relations') {
+      this.removeViewChildren(
+        child => child.type === 'DiagramObject' && child.archimateElement !== undefined && deletedIds.has(child.archimateElement)
+      );
     }
-
-    return true;
   }
 
   /**
@@ -344,12 +352,12 @@ export class Archimate {
     const type = resolveRelationshipType(input.type);
     this.assertRelationshipType(type);
     const relationship = { ...input, type };
-    this.assertRelationshipEndpointExists(relationship.source, 'source');
-    this.assertRelationshipEndpointExists(relationship.target, 'target');
+    const source = this.relationshipEndpoint(relationship.source, 'source');
+    const target = this.relationshipEndpoint(relationship.target, 'target');
     const typeIssue = this.relationshipTypeIssue(
       relationship,
-      this.getElement(relationship.source)!,
-      this.getElement(relationship.target)!,
+      source,
+      target,
       id => this.getElement(id) ?? undefined,
       id => this.findRelationshipsForElement(id)
     );
@@ -669,9 +677,7 @@ export class Archimate {
   private usesCanvasTypes(): boolean {
     const canvasTypes: readonly string[] = canvasModelTypes;
     const hasCanvasType = (children: Child[] | Child | undefined): boolean =>
-      (Array.isArray(children) ? children : children ? [children] : []).some(
-        child => canvasTypes.includes(child.type) || hasCanvasType(child.child)
-      );
+      toArray(children).some(child => canvasTypes.includes(child.type) || hasCanvasType(child.child));
     return (this.model.diagrams.elements || []).some(view => canvasTypes.includes(view.type) || hasCanvasType(view.child));
   }
 
@@ -787,7 +793,7 @@ export class Archimate {
       viewpoint?: string;
     }
   ): View | null {
-    return this.viewManager.generateViewFromElements(name, elementIds, options);
+    return this.withIdScope(() => this.viewManager.generateViewFromElements(name, elementIds, options));
   }
 
   /**
@@ -821,17 +827,14 @@ export class Archimate {
    * Helper method to find elements by type for view generation
    */
   public findElementsByType(elementType: ArchimateModelType): Element[] {
-    const results: Element[] = [];
+    return this.allElements().filter(el => el.type === elementType);
+  }
 
-    for (const folderKey of Object.keys(this.model) as Array<keyof Model>) {
-      const folder = this.model[folderKey];
-      if (folder.elements) {
-        const matchingElements = folder.elements.filter(el => el.type === elementType);
-        results.push(...matchingElements);
-      }
-    }
-
-    return results;
+  /**
+   * Every element, relationship and view, in folder order.
+   */
+  private allElements(): Element[] {
+    return Object.values(this.model).flatMap(folder => folder.elements || []);
   }
 
   /**
@@ -944,12 +947,24 @@ export class Archimate {
 
     location.parent.folders = location.parent.folders!.filter(folder => folder !== location.folder);
 
-    const topLevelIds = new Set((this.model[location.folderKey].elements || []).map(element => element.id));
+    const topLevel = this.model[location.folderKey];
+    const topLevelIds = new Set((topLevel.elements || []).map(element => element.id));
     const collect = (folder: Folder): string[] => [...(folder.elementIds || []), ...(folder.folders || []).flatMap(collect)];
-    for (const id of collect(location.folder as Folder)) {
-      if (!topLevelIds.has(id)) continue;
-      if (location.folderKey === 'diagrams') this.deleteView(id);
-      else this.deleteElement(id);
+    const deletedIds = new Set(collect(location.folder as Folder).filter(id => topLevelIds.has(id)));
+    if (deletedIds.size === 0) return true;
+
+    // Everything is deleted at once, which removes the same as deleting each element or view in turn.
+    if (location.folderKey === 'diagrams') {
+      for (const id of deletedIds) this.viewManager.deleteView(id);
+      this.removeViewChildren(child => child.type === 'DiagramModelReference' && child.model !== undefined && deletedIds.has(child.model));
+    } else {
+      const elements = topLevel.elements!;
+      let kept = 0;
+      for (const element of elements) {
+        if (!deletedIds.has(element.id)) elements[kept++] = element;
+      }
+      elements.length = kept;
+      this.removeWithDeletedElements(location.folderKey, deletedIds);
     }
     return true;
   }
@@ -1115,34 +1130,33 @@ export class Archimate {
   }
 
   /**
-   * Removes relationships attached to the element, and transitively any
+   * Removes relationships attached to the elements, and transitively any
    * relationships attached to those relationships.
    */
-  private removeRelationshipsForElement(elementId: string): Element[] {
-    const removedIds = new Set([elementId]);
-    const removedRelationships: Element[] = [];
-    let remaining = this.model.relations.elements || [];
-
-    let removedAny = true;
-    while (removedAny) {
-      removedAny = false;
-      remaining = remaining.filter(relationship => {
-        const shouldRemove = [relationship.source, relationship.target].some(id => id !== undefined && removedIds.has(id));
-        if (shouldRemove) {
-          removedIds.add(relationship.id);
-          removedRelationships.push(relationship);
-          removedAny = true;
-        }
-        return !shouldRemove;
-      });
+  private removeRelationshipsForElements(elementIds: ReadonlySet<string>): Element[] {
+    const relationships = this.model.relations.elements || [];
+    const relationshipsByEndpoint = new Map<string, Element[]>();
+    for (const relationship of relationships) {
+      for (const endpoint of [relationship.source, relationship.target]) {
+        if (endpoint === undefined) continue;
+        const attached = relationshipsByEndpoint.get(endpoint);
+        if (attached) attached.push(relationship);
+        else relationshipsByEndpoint.set(endpoint, [relationship]);
+      }
     }
 
-    this.model.relations.elements = remaining;
-    return removedRelationships;
-  }
+    const removed = new Set<Element>();
+    const pending = [...elementIds];
+    for (let id = pending.pop(); id !== undefined; id = pending.pop()) {
+      for (const relationship of relationshipsByEndpoint.get(id) ?? []) {
+        if (removed.has(relationship)) continue;
+        removed.add(relationship);
+        pending.push(relationship.id);
+      }
+    }
 
-  private removeDiagramObjectsForElement(elementId: string): void {
-    this.removeViewChildren(child => child.type === 'DiagramObject' && child.archimateElement === elementId);
+    this.model.relations.elements = relationships.filter(relationship => !removed.has(relationship));
+    return relationships.filter(relationship => removed.has(relationship));
   }
 
   private removeDiagramModelReferences(viewId: string): void {
@@ -1158,7 +1172,7 @@ export class Archimate {
     for (const viewElement of this.model.diagrams.elements || []) {
       if (!viewElement.child) continue;
 
-      const children = (Array.isArray(viewElement.child) ? viewElement.child : [viewElement.child]) as StoredViewChild[];
+      const children = toArray(viewElement.child) as StoredViewChild[];
       const removedIds = new Set<string>();
       const keptChildren = this.removeMatchingChildren(children, shouldRemove, removedIds);
       if (removedIds.size === 0) continue;
@@ -1221,7 +1235,7 @@ export class Archimate {
     for (const viewElement of this.model.diagrams.elements || []) {
       if (!viewElement.child) continue;
 
-      const children = (Array.isArray(viewElement.child) ? viewElement.child : [viewElement.child]) as StoredViewChild[];
+      const children = toArray(viewElement.child) as StoredViewChild[];
       const removedConnectionIds = new Set<string>();
       // A connection can be attached to a removed connection that was visited earlier or later.
       while (this.removeViewConnectionsFromChildren(children, relationshipIds, removedConnectionIds));
@@ -1270,7 +1284,7 @@ export class Archimate {
     const sourceConnection = owner.sourceConnection;
     if (!sourceConnection) return false;
 
-    const connections = Array.isArray(sourceConnection) ? sourceConnection : [sourceConnection];
+    const connections = toArray(sourceConnection);
     let removedAny = false;
     for (const connection of connections) {
       if (this.removeLoadedViewConnections(connection, relationshipIds, removedConnectionIds)) removedAny = true;
@@ -1347,26 +1361,6 @@ export class Archimate {
     }
   }
 
-  private childrenHaveId(children: StoredViewChild[], id: string): boolean {
-    for (const child of children) {
-      if (child.id === id) return true;
-
-      for (const connection of this.getSourceConnections(child)) {
-        if (connection.id === id) return true;
-      }
-
-      if (this.childrenHaveId(this.getNestedChildren(child), id)) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  private foldersHaveId(folders: Folder[], id: string): boolean {
-    return folders.some(folder => folder.id === id || this.foldersHaveId(folder.folders || [], id));
-  }
-
   private recordFolderIds(folders: Folder[], path: string, seenIds: Map<string, string>, issues: PendingIssue[]): void {
     for (const [index, folder] of folders.entries()) {
       const folderPath = `${path}.folders[${index}]`;
@@ -1381,11 +1375,15 @@ export class Archimate {
     }
   }
 
-  private assertRelationshipEndpointExists(elementId: string, endpoint: 'source' | 'target'): void {
+  /**
+   * Returns the element or relationship a new relationship starts or ends on; throws when there is none.
+   */
+  private relationshipEndpoint(elementId: string, endpoint: 'source' | 'target'): Element {
     const element = this.getElement(elementId);
     if (!element || elementTypeToFolderKey.get(element.type) === 'diagrams') {
       throw new Error(`Relationship ${endpoint} element "${elementId}" not found in model.`);
     }
+    return element;
   }
 
   private validateElementFields(element: Element, path: string, issues: PendingIssue[]): void {
@@ -1538,7 +1536,7 @@ export class Archimate {
     }
 
     // Unknown relationship and element types are not checked here; they are reported as unknown-type.
-    if (!(Object.values(relationshipMatrixKeys) as string[]).includes(type)) return null;
+    if (!matrixRelationshipTypes.has(type)) return null;
     const isAllowed = (from: Element, to: Element) =>
       allowedRelationshipTypes(from.type, to.type)?.includes(type as ArchimateRelationshipType) ?? true;
 
@@ -1609,7 +1607,7 @@ export class Archimate {
       const viewPath = `folder.diagrams.elements[${viewIndex}]`;
       if (!viewElement.child) continue;
 
-      const children = (Array.isArray(viewElement.child) ? viewElement.child : [viewElement.child]) as StoredViewChild[];
+      const children = toArray(viewElement.child) as StoredViewChild[];
       const childIds = new Set<string>();
       const connectionIds = new Set<string>();
 
@@ -1738,8 +1736,7 @@ export class Archimate {
     const sourceConnections = child.sourceConnections || [];
     const sourceConnection = (child as Child).sourceConnection;
     if (!sourceConnection) return sourceConnections;
-    const parsed = Array.isArray(sourceConnection) ? sourceConnection : [sourceConnection];
-    return [...sourceConnections, ...(parsed as StoredViewConnection[])];
+    return [...sourceConnections, ...(toArray(sourceConnection) as StoredViewConnection[])];
   }
 
   /**
@@ -1756,7 +1753,7 @@ export class Archimate {
     return connections.flatMap(connection => {
       const nested = connection.sourceConnection;
       if (!nested) return [connection];
-      return [connection, ...this.flattenConnections(Array.isArray(nested) ? nested : [nested])];
+      return [connection, ...this.flattenConnections(toArray(nested))];
     });
   }
 

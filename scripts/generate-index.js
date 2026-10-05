@@ -24,13 +24,7 @@ function scanDir(dir, relativePath = '.') {
       if (relativePath === '.' && entry.name === 'node') continue;
       // Recurse into subdirectory
       scanDir(entryPath, path.join(relativePath, entry.name));
-    } else if (
-      entry.isFile() &&
-      entry.name.endsWith('.mts') &&
-      !entry.name.endsWith('.d.ts') &&
-      entry.name !== 'index.mts' &&
-      entry.name !== 'cmd.mts'
-    ) {
+    } else if (entry.isFile() && entry.name.endsWith('.mts') && entry.name !== 'index.mts') {
       const isSchemaFile = relativePath.split(path.sep).includes('schema');
 
       if (!isSchemaFile) {

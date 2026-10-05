@@ -11,6 +11,7 @@ This project adheres to [Keep a CHANGELOG](http://keepachangelog.com/)
 ### Changed
 
 - `Meaning` and `Value` are motivation elements, as in Archi (and ArchiMate since 3.1): `upsertElement()` files new ones in the Motivation folder instead of Business, and `updateElement()` moves an element changed to either type there. They move from `archimateBusinessElementTypes` and `ArchimateBusinessElementType` to `archimateMotivationElementTypes` and `ArchimateMotivationElementType`. Elements already in a file stay in the folder they were loaded from ([#474](https://github.com/localgod/tsarchi/issues/474)).
+- `deleteFolder()` deletes the elements, relationships or views in a folder in one pass instead of one at a time, and `generateViewFromElements()`, `createViewByElementType()` and `createViewByFolder()` collect the model's ids once instead of for every new id. On a model with 10,000 elements and 20,000 relationships, deleting a folder of 1,000 elements takes about 8 ms instead of 1 s, and a view of 1,000 elements about 30 ms instead of 140 ms. Deleting an element or relationship finds the relationships attached to it in a single pass.
 
 ### Fixed
 

@@ -47,6 +47,15 @@ npm install tsarchi
 
 The `tsarchi` entry point holds the model API and runs in Node.js and in the browser. `TsArchi`, which reads and writes files, is imported from `tsarchi/node`.
 
+## Upgrading from 2.x
+
+The next major version changes how views are read:
+
+- `getView()`, `listViews()`, `createView()`, `addDiagramObject()`, `addGroup()`, `addDiagramObjectToGroup()` and `addConnection()` return copies in one shape, for views loaded from a file and views built with the API alike. Nested objects are in `children`, connections in `sourceConnections`, and the ids of the connections ending on an object in `targetConnections` (an array). All three are always present, empty when there is nothing in them. Change a view through the view methods: changing a returned view no longer changes the model.
+- `ViewChild` and `ViewConnection` have every field of `Child` and `SourceConnection` (figure, features, documentation, content, …), and `ViewChild.type` is a string, as loaded views also contain types such as `DiagramModelReference` and `SketchModelSticky`.
+- The stored form, with `child`, `sourceConnection` and space-separated `targetConnections` as in the file, is still available through `getElement(viewId).child`.
+- `Meaning` and `Value` are motivation elements, as in Archi: they move from `archimateBusinessElementTypes` / `ArchimateBusinessElementType` to `archimateMotivationElementTypes` / `ArchimateMotivationElementType`.
+
 ## Upgrading from 1.x
 
 Version 2.0.0 has breaking changes. The main ones:
@@ -321,8 +330,13 @@ console.log(`Found ${allViews.length} views`);
 // List only ArchiMate views
 const archimateViews = model.listViews({ type: "ArchimateDiagramModel" });
 
-// Get specific view
+// Get specific view. Nested objects are in `children`, connections in `sourceConnections`
+// and connection ids ending on an object in `targetConnections`. The view is a copy:
+// change it through the methods below.
 const view = model.getView("view-id");
+for (const child of view?.children ?? []) {
+  console.log(child.type, child.id, child.children.length, child.sourceConnections.length);
+}
 
 // Update diagram object styling
 model.updateDiagramObjectStyle("view-id", "object-id", {

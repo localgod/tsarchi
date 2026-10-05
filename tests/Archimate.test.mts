@@ -1,7 +1,9 @@
 import { describe, it, beforeEach, expect, vi } from 'vitest';
 import { Archimate } from '../src/Archimate.mjs';
 import {
+  archimateBusinessElementTypes,
   archimateModelTypes,
+  archimateMotivationElementTypes,
   archimateRelationshipAliasTypes,
   archimateRelationshipTypes,
   elementTypeToFolderKey,
@@ -132,6 +134,8 @@ describe('Archimate', () => {
       ['Equipment', 'technology'],
       ['Product', 'business'],
       ['Material', 'technology'],
+      ['Meaning', 'motivation'],
+      ['Value', 'motivation'],
     ] as const)('should place %s in the %s folder', (type, folderKey) => {
       archimate.upsertElement({ id: `el-${type}`, name: type, type });
 
@@ -143,6 +147,12 @@ describe('Archimate', () => {
     it.each(['Stage', 'Actor', 'BusinessProduct', 'TechnologyObject'])('should not accept %s, which Archi does not have', type => {
       expect(isArchimateModelType(type)).toBe(false);
       expect(() => archimate.upsertElement({ id: 'el', name: type, type: type as ArchimateElementType })).toThrow();
+    });
+
+    it.each(['Meaning', 'Value'] as const)('should list %s as a motivation element, as Archi does', type => {
+      expect(elementTypeToFolderKey.get(type)).toBe('motivation');
+      expect(archimateMotivationElementTypes).toContain(type);
+      expect(archimateBusinessElementTypes).not.toContain(type);
     });
 
     it("should list exactly the element types in Archi's relationships matrix", () => {

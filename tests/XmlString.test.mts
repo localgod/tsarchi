@@ -35,6 +35,25 @@ describe('Archimate.fromXml / toXml', () => {
     expect(archimate.getId()).toBeTruthy();
   });
 
+  it('keeps text that looks like a number or boolean as written', async () => {
+    const archimate = Archimate.fromXml(await readFile('tests/fixtures/roundtrip/numeric-text.archimate', 'utf8'));
+    const [subfolder] = archimate.getFolders('business');
+    const [dmoCustomer, , note] = archimate.getView('id-view-numbers')!.children as unknown as Record<string, unknown>[];
+    const [connection] = [dmoCustomer.sourceConnection].flat() as Record<string, unknown>[];
+
+    expect(archimate.getPurpose()).toBe('1.0');
+    expect(archimate.getFolder('business').documentation).toBe('007');
+    expect(subfolder.documentation).toBe('2.0');
+    expect(archimate.getElement('id-customer')?.documentation).toBe('1.50');
+    expect(archimate.getElement('id-insurant')?.documentation).toBe('true');
+    expect(archimate.getElement('id-policy')?.documentation).toBe('0x1A');
+    expect(archimate.getElement('id-rel-assignment')?.documentation).toBe('1e3');
+    expect(archimate.getView('id-view-numbers')?.documentation).toBe('10.0');
+    expect(dmoCustomer.documentation).toBe('3.10');
+    expect(connection.documentation).toBe('-0');
+    expect(note.content).toBe('0.10');
+  });
+
   it('loads an empty <archimate:model> element', () => {
     const archimate = Archimate.fromXml('<archimate:model></archimate:model>');
     expect(archimate.listElements()).toEqual([]);

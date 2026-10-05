@@ -16,6 +16,7 @@ This project adheres to [Keep a CHANGELOG](http://keepachangelog.com/)
 ### Fixed
 
 - Text that looks like a number or boolean is kept as written on load and save: `<documentation>1.50</documentation>` used to be read as the number `1.5` (and `0x1A` as `26`, `true` as a boolean) and saved changed. This affected the documentation of elements, relationships, views, folders, diagram objects and connections, a note's content, and the model's purpose. Element and folder `documentation` are now always strings, also when `parse()` is given a schema read with fast-xml-parser's defaults ([#478](https://github.com/localgod/tsarchi/issues/478)).
+- Views built with `createView()`, `addDiagramObject()`, `addGroup()`, `addDiagramObjectToGroup()` and `addConnection()` (or `generateViewFromElements()`) are saved completely. Diagram objects inside a group and every connection added with `addConnection()` used to be missing from `toXml()`, and an object's `targetConnections` is now written as space-separated ids, as Archi does ([#477](https://github.com/localgod/tsarchi/issues/477)).
 - `updateElement()` updates an element or relationship of a type tsarchi does not know (such as `archimate:Bogus1`, kept from the file since 2.1) in place instead of throwing `Unknown element type`. Changing an element to an unknown type still throws. An element whose type is unchanged now stays in the folder it was loaded from, instead of moving to the default folder for its type ([#467](https://github.com/localgod/tsarchi/issues/467)).
 
 ## [2.2.0] - 2026-10-03

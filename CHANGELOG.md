@@ -8,10 +8,17 @@ This project adheres to [Keep a CHANGELOG](http://keepachangelog.com/)
 
 ## [Unreleased]
 
+## [4.0.0] - 2026-10-10
+
 ### Added
 
 - Association relationships have a `directed` field, read from and written to Archi's `directed="true"` attribute. Undirected associations leave it unset, as Archi does. It used to be kept only as `'@_directed'` in `unrecognized` ([#490](https://github.com/localgod/tsarchi/issues/490)).
 - Influence relationships have a `strength` field, read from and written to Archi's free-text `strength` attribute (for example `+` or `--`). It used to be kept only as `'@_strength'` in `unrecognized` ([#490](https://github.com/localgod/tsarchi/issues/490)).
+
+### Changed
+
+- ⚠️ Elements, relationships, nested folders and profiles are returned as copies: `getElement()`, `getRelationship()`, `listElements()`, `listRelationships()`, `findElementsByName()`, `findElementsByType()`, `findElementsByFolder()`, `findElementInFolderByName()`, `findRelationshipsForElement()`, `findRelationshipsBetween()`, `getFolders()`, `getProfiles()`, `getProfile()`, and the return values of `upsertElement()`, `upsertRelationship()` and `updateElement()`. Changing a returned object used to change the model without validation or the folder moves `updateElement()` does. `setProfiles()` stores copies of the profiles it is given ([#493](https://github.com/localgod/tsarchi/issues/493)).
+- ⚠️ `upsertElement()` and `upsertRelationship()` match an existing element or relationship only on `id`. Without an `id` they always add a new one: an element used to be matched on `name` and `type`, and a relationship on `name`, `type`, `source` and `target`, which merged distinct elements that share a name ([#492](https://github.com/localgod/tsarchi/issues/492)).
 
 ### Removed
 
@@ -21,11 +28,6 @@ This project adheres to [Keep a CHANGELOG](http://keepachangelog.com/)
 - ⚠️ `Archimate.parse()` and `serialize()` are private, so the schema shape stays out of the public API. Use `Archimate.fromXml()` and `toXml()` ([#492](https://github.com/localgod/tsarchi/issues/492)).
 - ⚠️ `ViewManager`, `relationshipMatrixKeys` and `relationshipsMatrix` are no longer exported. The view methods on `Archimate` and `allowedRelationshipTypes()` cover them, and `ViewManager.deleteView()` skipped the clean-up that `Archimate.deleteView()` does ([#492](https://github.com/localgod/tsarchi/issues/492)).
 - ⚠️ `generateRandomId()` is private. `generateUniqueId()` returns an id that is not in use ([#492](https://github.com/localgod/tsarchi/issues/492)).
-
-### Changed
-
-- ⚠️ Elements, relationships, nested folders and profiles are returned as copies: `getElement()`, `getRelationship()`, `listElements()`, `listRelationships()`, `findElementsByName()`, `findElementsByType()`, `findElementsByFolder()`, `findElementInFolderByName()`, `findRelationshipsForElement()`, `findRelationshipsBetween()`, `getFolders()`, `getProfiles()`, `getProfile()`, and the return values of `upsertElement()`, `upsertRelationship()` and `updateElement()`. Changing a returned object used to change the model without validation or the folder moves `updateElement()` does. `setProfiles()` stores copies of the profiles it is given ([#493](https://github.com/localgod/tsarchi/issues/493)).
-- ⚠️ `upsertElement()` and `upsertRelationship()` match an existing element or relationship only on `id`. Without an `id` they always add a new one: an element used to be matched on `name` and `type`, and a relationship on `name`, `type`, `source` and `target`, which merged distinct elements that share a name ([#492](https://github.com/localgod/tsarchi/issues/492)).
 
 ### Fixed
 
@@ -194,7 +196,8 @@ Unpublished from npm. Its changes were released in 1.0.2.
 - A `sync` command-line script that loads a model from `-i` and saves it to `-o`.
 - The package contains the TypeScript sources only, without compiled JavaScript.
 
-[Unreleased]: https://github.com/localgod/tsarchi/compare/3.0.0...HEAD
+[Unreleased]: https://github.com/localgod/tsarchi/compare/4.0.0...HEAD
+[4.0.0]: https://github.com/localgod/tsarchi/compare/3.0.0...4.0.0
 [3.0.0]: https://github.com/localgod/tsarchi/compare/2.2.0...3.0.0
 [2.2.0]: https://github.com/localgod/tsarchi/compare/2.1.0...2.2.0
 [2.1.0]: https://github.com/localgod/tsarchi/compare/2.0.0...2.1.0

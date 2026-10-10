@@ -381,6 +381,8 @@ export class Archimate {
       properties: relationship.properties,
     };
     if (relationship.accessType !== undefined) newRelationship.accessType = relationship.accessType;
+    if (relationship.directed !== undefined) newRelationship.directed = relationship.directed;
+    if (relationship.strength !== undefined) newRelationship.strength = relationship.strength;
     if (relationship.profiles !== undefined) newRelationship.profiles = relationship.profiles;
     if (relationship.features !== undefined) newRelationship.features = relationship.features;
     folder.elements.push(newRelationship);

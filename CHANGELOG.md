@@ -8,6 +8,11 @@ This project adheres to [Keep a CHANGELOG](http://keepachangelog.com/)
 
 ## [Unreleased]
 
+### Added
+
+- Association relationships have a `directed` field, read from and written to Archi's `directed="true"` attribute. Undirected associations leave it unset, as Archi does. It used to be kept only as `'@_directed'` in `unrecognized` ([#490](https://github.com/localgod/tsarchi/issues/490)).
+- Influence relationships have a `strength` field, read from and written to Archi's free-text `strength` attribute (for example `+` or `--`). It used to be kept only as `'@_strength'` in `unrecognized` ([#490](https://github.com/localgod/tsarchi/issues/490)).
+
 ## [3.0.0] - 2026-10-05
 
 ### Changed

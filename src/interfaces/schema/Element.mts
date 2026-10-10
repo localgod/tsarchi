@@ -19,6 +19,10 @@ export interface Element {
   '@_background'?: string;
   '@_connectionRouterType'?: string;
   '@_accessType'?: string;
+  /** 'true' on a directed AssociationRelationship. */
+  '@_directed'?: string;
+  /** Free-text strength of an InfluenceRelationship. */
+  '@_strength'?: string;
   /** Junction type ('or'); only on Junction elements. */
   '@_type'?: string;
   documentation?: string;

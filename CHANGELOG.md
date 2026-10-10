@@ -16,6 +16,15 @@ This project adheres to [Keep a CHANGELOG](http://keepachangelog.com/)
 ### Removed
 
 - ⚠️ `generateViewFromElements()`, `createViewByElementType()` and `createViewByFolder()` are removed. Laying out a view is not part of the ArchiMate exchange format, and tsarchi only loads, edits and saves models. Build views with `createView()`, `addDiagramObject()` and `addGroup()` with explicit bounds, and `addConnection()`; `findElementsByType()` and `findElementsByFolder()` still find the elements to place.
+- ⚠️ Short relationship names such as `Flow` are no longer accepted by `upsertRelationship()` and `findRelationshipsBetween()`; use the full type (`FlowRelationship`). `archimateRelationshipAliasTypes`, `ArchimateRelationshipAliasType` and `resolveRelationshipType()` are removed.
+- ⚠️ `TsArchi.load()` and `TsArchi.save()`, which read and wrote the raw XML-shaped schema without validation, are removed. Use `loadModel()` and `saveModel()`.
+- ⚠️ `Archimate.parse()` and `serialize()` are private, so the schema shape stays out of the public API. Use `Archimate.fromXml()` and `toXml()`.
+- ⚠️ `ViewManager`, `relationshipMatrixKeys` and `relationshipsMatrix` are no longer exported. The view methods on `Archimate` and `allowedRelationshipTypes()` cover them, and `ViewManager.deleteView()` skipped the clean-up that `Archimate.deleteView()` does.
+- ⚠️ `generateRandomId()` is private. `generateUniqueId()` returns an id that is not in use.
+
+### Changed
+
+- ⚠️ `upsertElement()` and `upsertRelationship()` match an existing element or relationship only on `id`. Without an `id` they always add a new one: an element used to be matched on `name` and `type`, and a relationship on `name`, `type`, `source` and `target`, which merged distinct elements that share a name.
 
 ## [3.0.0] - 2026-10-05
 

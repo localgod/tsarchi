@@ -3,12 +3,12 @@ import { readFile } from 'fs/promises';
 import { XMLParser } from 'fast-xml-parser';
 import { Archimate } from '../src/Archimate.mjs';
 import type { Schema } from '../src/interfaces/schema/Schema.mjs';
+import { archimateFromSchema, archimateToSchema } from '../src/internal/SchemaAccess.mjs';
 
 async function parseFile(path: string, edit: (xml: string) => string = xml => xml): Promise<Archimate> {
   const xml = edit(await readFile(path, 'utf8'));
   const raw = new XMLParser({ ignoreAttributes: false }).parse(xml) as Schema;
-  const archimate = new Archimate();
-  archimate.parse(raw);
+  const archimate = archimateFromSchema(raw);
   return archimate;
 }
 
@@ -35,7 +35,7 @@ describe('deleteView', () => {
     expect(archimate.deleteView('id-detail')).toBe(true);
 
     expect(archimate.validateModel()).toEqual([]);
-    const saved = collectById(archimate.serialize());
+    const saved = collectById(archimateToSchema(archimate));
     expect(saved.has('id-detail')).toBe(false);
     expect(saved.has('id-ref-overview')).toBe(false);
     expect(saved.has('id-ref-detail')).toBe(false);
@@ -50,12 +50,12 @@ describe('deleteView', () => {
 
   it('should only remove references to the deleted view', async () => {
     const archimate = await parseFile(viewReferences);
-    const before = collectById(archimate.serialize());
+    const before = collectById(archimateToSchema(archimate));
 
     expect(archimate.deleteView('id-missing')).toBe(false);
     expect(archimate.deleteView('id-other')).toBe(true);
 
-    const saved = collectById(archimate.serialize());
+    const saved = collectById(archimateToSchema(archimate));
     expect(saved.has('id-ref-other-view')).toBe(false);
     expect(saved.get('id-ref-detail')).toEqual(before.get('id-ref-detail'));
     expect(archimate.validateModel()).toEqual([]);

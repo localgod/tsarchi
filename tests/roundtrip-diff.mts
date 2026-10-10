@@ -4,6 +4,7 @@ import chalk from 'chalk';
 import { TsArchi } from '../src/node/TsArchi.mjs';
 import { buildArchimateXml } from '../src/internal/Xml.mjs';
 import { compareObjects, normalizeXml } from './roundtrip-utils.mjs';
+import { archimateToSchema } from '../src/internal/SchemaAccess.mjs';
 
 /**
  * Loads each .archimate file, serializes it without validation and reports what did not survive,
@@ -79,7 +80,7 @@ async function diffFile(file: string): Promise<FileReport> {
   }
 
   // Written as toXml() does, without its validation, so files with validation errors are compared too
-  const outputXml = buildArchimateXml(archimate.serialize());
+  const outputXml = buildArchimateXml(archimateToSchema(archimate));
   const inputXml = await readFile(file, 'utf8');
   const details = compareObjects(normalizeXml(inputXml), normalizeXml(outputXml));
 

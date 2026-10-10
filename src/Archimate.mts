@@ -16,7 +16,7 @@ import { ArchimateParseError } from './interfaces/ArchimateParseError.mjs';
 import { Parser } from './internal/Parser.mjs';
 import { parseArchimateXml, buildArchimateXml } from './internal/Xml.mjs';
 import { Serializer } from './internal/Serializer.mjs';
-import { ViewManager } from './ViewManager.mjs';
+import { ViewManager } from './internal/ViewManager.mjs';
 import { removeFromNestedFolders } from './internal/NestedFolders.mjs';
 import { toArray } from './internal/Arrays.mjs';
 import { randomArchiId } from './internal/Ids.mjs';
@@ -29,10 +29,9 @@ import {
   archimateNamespace,
   canvasNamespace,
   allowedRelationshipTypes,
-  resolveRelationshipType,
 } from './constants/archimate-mappings.mjs';
-import { relationshipMatrixKeys } from './constants/relationships-matrix.mjs';
-import type { ArchimateModelType, ArchimateRelationshipAliasType, ArchimateRelationshipType } from './constants/archimate-mappings.mjs';
+import { relationshipMatrixKeys } from './internal/relationships-matrix.mjs';
+import type { ArchimateModelType, ArchimateRelationshipType } from './constants/archimate-mappings.mjs';
 
 /**
  * Codes for models Archi opens and saves, but that break a naming convention or an ArchiMate rule
@@ -109,7 +108,7 @@ export class Archimate {
     }, {} as Model);
   }
 
-  public generateRandomId(): string {
+  private generateRandomId(): string {
     return randomArchiId();
   }
 
@@ -170,9 +169,8 @@ export class Archimate {
 
   /**
    * Inserts or updates an element in the appropriate folder.
-   * Updates are matched on `id` when one is given. Without an `id`, a named
-   * element matches an existing element with the same `name` + `type`;
-   * unnamed elements (such as junctions) are always added.
+   * Updates are matched on `id`. An element without an `id` is always added
+   * with a new one: names are not unique in a model, so they are never matched.
    * Throws when the given `id` is already used by something other than an
    * element in the target folder.
    * Only provided properties are overwritten; others remain unchanged.
@@ -192,18 +190,14 @@ export class Archimate {
       folder.elements = [];
     }
 
-    const existingIndex = element.id
-      ? folder.elements.findIndex(e => e.id === element.id)
-      : element.name
-        ? folder.elements.findIndex(e => e.name === element.name && e.type === element.type)
-        : -1;
+    const existingIndex = element.id ? folder.elements.findIndex(e => e.id === element.id) : -1;
 
     if (existingIndex < 0 && element.id && this.hasId(element.id)) {
       throw new Error(`ID "${element.id}" is already in use.`);
     }
 
     if (existingIndex >= 0) {
-      // The element is updated in place; its id is the one matched or, when matched by name, left out.
+      // The element is updated in place.
       const existingElement = folder.elements[existingIndex];
       return Object.assign(existingElement, this.mergeElementPatch(existingElement, element));
     } else {
@@ -317,12 +311,10 @@ export class Archimate {
   /**
    * Inserts or updates a relationship in the relations folder.
    *
-   * Updates are matched by id when provided, otherwise by name + type + source + target.
+   * Updates are matched on `id`. A relationship without an `id` is always added with a new one.
    */
-  public upsertRelationship(input: RelationshipInput): Relationship {
-    const type = resolveRelationshipType(input.type);
-    this.assertRelationshipType(type);
-    const relationship = { ...input, type };
+  public upsertRelationship(relationship: RelationshipInput): Relationship {
+    this.assertRelationshipType(relationship.type);
     const source = this.relationshipEndpoint(relationship.source, 'source');
     const target = this.relationshipEndpoint(relationship.target, 'target');
     const typeIssue = this.relationshipTypeIssue(
@@ -337,15 +329,7 @@ export class Archimate {
     const folder = this.model.relations;
     if (!folder.elements) folder.elements = [];
 
-    const existingIndex = relationship.id
-      ? folder.elements.findIndex(el => el.id === relationship.id)
-      : folder.elements.findIndex(
-          el =>
-            el.name === relationship.name &&
-            el.type === relationship.type &&
-            el.source === relationship.source &&
-            el.target === relationship.target
-        );
+    const existingIndex = relationship.id ? folder.elements.findIndex(el => el.id === relationship.id) : -1;
 
     if (existingIndex >= 0) {
       const updatedRelationship = this.mergeElementPatch(folder.elements[existingIndex], relationship) as Relationship;
@@ -415,14 +399,14 @@ export class Archimate {
     targetElementId: string,
     options?: {
       bidirectional?: boolean;
-      type?: ArchimateRelationshipType | ArchimateRelationshipAliasType;
+      type?: ArchimateRelationshipType;
     }
   ): Relationship[] {
     return (this.model.relations.elements || []).filter(relationship => {
       const directMatch = relationship.source === sourceElementId && relationship.target === targetElementId;
       const reverseMatch =
         options?.bidirectional === true && relationship.source === targetElementId && relationship.target === sourceElementId;
-      const typeMatch = options?.type ? relationship.type === resolveRelationshipType(options.type) : true;
+      const typeMatch = options?.type ? relationship.type === options.type : true;
 
       return typeMatch && (directMatch || reverseMatch);
     }) as Relationship[];
@@ -494,7 +478,7 @@ export class Archimate {
     }
   }
 
-  public parse(input: ArchimateSchema): void {
+  private parse(input: ArchimateSchema): void {
     const parser = new Parser(this.model);
     this.model = parser.parse(input);
     this.content = parser.parseModelContent(input);
@@ -538,7 +522,7 @@ export class Archimate {
     return buildArchimateXml(this.serialize());
   }
 
-  public serialize(): ArchimateSchema {
+  private serialize(): ArchimateSchema {
     const serializer = new Serializer(this.model);
     return serializer.serialize(this.withRequiredNamespaces(this.modelMetadata), this.xmlMetadata, this.content);
   }

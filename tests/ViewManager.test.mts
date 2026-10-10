@@ -7,6 +7,7 @@ import { XMLParser } from 'fast-xml-parser';
 import type { Schema } from '../src/interfaces/schema/Schema.mjs';
 import type { Folder as SchemaFolder } from '../src/interfaces/schema/Folder.mjs';
 import type { Element as SchemaElement } from '../src/interfaces/schema/Element.mjs';
+import { archimateFromSchema, archimateToSchema } from '../src/internal/SchemaAccess.mjs';
 
 describe('ViewManager', () => {
   let archimate: Archimate;
@@ -213,7 +214,7 @@ describe('ViewManager', () => {
 });
 
 function savedView(archimate: Archimate, viewId: string): SchemaElement | undefined {
-  const folders = archimate.serialize()['archimate:model'].folder as SchemaFolder | SchemaFolder[];
+  const folders = archimateToSchema(archimate)['archimate:model'].folder as SchemaFolder | SchemaFolder[];
   const diagrams = (Array.isArray(folders) ? folders : [folders]).find(folder => folder['@_type'] === 'diagrams');
   const elements = diagrams?.element;
   return (Array.isArray(elements) ? elements : elements ? [elements] : []).find(el => el['@_id'] === viewId);
@@ -239,8 +240,7 @@ describe('view attributes', () => {
 
   it('should return loaded view attributes from getView', async () => {
     const xml = await readFile('tests/fixtures/roundtrip/sketch-and-canvas.archimate', 'utf8');
-    const archimate = new Archimate();
-    archimate.parse(new XMLParser({ ignoreAttributes: false }).parse(xml) as Schema);
+    const archimate = archimateFromSchema(new XMLParser({ ignoreAttributes: false }).parse(xml) as Schema);
 
     expect(archimate.getView('id-sketch')?.background).toBe(1);
     expect(archimate.getView('id-canvas')?.connectionRouterType).toBe(2);
@@ -248,8 +248,7 @@ describe('view attributes', () => {
 
   it('should keep loaded view attributes when the view is edited', async () => {
     const xml = await readFile('tests/fixtures/roundtrip/sketch-and-canvas.archimate', 'utf8');
-    const archimate = new Archimate();
-    archimate.parse(new XMLParser({ ignoreAttributes: false }).parse(xml) as Schema);
+    const archimate = archimateFromSchema(new XMLParser({ ignoreAttributes: false }).parse(xml) as Schema);
     archimate.upsertElement({ id: 'app-1', type: 'ApplicationComponent', name: 'App' });
 
     for (const viewId of ['id-sketch', 'id-canvas']) {
@@ -264,8 +263,7 @@ describe('view attributes', () => {
 describe('listViews', () => {
   async function loadSketchAndCanvas(): Promise<Archimate> {
     const xml = await readFile('tests/fixtures/roundtrip/sketch-and-canvas.archimate', 'utf8');
-    const archimate = new Archimate();
-    archimate.parse(new XMLParser({ ignoreAttributes: false }).parse(xml) as Schema);
+    const archimate = archimateFromSchema(new XMLParser({ ignoreAttributes: false }).parse(xml) as Schema);
     return archimate;
   }
 
@@ -300,8 +298,7 @@ describe('non-view elements in the Views folder', () => {
 </archimate:model>`;
 
   function load(): Archimate {
-    const archimate = new Archimate();
-    archimate.parse(new XMLParser({ ignoreAttributes: false }).parse(xml) as Schema);
+    const archimate = archimateFromSchema(new XMLParser({ ignoreAttributes: false }).parse(xml) as Schema);
     return archimate;
   }
 

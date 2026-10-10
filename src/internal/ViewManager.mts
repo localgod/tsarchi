@@ -1,14 +1,14 @@
-import type { View, ViewGroup, ViewDiagramObject, ViewConnection } from './interfaces/View.mjs';
-import type { Element } from './interfaces/Element.mjs';
-import type { Child } from './interfaces/Child.mjs';
-import type { SourceConnection } from './interfaces/SourceConnection.mjs';
-import type { Model } from './interfaces/Model.mjs';
-import type { Bounds } from './interfaces/Bounds.mjs';
-import { isArchimateViewType } from './constants/archimate-mappings.mjs';
-import { removeFromNestedFolders } from './internal/NestedFolders.mjs';
-import { toArray } from './internal/Arrays.mjs';
-import { randomArchiId } from './internal/Ids.mjs';
-import { splitIds, toViewChild, toViewConnection } from './internal/ViewChildMapper.mjs';
+import type { View, ViewGroup, ViewDiagramObject, ViewConnection } from '../interfaces/View.mjs';
+import type { Element } from '../interfaces/Element.mjs';
+import type { Child } from '../interfaces/Child.mjs';
+import type { SourceConnection } from '../interfaces/SourceConnection.mjs';
+import type { Model } from '../interfaces/Model.mjs';
+import type { Bounds } from '../interfaces/Bounds.mjs';
+import { isArchimateViewType } from '../constants/archimate-mappings.mjs';
+import { removeFromNestedFolders } from './NestedFolders.mjs';
+import { toArray } from './Arrays.mjs';
+import { randomArchiId } from './Ids.mjs';
+import { splitIds, toViewChild, toViewConnection } from './ViewChildMapper.mjs';
 
 /**
  * Creates, reads and edits views. Views are stored in the shape they have in the file (`Child`, with nested `child`,

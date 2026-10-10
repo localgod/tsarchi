@@ -1,7 +1,7 @@
 // src/constants/archimate-mappings.mts
 
 import type { FolderKey } from '../interfaces/Model.mjs';
-import { relationshipMatrixKeys, relationshipsMatrix } from './relationships-matrix.mjs';
+import { relationshipMatrixKeys, relationshipsMatrix } from '../internal/relationships-matrix.mjs';
 
 export const archimateStrategyElementTypes = ['Capability', 'CourseOfAction', 'Resource', 'ValueStream'] as const;
 
@@ -92,25 +92,6 @@ export const archimateRelationshipTypes = [
   'SpecializationRelationship',
 ] as const;
 
-/**
- * Short names that `upsertRelationship()` and `findRelationshipsBetween()` accept in place of a relationship type
- * ("Flow" for "FlowRelationship"). They are not types: Archi never writes them, and they are stored and saved
- * as the full type.
- */
-export const archimateRelationshipAliasTypes = [
-  'Access',
-  'Assignment',
-  'Association',
-  'Composition',
-  'Aggregation',
-  'Flow',
-  'Triggering',
-  'Serving',
-  'Realization',
-  'Influence',
-  'Specialization',
-] as const;
-
 export const archimateViewTypes = ['ArchimateDiagramModel', 'SketchModel', 'CanvasModel'] as const;
 
 /**
@@ -161,7 +142,6 @@ export type ArchimateImplementationMigrationElementType = (typeof archimateImple
 export type ArchimateOtherElementType = (typeof archimateOtherElementTypes)[number];
 export type ArchimateConnectorType = (typeof archimateConnectorTypes)[number];
 export type ArchimateRelationshipType = (typeof archimateRelationshipTypes)[number];
-export type ArchimateRelationshipAliasType = (typeof archimateRelationshipAliasTypes)[number];
 export type ArchimateViewType = (typeof archimateViewTypes)[number];
 export type CanvasModelType = (typeof canvasModelTypes)[number];
 export type ArchimateElementType =
@@ -177,13 +157,6 @@ export type ArchimateModelType = ArchimateElementType | ArchimateRelationshipTyp
 
 export function isArchimateModelType(type: string): type is ArchimateModelType {
   return elementTypeToFolderKey.has(type as ArchimateModelType);
-}
-
-/**
- * Returns the relationship type for a short name ("Flow" -> "FlowRelationship"); any other value is returned unchanged.
- */
-export function resolveRelationshipType(type: string): string {
-  return (archimateRelationshipAliasTypes as readonly string[]).includes(type) ? `${type}Relationship` : type;
 }
 
 export function isArchimateViewType(type: string): type is ArchimateViewType {
@@ -248,7 +221,7 @@ export function toXsiType(type: string): string {
 
 /**
  * Relationship types Archi allows from a source concept to a target concept, read from its relationships
- * matrix (see relationships-matrix.mts). A relationship used as source or target counts as "Relationship".
+ * matrix (see internal/relationships-matrix.mts). A relationship used as source or target counts as "Relationship".
  * Returns null when either type is not in the matrix.
  */
 export function allowedRelationshipTypes(sourceType: string, targetType: string): ArchimateRelationshipType[] | null {

@@ -44,7 +44,7 @@ Run the `verify-archi-format` skill first. You need to know whether it's an attr
 
 - Add the construct to a fixture in `tests/fixtures/roundtrip/`: extend an existing one if it fits the theme, otherwise add `<topic>.archimate` (`git add -f`; it must pass `validateModel()`). `RoundtripFixtures.test.mts` picks it up automatically.
 - If it came from an Archi file, add an assertion in `tests/ArchiFixtures.test.mts` that reads the value through the public API.
-- If the API is public (e.g. `getView()` should expose it), add a unit test for that path too. Remember that `ViewManager.createView` / `elementToView` copy fields explicitly.
+- If the API is public (e.g. `getView()` should expose it), add a unit test for that path too. Remember that `ViewManager.createView` (`src/internal/ViewManager.mts`) / `elementToView` copy fields explicitly.
 - `npm test`, `npm run lint`, `npm run format`, then `npm run roundtrip:diff` again.
 
 ## 5. Document

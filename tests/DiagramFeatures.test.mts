@@ -23,6 +23,20 @@ function viewChildren(archimate: Archimate, viewId: string): Child[] {
   return Array.isArray(child) ? child : child ? [child] : [];
 }
 
+/**
+ * Edits a view's diagram children as code using the API does: change a copy, then write it back with updateElement.
+ */
+function editViewChildren(archimate: Archimate, viewId: string, edit: (children: Child[]) => void): void {
+  const children = viewChildren(archimate, viewId);
+  edit(children);
+  archimate.updateElement(viewId, { child: children });
+}
+
+function firstConnection(child: Child | undefined): SourceConnection {
+  const connection = child?.sourceConnection;
+  return (Array.isArray(connection) ? connection[0] : connection)!;
+}
+
 function schemaChild(archimate: Archimate, viewId: string, childId: string): SchemaChild | undefined {
   const diagrams = archimateToSchema(archimate)['archimate:model'].folder.find(folder => folder['@_type'] === 'diagrams');
   const elements = diagrams?.element as SchemaElement | SchemaElement[] | undefined;
@@ -32,8 +46,7 @@ function schemaChild(archimate: Archimate, viewId: string, childId: string): Sch
 }
 
 function viewConnection(archimate: Archimate, viewId: string, childId: string): SourceConnection {
-  const connection = viewChildren(archimate, viewId).find(child => child.id === childId)?.sourceConnection;
-  return (Array.isArray(connection) ? connection[0] : connection)!;
+  return firstConnection(viewChildren(archimate, viewId).find(child => child.id === childId));
 }
 
 function schemaConnection(archimate: Archimate, viewId: string, childId: string): SchemaSourceConnection | undefined {
@@ -64,10 +77,12 @@ describe('diagram object features', () => {
 
   it('should write typed properties set in code as features, not attributes', async () => {
     const archimate = await parseFile('tests/fixtures/roundtrip/diagram-features.archimate');
-    const insurant = viewChildren(archimate, 'id-view-styled').find(child => child.id === 'id-dmo-insurant')!;
-    insurant.lineAlpha = 64;
-    insurant.iconColor = '#00ff00';
-    insurant.deriveElementLineColor = false;
+    editViewChildren(archimate, 'id-view-styled', children => {
+      const insurant = children.find(child => child.id === 'id-dmo-insurant')!;
+      insurant.lineAlpha = 64;
+      insurant.iconColor = '#00ff00';
+      insurant.deriveElementLineColor = false;
+    });
 
     const saved = schemaChild(archimate, 'id-view-styled', 'id-dmo-insurant');
     expect(saved).not.toHaveProperty('@_lineAlpha');
@@ -81,9 +96,11 @@ describe('diagram object features', () => {
 
   it('should keep the feature order when a typed property changes or is cleared', async () => {
     const archimate = await parseFile('tests/fixtures/roundtrip/diagram-features.archimate');
-    const customer = viewChildren(archimate, 'id-view-styled').find(child => child.id === 'id-dmo-customer')!;
-    customer.lineAlpha = 200;
-    delete customer.gradient;
+    editViewChildren(archimate, 'id-view-styled', children => {
+      const customer = children.find(child => child.id === 'id-dmo-customer')!;
+      customer.lineAlpha = 200;
+      delete customer.gradient;
+    });
 
     expect(schemaFeatures(schemaChild(archimate, 'id-view-styled', 'id-dmo-customer'))).toEqual([
       ['iconColor', '#ff0000'],
@@ -115,9 +132,11 @@ describe('view connection features', () => {
 
   it('should write typed properties set in code as features', async () => {
     const archimate = await parseFile('tests/fixtures/roundtrip/diagram-features.archimate');
-    const connection = viewConnection(archimate, 'id-view-styled', 'id-dmo-insurant');
-    connection.nameVisible = false;
-    connection.textRelativePosition = 1;
+    editViewChildren(archimate, 'id-view-styled', children => {
+      const connection = firstConnection(children.find(child => child.id === 'id-dmo-insurant'));
+      connection.nameVisible = false;
+      connection.textRelativePosition = 1;
+    });
 
     const saved = schemaConnection(archimate, 'id-view-styled', 'id-dmo-insurant');
     expect(saved).not.toHaveProperty('@_nameVisible');
@@ -130,9 +149,11 @@ describe('view connection features', () => {
 
   it('should keep the feature order when a typed property changes or is cleared', async () => {
     const archimate = await parseFile('tests/fixtures/roundtrip/diagram-features.archimate');
-    const connection = viewConnection(archimate, 'id-view-styled', 'id-dmo-customer');
-    connection.textRelativePosition = 16;
-    delete connection.nameVisible;
+    editViewChildren(archimate, 'id-view-styled', children => {
+      const connection = firstConnection(children.find(child => child.id === 'id-dmo-customer'));
+      connection.textRelativePosition = 16;
+      delete connection.nameVisible;
+    });
 
     expect(schemaFeatures(schemaConnection(archimate, 'id-view-styled', 'id-dmo-customer'))).toEqual([
       ['textRelativePosition', '16'],

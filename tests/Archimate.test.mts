@@ -317,11 +317,11 @@ describe('Archimate', () => {
       try {
         const inserted = archimate.upsertElement({ name: 'App', type: 'ApplicationComponent' });
         expect(inserted.id).toMatch(/^id-/);
-        expect(archimate.getElement(inserted.id)).toBe(inserted);
+        expect(archimate.getElement(inserted.id)).toEqual(inserted);
 
         const updated = archimate.upsertElement({ id: inserted.id, name: 'Renamed', type: 'ApplicationComponent' });
-        expect(updated).toBe(inserted);
-        expect(updated.name).toBe('Renamed');
+        expect(updated).toEqual({ ...inserted, name: 'Renamed' });
+        expect(archimate.getElement(inserted.id)?.name).toBe('Renamed');
 
         expect(log).not.toHaveBeenCalled();
       } finally {

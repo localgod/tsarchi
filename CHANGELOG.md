@@ -24,6 +24,7 @@ This project adheres to [Keep a CHANGELOG](http://keepachangelog.com/)
 
 ### Changed
 
+- ⚠️ Elements, relationships, nested folders and profiles are returned as copies: `getElement()`, `getRelationship()`, `listElements()`, `listRelationships()`, `findElementsByName()`, `findElementsByType()`, `findElementsByFolder()`, `findElementInFolderByName()`, `findRelationshipsForElement()`, `findRelationshipsBetween()`, `getFolders()`, `getProfiles()`, `getProfile()`, and the return values of `upsertElement()`, `upsertRelationship()` and `updateElement()`. Changing a returned object used to change the model without validation or the folder moves `updateElement()` does. `setProfiles()` stores copies of the profiles it is given ([#493](https://github.com/localgod/tsarchi/issues/493)).
 - ⚠️ `upsertElement()` and `upsertRelationship()` match an existing element or relationship only on `id`. Without an `id` they always add a new one: an element used to be matched on `name` and `type`, and a relationship on `name`, `type`, `source` and `target`, which merged distinct elements that share a name ([#492](https://github.com/localgod/tsarchi/issues/492)).
 
 ### Fixed

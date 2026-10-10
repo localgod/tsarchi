@@ -171,88 +171,6 @@ describe('ViewManager', () => {
     });
   });
 
-  describe('generateViewFromElements', () => {
-    it('should generate a view with grid layout', () => {
-      const view = archimate.generateViewFromElements('Generated View', ['app-1', 'app-2', 'bp-1'], {
-        layoutType: 'grid',
-        includeRelationships: true,
-      });
-
-      expect(view).toBeDefined();
-      expect(view?.name).toBe('Generated View');
-      expect(view?.children).toHaveLength(3);
-
-      // Check that elements are positioned in grid
-      const children = view?.children as any[];
-      expect(children[0].bounds.x).toBe(50);
-      expect(children[0].bounds.y).toBe(50);
-      expect(children[1].bounds.x).toBe(190); // 50 + 120 + 20 padding
-      expect(children[1].bounds.y).toBe(50);
-    });
-
-    it('should generate a view with circular layout', () => {
-      const view = archimate.generateViewFromElements('Circular View', ['app-1', 'app-2'], { layoutType: 'circular' });
-
-      expect(view).toBeDefined();
-      expect(view?.children).toHaveLength(2);
-
-      // Check that elements are positioned in circle
-      const children = view?.children as any[];
-      // For 2 elements: radius = max(150, 2*20) = 150, center = 300
-      // Element 0: cos(0) * 150 + 300 = 450
-      // Element 1: cos(π) * 150 + 300 = 150
-      expect(children[0].bounds.x).toBeCloseTo(450, 0); // cos(0) * radius + center
-      expect(children[1].bounds.x).toBeCloseTo(150, 0); // cos(π) * radius + center
-    });
-
-    it('should include relationship connections when requested', () => {
-      const view = archimate.generateViewFromElements('Connected View', ['app-1', 'app-2'], { includeRelationships: true });
-
-      expect(view).toBeDefined();
-
-      // Check that connections were created
-      const children = view?.children as any[];
-      const sourceObject = children.find(c => c.archimateElement === 'app-1');
-      expect(sourceObject.sourceConnections).toHaveLength(1);
-      expect(sourceObject.sourceConnections[0].archimateRelationship).toBe('rel-1');
-    });
-  });
-
-  describe('createViewByElementType', () => {
-    it('should create a view with all elements of specified type', () => {
-      const view = archimate.createViewByElementType('Application Components', 'ApplicationComponent');
-
-      expect(view).toBeDefined();
-      expect(view?.name).toBe('Application Components');
-      expect(view?.children).toHaveLength(2);
-
-      const children = view?.children as any[];
-      const elementIds = children.map(c => c.archimateElement);
-      expect(elementIds).toContain('app-1');
-      expect(elementIds).toContain('app-2');
-    });
-
-    it('should return null for non-existent element type', () => {
-      const view = archimate.createViewByElementType('Non-existent', 'NonExistentType');
-      expect(view).toBeNull();
-    });
-  });
-
-  describe('createViewByFolder', () => {
-    it('should create a view with all elements from specified folder', () => {
-      const view = archimate.createViewByFolder('Application Layer', 'application');
-
-      expect(view).toBeDefined();
-      expect(view?.name).toBe('Application Layer');
-      expect(view?.children).toHaveLength(2);
-    });
-
-    it('should return null for empty folder', () => {
-      const view = archimate.createViewByFolder('Strategy Layer', 'strategy');
-      expect(view).toBeNull();
-    });
-  });
-
   describe('updateDiagramObjectStyle', () => {
     it('should update diagram object visual properties', () => {
       const view = archimate.createView('Test View');
@@ -317,15 +235,6 @@ describe('view attributes', () => {
 
     expect(archimate.getView(view.id)).toMatchObject({ viewpoint: 'layered', background: 1 });
     expect(archimate.listViews()[0]).toMatchObject({ viewpoint: 'layered', background: 1 });
-  });
-
-  it('should save the viewpoint of a generated view', () => {
-    const archimate = new Archimate();
-    archimate.upsertElement({ id: 'app-1', type: 'ApplicationComponent', name: 'App' });
-    const view = archimate.generateViewFromElements('Generated', ['app-1'], { viewpoint: 'application_structure' });
-
-    expect(view?.viewpoint).toBe('application_structure');
-    expect(savedView(archimate, view!.id)?.['@_viewpoint']).toBe('application_structure');
   });
 
   it('should return loaded view attributes from getView', async () => {

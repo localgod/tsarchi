@@ -76,9 +76,6 @@ export class Archimate {
 
   private viewManager: ViewManager;
 
-  /** Every id in the model while a bulk operation runs, so generateUniqueId does not walk the model for each new id. */
-  private idScope?: Set<string>;
-
   public constructor() {
     this.content = {};
     this.xmlMetadata = this.defaultXmlMetadata();
@@ -134,26 +131,11 @@ export class Archimate {
   public generateUniqueId(): string {
     let id = this.generateRandomId();
 
-    while (this.idScope ? this.idScope.has(id) : this.hasId(id)) {
+    while (this.hasId(id)) {
       id = this.generateRandomId();
     }
 
-    this.idScope?.add(id);
     return id;
-  }
-
-  /**
-   * Runs a bulk operation with the model's ids collected once. Only use it for operations that add ids through
-   * generateUniqueId.
-   */
-  private withIdScope<T>(run: () => T): T {
-    if (this.idScope) return run();
-    this.idScope = new Set(this.modelIds());
-    try {
-      return run();
-    } finally {
-      this.idScope = undefined;
-    }
   }
 
   /**
@@ -773,21 +755,6 @@ export class Archimate {
   }
 
   /**
-   * Auto-generates a view based on elements and their relationships
-   */
-  public generateViewFromElements(
-    name: string,
-    elementIds: string[],
-    options?: {
-      includeRelationships?: boolean;
-      layoutType?: 'hierarchical' | 'circular' | 'grid';
-      viewpoint?: string;
-    }
-  ): View | null {
-    return this.withIdScope(() => this.viewManager.generateViewFromElements(name, elementIds, options));
-  }
-
-  /**
    * Updates visual properties of a diagram object
    */
   public updateDiagramObjectStyle(
@@ -815,7 +782,7 @@ export class Archimate {
   }
 
   /**
-   * Helper method to find elements by type for view generation
+   * Finds the elements, relationships and views of a type
    */
   public findElementsByType(elementType: ArchimateModelType): Element[] {
     return this.allElements().filter(el => el.type === elementType);
@@ -829,7 +796,7 @@ export class Archimate {
   }
 
   /**
-   * Helper method to find elements by folder for view generation
+   * Finds the elements, relationships or views in a top-level folder, including its nested folders
    */
   public findElementsByFolder(folderKey: FolderKey): Element[] {
     const folder = this.model[folderKey];
@@ -1032,42 +999,6 @@ export class Archimate {
       ...(properties && { properties: new Map(properties) }),
       ...(features && { features: new Map(features) }),
     };
-  }
-
-  /**
-   * Creates a view showing all elements of a specific type
-   */
-  public createViewByElementType(
-    viewName: string,
-    elementType: ArchimateModelType,
-    options?: {
-      layoutType?: 'hierarchical' | 'circular' | 'grid';
-      includeRelationships?: boolean;
-    }
-  ): View | null {
-    const elements = this.findElementsByType(elementType);
-    if (elements.length === 0) return null;
-
-    const elementIds = elements.map(el => el.id);
-    return this.generateViewFromElements(viewName, elementIds, options);
-  }
-
-  /**
-   * Creates a view showing all elements from a specific folder
-   */
-  public createViewByFolder(
-    viewName: string,
-    folderKey: FolderKey,
-    options?: {
-      layoutType?: 'hierarchical' | 'circular' | 'grid';
-      includeRelationships?: boolean;
-    }
-  ): View | null {
-    const elements = this.findElementsByFolder(folderKey);
-    if (elements.length === 0) return null;
-
-    const elementIds = elements.map(el => el.id);
-    return this.generateViewFromElements(viewName, elementIds, options);
   }
 
   private findElementLocationById(elementId: string): {

@@ -13,6 +13,10 @@ This project adheres to [Keep a CHANGELOG](http://keepachangelog.com/)
 - Association relationships have a `directed` field, read from and written to Archi's `directed="true"` attribute. Undirected associations leave it unset, as Archi does. It used to be kept only as `'@_directed'` in `unrecognized` ([#490](https://github.com/localgod/tsarchi/issues/490)).
 - Influence relationships have a `strength` field, read from and written to Archi's free-text `strength` attribute (for example `+` or `--`). It used to be kept only as `'@_strength'` in `unrecognized` ([#490](https://github.com/localgod/tsarchi/issues/490)).
 
+### Removed
+
+- ⚠️ `generateViewFromElements()`, `createViewByElementType()` and `createViewByFolder()` are removed. Laying out a view is not part of the ArchiMate exchange format, and tsarchi only loads, edits and saves models. Build views with `createView()`, `addDiagramObject()` and `addGroup()` with explicit bounds, and `addConnection()`; `findElementsByType()` and `findElementsByFolder()` still find the elements to place.
+
 ## [3.0.0] - 2026-10-05
 
 ### Changed

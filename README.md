@@ -35,7 +35,6 @@ TSArchi provides a TypeScript-based tool for parsing, modifying, and saving `.ar
 - **Element Upsert**: Smart insert/update operations that preserve existing IDs while updating properties.
 - **Comprehensive Element Support**: Full support for all ArchiMate 3.x element types and relationships.
 - **Advanced View Management**: Create, update, and manage ArchiMate diagrams with visual positioning and styling.
-- **Auto-layout Capabilities**: Generate views automatically with grid, circular, or hierarchical layouts.
 
 ## Installation
 
@@ -316,31 +315,6 @@ model.addDiagramObjectToGroup(view.id, group.id, "another-element-id", {
   y: 20,
   width: 120,
   height: 55,
-});
-```
-
-### Auto-generating Views
-
-Create views automatically from existing model elements:
-
-```typescript
-// Generate view from specific elements
-const elementIds = ["comp-1", "comp-2", "comp-3"];
-const generatedView = model.generateViewFromElements("Generated View", elementIds, {
-  layoutType: "grid",
-  includeRelationships: true,
-  viewpoint: "application",
-});
-
-// Create view from all elements of a specific type
-const appView = model.createViewByElementType("Application Components", "ApplicationComponent", {
-  layoutType: "circular",
-  includeRelationships: true,
-});
-
-// Create view from all elements in a folder
-const businessView = model.createViewByFolder("Business Overview", "business", {
-  layoutType: "hierarchical",
 });
 ```
 

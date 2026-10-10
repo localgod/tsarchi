@@ -5,7 +5,7 @@ description: Measure what tsarchi loses when loading and saving an .archimate fi
 
 # Round-trip diff
 
-`tests/roundtrip-diff.mts` loads each file, calls `Archimate.serialize()` directly (no `assertValidModel`), and compares input and output with the same `compareObjects` used by the round-trip tests. Differences are grouped by kind and by the last two path segments, so one lost attribute across 60 elements shows as one line.
+`tests/roundtrip-diff.mts` loads each file, calls `archimateToSchema()` from `src/internal/SchemaAccess.mts` (no `assertValidModel`), and compares input and output with the same `compareObjects` used by the round-trip tests. Differences are grouped by kind and by the last two path segments, so one lost attribute across 60 elements shows as one line.
 
 ## Run
 

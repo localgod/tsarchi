@@ -3,18 +3,18 @@ import { readFile } from 'fs/promises';
 import { XMLParser } from 'fast-xml-parser';
 import { Archimate } from '../src/Archimate.mjs';
 import type { Schema } from '../src/interfaces/schema/Schema.mjs';
+import { archimateFromSchema, archimateToSchema } from '../src/internal/SchemaAccess.mjs';
 
 const fixture = 'tests/fixtures/roundtrip/features-and-unrecognized.archimate';
 
 async function parseFixture(): Promise<Archimate> {
   const raw = new XMLParser({ ignoreAttributes: false }).parse(await readFile(fixture, 'utf8')) as Schema;
-  const archimate = new Archimate();
-  archimate.parse(raw);
+  const archimate = archimateFromSchema(raw);
   return archimate;
 }
 
 function businessFolder(archimate: Archimate) {
-  return archimate.serialize()['archimate:model'].folder.find(folder => folder['@_type'] === 'business')!;
+  return archimateToSchema(archimate)['archimate:model'].folder.find(folder => folder['@_type'] === 'business')!;
 }
 
 describe('features on folders, elements and relationships', () => {

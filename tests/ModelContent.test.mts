@@ -3,13 +3,13 @@ import { readFile } from 'fs/promises';
 import { XMLBuilder, XMLParser } from 'fast-xml-parser';
 import { Archimate } from '../src/Archimate.mjs';
 import type { Schema } from '../src/interfaces/schema/Schema.mjs';
+import { archimateFromSchema, archimateToSchema } from '../src/internal/SchemaAccess.mjs';
 
 const fixture = 'tests/fixtures/roundtrip/model-content.archimate';
 
 function parseXml(xml: string): Archimate {
   const raw = new XMLParser({ ignoreAttributes: false }).parse(xml) as Schema;
-  const archimate = new Archimate();
-  archimate.parse(raw);
+  const archimate = archimateFromSchema(raw);
   return archimate;
 }
 
@@ -29,7 +29,7 @@ function modelWith(content: string): string {
 }
 
 function modelKeys(archimate: Archimate): string[] {
-  return Object.keys(archimate.serialize()['archimate:model']).filter(key => !key.startsWith('@_'));
+  return Object.keys(archimateToSchema(archimate)['archimate:model']).filter(key => !key.startsWith('@_'));
 }
 
 describe('model-level content', () => {
@@ -71,7 +71,7 @@ describe('model-level content', () => {
     archimate.setProperties(new Map([['p', '1']]));
     archimate.updateElement('id-customer', { profiles: 'id-profile' });
 
-    const model = archimate.serialize()['archimate:model'];
+    const model = archimateToSchema(archimate)['archimate:model'];
     expect(modelKeys(archimate)).toEqual(['folder', 'property', 'purpose', 'metadata', 'profile']);
     expect(model.property).toEqual([{ '@_key': 'p', '@_value': '1' }]);
     expect(model.metadata).toEqual({ entry: [{ '@_key': 'k', '@_value': 'v' }] });
@@ -96,7 +96,9 @@ describe('model-level content', () => {
     const archimate = parseXml(modelWith('<metadata/>'));
 
     expect(archimate.getMetadata().size).toBe(0);
-    expect(new XMLBuilder({ ignoreAttributes: false, suppressEmptyNode: true }).build(archimate.serialize())).toContain('<metadata/>');
+    expect(new XMLBuilder({ ignoreAttributes: false, suppressEmptyNode: true }).build(archimateToSchema(archimate))).toContain(
+      '<metadata/>'
+    );
   });
 
   it('should keep attributes and child elements of the model it does not recognise', () => {
@@ -106,7 +108,7 @@ describe('model-level content', () => {
   <futureElement key="x"><nested>text</nested></futureElement>`).replace('version="5.0.0"', 'version="5.0.0" futureAttribute="kept"')
     );
 
-    const model = archimate.serialize()['archimate:model'] as unknown as Record<string, unknown>;
+    const model = archimateToSchema(archimate)['archimate:model'] as unknown as Record<string, unknown>;
     expect(model['@_futureAttribute']).toBe('kept');
     expect(model.feature).toEqual([
       { '@_name': 'a', '@_value': '1' },

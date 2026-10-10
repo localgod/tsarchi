@@ -6,13 +6,13 @@ import type { Schema } from '../src/interfaces/schema/Schema.mjs';
 import type { Folder as SchemaFolder } from '../src/interfaces/schema/Folder.mjs';
 import type { Folder } from '../src/interfaces/Folder.mjs';
 import type { FolderKey, Model } from '../src/interfaces/Model.mjs';
-import { ViewManager } from '../src/ViewManager.mjs';
+import { ViewManager } from '../src/internal/ViewManager.mjs';
+import { archimateFromSchema, archimateToSchema } from '../src/internal/SchemaAccess.mjs';
 
 async function parseFile(path: string): Promise<Archimate> {
   const xml = await readFile(path, 'utf8');
   const raw = new XMLParser({ ignoreAttributes: false }).parse(xml) as Schema;
-  const archimate = new Archimate();
-  archimate.parse(raw);
+  const archimate = archimateFromSchema(raw);
   return archimate;
 }
 
@@ -47,8 +47,7 @@ describe('top-level folders', () => {
     <element xsi:type="archimate:ArchimateDiagramModel" name="View" id="id-view"/>
   </folder>
 </archimate:model>`;
-    const archimate = new Archimate();
-    archimate.parse(new XMLParser({ ignoreAttributes: false }).parse(xml) as Schema);
+    const archimate = archimateFromSchema(new XMLParser({ ignoreAttributes: false }).parse(xml) as Schema);
 
     expect(archimate.getFolder('diagrams')).toEqual({ id: 'id-views', name: 'Views' });
     expect(archimate.getElement('id-view')?.type).toBe('ArchimateDiagramModel');
@@ -107,7 +106,7 @@ describe('nested folders', () => {
     archimate.deleteElement('id-old-portal');
 
     expect(archimate.getFolders('application')[0].folders?.[0].elementIds).toEqual([]);
-    const legacy = findSchemaFolder(archimate.serialize()['archimate:model'].folder, 'id-folder-legacy');
+    const legacy = findSchemaFolder(archimateToSchema(archimate)['archimate:model'].folder, 'id-folder-legacy');
     expect(legacy).toBeDefined();
     expect(elementIds(legacy)).toEqual([]);
   });
@@ -153,7 +152,7 @@ describe('nested folders', () => {
 
     archimate.updateElement('id-portal', { name: 'Renamed Portal' });
 
-    const portals = findSchemaFolder(archimate.serialize()['archimate:model'].folder, 'id-folder-portals');
+    const portals = findSchemaFolder(archimateToSchema(archimate)['archimate:model'].folder, 'id-folder-portals');
     expect(elementIds(portals)).toEqual(['id-portal', 'id-portal-service']);
   });
 
@@ -163,7 +162,7 @@ describe('nested folders', () => {
     archimate.updateElement('id-portal', { type: 'Node' });
 
     expect(archimate.getFolders('application')[0].elementIds).toEqual(['id-portal-service']);
-    const folders = archimate.serialize()['archimate:model'].folder;
+    const folders = archimateToSchema(archimate)['archimate:model'].folder;
     expect(elementIds(folders.find(folder => folder['@_type'] === 'technology'))).toEqual(['id-portal']);
   });
 
@@ -172,7 +171,7 @@ describe('nested folders', () => {
 
     archimate.upsertElement({ id: 'id-new', name: 'New App', type: 'ApplicationComponent' });
 
-    const folders = archimate.serialize()['archimate:model'].folder;
+    const folders = archimateToSchema(archimate)['archimate:model'].folder;
     expect(elementIds(folders.find(folder => folder['@_type'] === 'application'))).toEqual(['id-crm', 'id-new']);
   });
 });
@@ -225,7 +224,7 @@ describe('nested folder details', () => {
     });
 
     expect(details).toEqual(archimate.getFolderById('id-folder-legacy'));
-    const legacy = findSchemaFolder(archimate.serialize()['archimate:model'].folder, 'id-folder-legacy') as unknown as Record<
+    const legacy = findSchemaFolder(archimateToSchema(archimate)['archimate:model'].folder, 'id-folder-legacy') as unknown as Record<
       string,
       unknown
     >;
@@ -243,7 +242,7 @@ describe('nested folder details', () => {
     archimate.updateFolderById('id-folder-portals', { documentation: undefined, properties: new Map() });
 
     expect(archimate.getFolderById('id-folder-portals')).toEqual({ id: 'id-folder-portals', name: 'Portals' });
-    const portals = findSchemaFolder(archimate.serialize()['archimate:model'].folder, 'id-folder-portals') as unknown as Record<
+    const portals = findSchemaFolder(archimateToSchema(archimate)['archimate:model'].folder, 'id-folder-portals') as unknown as Record<
       string,
       unknown
     >;
@@ -289,7 +288,7 @@ describe('creating, moving and deleting nested folders', () => {
     expect(archimate.getFolderById(created.id)).toEqual(created);
     expect(archimate.getFolders('application')[0].folders?.map(folder => folder.id)).toEqual(['id-folder-legacy', created.id]);
     expect(archimate.validateModel()).toEqual([]);
-    const saved = findSchemaFolder(archimate.serialize()['archimate:model'].folder, created.id);
+    const saved = findSchemaFolder(archimateToSchema(archimate)['archimate:model'].folder, created.id);
     expect(saved).toMatchObject({ '@_name': 'Mobile', '@_id': created.id, documentation: 'Apps.' });
   });
 
@@ -319,7 +318,7 @@ describe('creating, moving and deleting nested folders', () => {
     const [portals, empty] = archimate.getFolders('application');
     expect(portals.folders).toEqual([]);
     expect(empty.folders?.map(folder => folder.id)).toEqual(['id-folder-legacy']);
-    const legacy = findSchemaFolder(archimate.serialize()['archimate:model'].folder, 'id-folder-legacy');
+    const legacy = findSchemaFolder(archimateToSchema(archimate)['archimate:model'].folder, 'id-folder-legacy');
     expect(elementIds(legacy)).toEqual(['id-old-portal']);
 
     archimate.moveFolder('id-folder-legacy', 'id-nested-application');
@@ -381,7 +380,7 @@ describe('creating, moving and deleting nested folders', () => {
     expect(empty.elementIds).toEqual(['id-crm']);
     expect(portals.elementIds).toEqual(['id-portal-service']);
     expect(portals.folders?.[0].elementIds).toEqual(['id-portal']);
-    const folders = archimate.serialize()['archimate:model'].folder;
+    const folders = archimateToSchema(archimate)['archimate:model'].folder;
     expect(elementIds(folders.find(folder => folder['@_type'] === 'application'))).toEqual(['id-old-portal']);
     expect(elementIds(findSchemaFolder(folders, 'id-folder-empty'))).toEqual(['id-crm']);
   });

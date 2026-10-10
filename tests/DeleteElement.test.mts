@@ -3,12 +3,12 @@ import { readFile } from 'fs/promises';
 import { XMLParser } from 'fast-xml-parser';
 import { Archimate } from '../src/Archimate.mjs';
 import type { Schema } from '../src/interfaces/schema/Schema.mjs';
+import { archimateFromSchema, archimateToSchema } from '../src/internal/SchemaAccess.mjs';
 
 async function parseFile(path: string): Promise<Archimate> {
   const xml = await readFile(path, 'utf8');
   const raw = new XMLParser({ ignoreAttributes: false }).parse(xml) as Schema;
-  const archimate = new Archimate();
-  archimate.parse(raw);
+  const archimate = archimateFromSchema(raw);
   return archimate;
 }
 
@@ -35,7 +35,7 @@ describe('deleteElement', () => {
     expect(archimate.deleteElement('id-portal')).toBe(true);
 
     expect(archimate.validateModel()).toEqual([]);
-    const saved = collectById(archimate.serialize());
+    const saved = collectById(archimateToSchema(archimate));
     for (const id of [
       'id-portal-object',
       'id-api-object',
@@ -64,7 +64,7 @@ describe('deleteElement', () => {
     expect(archimate.deleteElement('id-server')).toBe(true);
 
     expect(archimate.validateModel()).toEqual([]);
-    const saved = collectById(archimate.serialize());
+    const saved = collectById(archimateToSchema(archimate));
     expect(saved.has('id-server-object')).toBe(false);
     expect(saved.has('id-nested-portal-object')).toBe(false);
     expect(saved.has('id-portal-object')).toBe(true);

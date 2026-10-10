@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, type Mock } from 'vitest';
 import { TsArchi } from '../src/node/TsArchi.mjs';
 import { readFile, writeFile } from 'fs/promises';
-import type { Schema } from '../src/interfaces/schema/Schema.mjs';
 
 vi.mock('fs/promises', () => ({
   readFile: vi.fn(),
@@ -28,60 +27,16 @@ describe('TsArchi XML Parsing and Manipulation', () => {
     </not-archimate>
   `;
 
-  it('should successfully parse valid Archimate XML and contain the archimate:model section', async () => {
+  it('should load the elements and folders of an .archimate file', async () => {
     (readFile as Mock).mockResolvedValue(validArchimateXml);
 
     const tsArchi = new TsArchi();
-    const parsedData = (await tsArchi.load('dummy/path/to/model.xml')) as Schema;
+    const model = await tsArchi.loadModel('dummy/path/to/model.archimate');
 
-    expect(parsedData).toBeDefined();
-    expect(parsedData).toHaveProperty('archimate:model');
-    expect(parsedData['archimate:model']).toBeDefined();
-  });
-
-  it('should contain specific folders within the archimate:model section', async () => {
-    (readFile as Mock).mockResolvedValue(validArchimateXml);
-
-    const tsArchi = new TsArchi();
-    const parsedData = (await tsArchi.load('dummy/path/to/model.xml')) as Schema;
-
-    expect(parsedData['archimate:model']).toHaveProperty('folder');
-    expect(Array.isArray(parsedData['archimate:model'].folder)).toBe(true);
-    expect(parsedData['archimate:model'].folder.length).toBeGreaterThan(0);
-
-    const folders = parsedData['archimate:model'].folder;
-    const businessFolder = folders.find((f: any) => f['@_type'] === 'business');
-    const applicationFolder = folders.find((f: any) => f['@_type'] === 'application');
-    const technologyFolder = folders.find((f: any) => f['@_type'] === 'technology');
-
-    expect(businessFolder).toBeDefined();
-    expect(businessFolder).toHaveProperty('@_name', 'Business');
-    expect(applicationFolder).toBeDefined();
-    expect(applicationFolder).toHaveProperty('@_name', 'Application');
-    expect(technologyFolder).toBeDefined();
-    expect(technologyFolder).toHaveProperty('@_name', 'Technology & Physical');
-  });
-
-  it('should contain elements within a specific folder', async () => {
-    (readFile as Mock).mockResolvedValue(validArchimateXml);
-
-    const tsArchi = new TsArchi();
-    const parsedData = (await tsArchi.load('dummy/path/to/model.xml')) as Schema;
-    const folders = parsedData['archimate:model'].folder;
-    const businessFolder = folders.find((f: any) => f['@_type'] === 'business');
-
-    expect(businessFolder).toBeDefined();
-    expect(businessFolder).toHaveProperty('element');
-
-    const elements = Array.isArray(businessFolder!.element) ? businessFolder!.element : [businessFolder!.element];
-
-    expect(Array.isArray(elements)).toBe(true);
-
-    expect(elements.length).toBeGreaterThan(0);
-    const testActorElement = elements.find((e: any) => e['@_name'] === 'Test Actor');
-    expect(testActorElement).toBeDefined();
-    expect(testActorElement).toHaveProperty('@_xsi:type', 'archimate:BusinessActor');
-    expect(testActorElement).toHaveProperty('@_id', 'id-test-actor');
+    expect(model.getName()).toBe('Test Model');
+    expect(model.getElement('id-test-actor')).toMatchObject({ type: 'BusinessActor', name: 'Test Actor' });
+    expect(model.getFolder('technology').name).toBe('Technology & Physical');
+    expect(tsArchi.getModel()).toBe(model);
   });
 
   it('should throw an ArchimateParseError for XML that is not an Archi model', async () => {
@@ -89,7 +44,7 @@ describe('TsArchi XML Parsing and Manipulation', () => {
 
     const tsArchi = new TsArchi();
 
-    await expect(tsArchi.load('dummy/path/to/invalid.xml')).rejects.toMatchObject({
+    await expect(tsArchi.loadModel('dummy/path/to/invalid.xml')).rejects.toMatchObject({
       name: 'ArchimateParseError',
       kind: 'not-archimate',
     });
@@ -112,7 +67,6 @@ describe('TsArchi XML Parsing and Manipulation', () => {
 
     const tsArchi = new TsArchi();
 
-    await expect(tsArchi.load('dummy/path/to/nonexistent.xml')).rejects.toThrow('File not found');
     await expect(tsArchi.loadModel('dummy/path/to/nonexistent.xml')).rejects.toThrow('File not found');
   });
 

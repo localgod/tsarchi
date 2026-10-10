@@ -1,6 +1,6 @@
 {
   "$schema": "./node_modules/oxfmt/configuration_schema.json",
-  "ignorePatterns": ["src/index.mts", "src/constants/relationships-matrix.mts"],
+  "ignorePatterns": ["src/index.mts", "src/internal/relationships-matrix.mts"],
   "overrides": [
     {
       "files": ["*.mts", "*.ts", "*.mjs", "*.js"],

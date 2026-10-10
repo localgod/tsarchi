@@ -138,35 +138,6 @@ async function main() {
 
   console.log(`Added group: ${group?.name} to organize components`);
 
-  // Auto-generate a view showing all application components
-  const allAppComponents = model.findElementsByType('ApplicationComponent');
-  if (allAppComponents.length > 0) {
-    const autoView = model.generateViewFromElements(
-      'All Application Components',
-      allAppComponents.map(el => el.id),
-      {
-        layoutType: 'circular',
-        includeRelationships: true,
-        viewpoint: 'application'
-      }
-    );
-    
-    if (autoView) {
-      console.log(`Auto-generated view: ${autoView.name} with ${autoView.children?.length} elements`);
-    }
-  }
-
-  // Create a view by folder
-  const businessView = model.createViewByFolder('Business Layer View', 'business', {
-    layoutType: 'grid'
-  });
-
-  if (businessView) {
-    console.log(`Created business view: ${businessView.name}`);
-  } else {
-    console.log('No business elements found for business view');
-  }
-
   // List all views
   const allViews = model.listViews();
   console.log(`\nTotal views in model: ${allViews.length}`);

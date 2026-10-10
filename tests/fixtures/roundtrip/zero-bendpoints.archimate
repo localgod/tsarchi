@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<archimate:model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:archimate="http://www.archimatetool.com/archimate" name="zero bendpoints" id="id-zb-model" version="5.0.0">
+  <folder name="Strategy" id="id-zb-strategy" type="strategy"/>
+  <folder name="Business" id="id-zb-business" type="business">
+    <element xsi:type="archimate:BusinessActor" name="Clerk" id="id-clerk"/>
+    <element xsi:type="archimate:BusinessRole" name="Cashier" id="id-cashier"/>
+    <element xsi:type="archimate:BusinessRole" name="Manager" id="id-manager"/>
+  </folder>
+  <folder name="Application" id="id-zb-application" type="application"/>
+  <folder name="Technology &amp; Physical" id="id-zb-technology" type="technology"/>
+  <folder name="Motivation" id="id-zb-motivation" type="motivation"/>
+  <folder name="Implementation &amp; Migration" id="id-zb-implementation" type="implementation_migration"/>
+  <folder name="Other" id="id-zb-other" type="other"/>
+  <folder name="Relations" id="id-zb-relations" type="relations">
+    <element xsi:type="archimate:AssignmentRelationship" id="id-cashier-assignment" source="id-clerk" target="id-cashier"/>
+    <element xsi:type="archimate:AssignmentRelationship" id="id-manager-assignment" source="id-clerk" target="id-manager"/>
+  </folder>
+  <folder name="Views" id="id-zb-views" type="diagrams">
+    <element xsi:type="archimate:ArchimateDiagramModel" name="Zero Bendpoints" id="id-zb-view">
+      <child xsi:type="archimate:DiagramObject" id="id-clerk-object" archimateElement="id-clerk">
+        <bounds x="40" y="40" width="120" height="55"/>
+        <sourceConnection xsi:type="archimate:Connection" id="id-cashier-connection" source="id-clerk-object" target="id-cashier-object" archimateRelationship="id-cashier-assignment">
+          <bendpoint/>
+        </sourceConnection>
+        <sourceConnection xsi:type="archimate:Connection" id="id-manager-connection" source="id-clerk-object" target="id-manager-object" archimateRelationship="id-manager-assignment">
+          <bendpoint startX="10" endY="-20"/>
+          <bendpoint/>
+          <bendpoint startY="30"/>
+        </sourceConnection>
+      </child>
+      <child xsi:type="archimate:DiagramObject" id="id-cashier-object" targetConnections="id-cashier-connection" archimateElement="id-cashier">
+        <bounds x="280" y="40" width="120" height="55"/>
+      </child>
+      <child xsi:type="archimate:DiagramObject" id="id-manager-object" targetConnections="id-manager-connection" archimateElement="id-manager">
+        <bounds x="280" y="160" width="120" height="55"/>
+      </child>
+    </element>
+  </folder>
+</archimate:model>

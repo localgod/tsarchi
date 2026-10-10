@@ -19,7 +19,8 @@ export interface SourceConnection {
   '@_textPosition'?: string;
   '@_locked'?: string;
   documentation?: string;
-  bendpoint?: Bendpoint | Bendpoint[];
+  /** fast-xml-parser reads `<bendpoint/>` (every coordinate at its default) as ''. */
+  bendpoint?: Bendpoint | '' | (Bendpoint | '')[];
   property?: Property | Property[];
   feature?: Feature | Feature[];
   sourceConnection?: SourceConnection | SourceConnection[];

@@ -198,14 +198,20 @@ export class DiagramAttributeMapper {
     return entries.length > 0 ? Object.fromEntries(entries) : undefined;
   }
 
-  public static schemaToBendpoints(bendpoint: SchemaBendpoint | SchemaBendpoint[] | undefined): ViewBendpoint[] | undefined {
-    if (!bendpoint) return undefined;
-    return toArray(bendpoint).map(b => ({
-      startX: Number(b['@_startX']) || 0,
-      startY: Number(b['@_startY']) || 0,
-      endX: Number(b['@_endX']) || 0,
-      endY: Number(b['@_endY']) || 0,
-    }));
+  /**
+   * fast-xml-parser reads `<bendpoint/>` (every coordinate at Archi's default of 0) as ''.
+   */
+  public static schemaToBendpoints(bendpoint: SchemaBendpoint | '' | (SchemaBendpoint | '')[] | undefined): ViewBendpoint[] | undefined {
+    if (bendpoint === undefined) return undefined;
+    return (Array.isArray(bendpoint) ? bendpoint : [bendpoint]).map(b => {
+      const attributes = b === '' ? {} : b;
+      return {
+        startX: Number(attributes['@_startX']) || 0,
+        startY: Number(attributes['@_startY']) || 0,
+        endX: Number(attributes['@_endX']) || 0,
+        endY: Number(attributes['@_endY']) || 0,
+      };
+    });
   }
 
   /**

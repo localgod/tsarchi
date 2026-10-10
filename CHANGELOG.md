@@ -12,6 +12,10 @@ This project adheres to [Keep a CHANGELOG](http://keepachangelog.com/)
 
 - `snapshot()`, `restore()` and `Archimate.fromSnapshot()` copy a model as plain, JSON-safe data and put it back, into the same instance or a new one, without going through XML: for undo steps, copies, comparisons and moving a model to a worker or sandbox. Equal models give equal snapshots. `restore()` checks the whole snapshot and throws an `ArchimateParseError` without changing the model when it is invalid. The `ModelSnapshot` type is exported but unstable: format changes will be listed here under **Changed** ([#497](https://github.com/localgod/tsarchi/issues/497)).
 
+### Fixed
+
+- A view connection with a single bendpoint at 0 (`<bendpoint/>`, as Archi writes one whose coordinates are all at their default) lost the bendpoint on load. In a list of several bendpoints it was already read ([#497](https://github.com/localgod/tsarchi/issues/497)).
+
 ## [4.0.0] - 2026-10-10
 
 ### Added

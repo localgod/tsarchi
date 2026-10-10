@@ -174,6 +174,7 @@ export class Archimate {
    * Throws when the given `id` is already used by something other than an
    * element in the target folder.
    * Only provided properties are overwritten; others remain unchanged.
+   * The model stores a copy: the given object is not changed or kept.
    * @param element Partial or full element data to insert or update.
    * @returns The inserted or updated element as stored in the model.
    */
@@ -200,13 +201,11 @@ export class Archimate {
       // The element is updated in place.
       const existingElement = folder.elements[existingIndex];
       return Object.assign(existingElement, this.mergeElementPatch(existingElement, element));
-    } else {
-      if (!('id' in element) || !element.id) {
-        element.id = this.generateUniqueId();
-      }
-      folder.elements.push(element as Element);
-      return element as Element;
     }
+    // The model keeps its own copy, so the caller's object is left as it was and later changes to it are not seen.
+    const newElement: Element = { ...structuredClone(element), id: element.id || this.generateUniqueId() };
+    folder.elements.push(newElement);
+    return newElement;
   }
 
   /**
@@ -351,8 +350,10 @@ export class Archimate {
     if (relationship.strength !== undefined) newRelationship.strength = relationship.strength;
     if (relationship.profiles !== undefined) newRelationship.profiles = relationship.profiles;
     if (relationship.features !== undefined) newRelationship.features = relationship.features;
-    folder.elements.push(newRelationship);
-    return newRelationship;
+    // Maps and arrays are copied, so later changes to the caller's input are not seen.
+    const storedRelationship = structuredClone(newRelationship);
+    folder.elements.push(storedRelationship);
+    return storedRelationship;
   }
 
   /**
@@ -1028,7 +1029,7 @@ export class Archimate {
           updatedElement.properties.set(propKey, propValue);
         }
       } else {
-        (updatedElement as any)[key] = value;
+        (updatedElement as any)[key] = structuredClone(value);
       }
     }
 

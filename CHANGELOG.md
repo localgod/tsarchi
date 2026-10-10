@@ -26,6 +26,10 @@ This project adheres to [Keep a CHANGELOG](http://keepachangelog.com/)
 
 - ⚠️ `upsertElement()` and `upsertRelationship()` match an existing element or relationship only on `id`. Without an `id` they always add a new one: an element used to be matched on `name` and `type`, and a relationship on `name`, `type`, `source` and `target`, which merged distinct elements that share a name.
 
+### Fixed
+
+- `upsertElement()`, `upsertRelationship()` and `updateElement()` store copies of what they are given. `upsertElement()` used to store the caller's object and set its `id`, so passing the same object again updated the element instead of adding one, and changing the object, or a `properties`, `features` or `profiles` value passed in, changed the model without going through the API.
+
 ## [3.0.0] - 2026-10-05
 
 ### Changed

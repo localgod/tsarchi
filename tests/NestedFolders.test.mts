@@ -93,7 +93,8 @@ describe('nested folders', () => {
 
   it('should report duplicate nested folder ids', async () => {
     const archimate = await parseFile('tests/fixtures/roundtrip/nested-folders.archimate');
-    archimate.getFolders('application')[1].id = 'id-folder-legacy';
+    // No API changes a folder id, so the stored folder is edited to make a duplicate, as a hand-edited file would have.
+    ((archimate as any).model as Model).application.folders![1].id = 'id-folder-legacy';
 
     expect(archimate.validateModel()).toEqual([
       expect.objectContaining({ code: 'duplicate-id', id: 'id-folder-legacy', path: 'folder.application.folders[1]' }),

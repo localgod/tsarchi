@@ -51,6 +51,9 @@ type PendingIssue = Omit<ValidationIssue, 'severity'>;
 /** Relationship types the relationships matrix has rules for. */
 const matrixRelationshipTypes: ReadonlySet<string> = new Set(Object.values(relationshipMatrixKeys));
 
+/** A deep copy of a stored object, so that what the API returns cannot change the model. */
+const copy = <T,>(value: T): T => structuredClone(value);
+
 /**
  * Ids a view's children and connections are checked against in validateModel.
  */
@@ -176,7 +179,7 @@ export class Archimate {
    * Only provided properties are overwritten; others remain unchanged.
    * The model stores a copy: the given object is not changed or kept.
    * @param element Partial or full element data to insert or update.
-   * @returns The inserted or updated element as stored in the model.
+   * @returns A copy of the inserted or updated element.
    */
   public upsertElement(element: Partial<Element> & Pick<Element, 'name' | 'type'>): Element {
     const folderKey = elementTypeToFolderKey.get(element.type);
@@ -200,37 +203,40 @@ export class Archimate {
     if (existingIndex >= 0) {
       // The element is updated in place.
       const existingElement = folder.elements[existingIndex];
-      return Object.assign(existingElement, this.mergeElementPatch(existingElement, element));
+      return copy(Object.assign(existingElement, this.mergeElementPatch(existingElement, element)));
     }
     // The model keeps its own copy, so the caller's object is left as it was and later changes to it are not seen.
     const newElement: Element = { ...structuredClone(element), id: element.id || this.generateUniqueId() };
     folder.elements.push(newElement);
-    return newElement;
+    return copy(newElement);
   }
 
   /**
    * Finds an element with the given name within a specific folder.
    * @param folderKey The key of the folder to search within.
    * @param elementName The name of the element to find.
-   * @returns The Element object if found, otherwise null.
+   * @returns A copy of the element if found, otherwise null.
    */
   public findElementInFolderByName(folderKey: FolderKey, elementName: string): Element | null {
-    const folder = this.model[folderKey];
-    return folder?.elements?.find(el => el.name === elementName) || null;
+    const element = this.model[folderKey]?.elements?.find(el => el.name === elementName);
+    return element ? copy(element) : null;
   }
 
   /**
-   * Retrieves an element or relationship by ID from any folder.
+   * Retrieves a copy of an element, relationship or view by ID from any folder. Change it with `updateElement`.
    */
   public getElement(elementId: string): Element | null {
-    return this.findElementLocationById(elementId)?.element || null;
+    const element = this.findElementLocationById(elementId)?.element;
+    return element ? copy(element) : null;
   }
 
   /**
-   * Finds all elements with a matching name across all folders.
+   * Finds copies of all elements with a matching name across all folders.
    */
   public findElementsByName(elementName: string): Element[] {
-    return this.allElements().filter(el => el.name === elementName);
+    return this.allElements()
+      .filter(el => el.name === elementName)
+      .map(copy);
   }
 
   /**
@@ -240,6 +246,7 @@ export class Archimate {
    * Relationship source/target and IDs are preserved unless explicitly patched.
    * A key set to undefined removes that field (`name` becomes empty; `id` and `type` are kept); keys left out are unchanged.
    * `properties` is merged into the existing properties, so set it to undefined to remove them all.
+   * Returns a copy of the updated element.
    */
   public updateElement(elementId: string, patch: Partial<Omit<Element, 'id'>>): Element | null {
     const location = this.findElementLocationById(elementId);
@@ -264,7 +271,7 @@ export class Archimate {
       nextFolder.elements.push(updatedElement);
     }
 
-    return updatedElement;
+    return copy(updatedElement);
   }
 
   /**
@@ -311,6 +318,7 @@ export class Archimate {
    * Inserts or updates a relationship in the relations folder.
    *
    * Updates are matched on `id`. A relationship without an `id` is always added with a new one.
+   * Returns a copy of the inserted or updated relationship.
    */
   public upsertRelationship(relationship: RelationshipInput): Relationship {
     this.assertRelationshipType(relationship.type);
@@ -320,8 +328,8 @@ export class Archimate {
       relationship,
       source,
       target,
-      id => this.getElement(id) ?? undefined,
-      id => this.findRelationshipsForElement(id)
+      id => this.findElementLocationById(id)?.element,
+      id => this.relationshipsForElement(id, 'both')
     );
     if (typeIssue) throw new Error(typeIssue.message);
 
@@ -333,7 +341,7 @@ export class Archimate {
     if (existingIndex >= 0) {
       const updatedRelationship = this.mergeElementPatch(folder.elements[existingIndex], relationship) as Relationship;
       folder.elements[existingIndex] = updatedRelationship;
-      return updatedRelationship;
+      return copy(updatedRelationship);
     }
 
     const newRelationship: Relationship = {
@@ -353,38 +361,46 @@ export class Archimate {
     // Maps and arrays are copied, so later changes to the caller's input are not seen.
     const storedRelationship = structuredClone(newRelationship);
     folder.elements.push(storedRelationship);
-    return storedRelationship;
+    return copy(storedRelationship);
   }
 
   /**
-   * Lists all elements in the model, in folder order, including those in nested folders. Relationships and views
-   * are left out.
+   * Lists copies of all elements in the model, in folder order, including those in nested folders. Relationships
+   * and views are left out.
    */
   public listElements(): Element[] {
     return (Object.keys(this.model) as FolderKey[])
       .filter(folderKey => folderKey !== 'relations' && folderKey !== 'diagrams')
-      .flatMap(folderKey => this.model[folderKey].elements || []);
+      .flatMap(folderKey => this.model[folderKey].elements || [])
+      .map(copy);
   }
 
   /**
-   * Lists all relationships in the model, including those in nested folders.
+   * Lists copies of all relationships in the model, including those in nested folders.
    */
   public listRelationships(): Relationship[] {
-    return [...(this.model.relations.elements || [])] as Relationship[];
+    return (this.model.relations.elements || []).map(copy) as Relationship[];
   }
 
   /**
-   * Retrieves a relationship by ID.
+   * Retrieves a copy of a relationship by ID.
    */
   public getRelationship(relationshipId: string): Relationship | null {
     const relationship = this.model.relations.elements?.find(el => el.id === relationshipId);
-    return relationship ? (relationship as Relationship) : null;
+    return relationship ? (copy(relationship) as Relationship) : null;
   }
 
   /**
-   * Finds relationships connected to an element.
+   * Finds copies of the relationships connected to an element.
    */
   public findRelationshipsForElement(elementId: string, direction: 'source' | 'target' | 'both' = 'both'): Relationship[] {
+    return this.relationshipsForElement(elementId, direction).map(copy);
+  }
+
+  /**
+   * The stored relationships connected to an element.
+   */
+  private relationshipsForElement(elementId: string, direction: 'source' | 'target' | 'both'): Relationship[] {
     return (this.model.relations.elements || []).filter(relationship => {
       if (direction === 'source') return relationship.source === elementId;
       if (direction === 'target') return relationship.target === elementId;
@@ -393,7 +409,7 @@ export class Archimate {
   }
 
   /**
-   * Finds relationships between two elements.
+   * Finds copies of the relationships between two elements.
    */
   public findRelationshipsBetween(
     sourceElementId: string,
@@ -403,21 +419,23 @@ export class Archimate {
       type?: ArchimateRelationshipType;
     }
   ): Relationship[] {
-    return (this.model.relations.elements || []).filter(relationship => {
-      const directMatch = relationship.source === sourceElementId && relationship.target === targetElementId;
-      const reverseMatch =
-        options?.bidirectional === true && relationship.source === targetElementId && relationship.target === sourceElementId;
-      const typeMatch = options?.type ? relationship.type === options.type : true;
+    return (this.model.relations.elements || [])
+      .filter(relationship => {
+        const directMatch = relationship.source === sourceElementId && relationship.target === targetElementId;
+        const reverseMatch =
+          options?.bidirectional === true && relationship.source === targetElementId && relationship.target === sourceElementId;
+        const typeMatch = options?.type ? relationship.type === options.type : true;
 
-      return typeMatch && (directMatch || reverseMatch);
-    }) as Relationship[];
+        return typeMatch && (directMatch || reverseMatch);
+      })
+      .map(copy) as Relationship[];
   }
 
   /**
    * Deletes a relationship and removes matching view connections.
    */
   public deleteRelationship(relationshipId: string): boolean {
-    const relationship = this.getRelationship(relationshipId);
+    const relationship = this.model.relations.elements?.find(el => el.id === relationshipId);
     if (!relationship) return false;
     return this.deleteElement(relationshipId);
   }
@@ -600,17 +618,18 @@ export class Archimate {
   }
 
   /**
-   * Returns the specializations defined on the model, in file order.
+   * Returns copies of the specializations defined on the model, in file order.
    */
   public getProfiles(): Profile[] {
-    return [...(this.content.profiles ?? [])];
+    return (this.content.profiles ?? []).map(copy);
   }
 
   /**
-   * Returns the profile with the given id, or null.
+   * Returns a copy of the profile with the given id, or null.
    */
   public getProfile(profileId: string): Profile | null {
-    return this.content.profiles?.find(profile => profile.id === profileId) ?? null;
+    const profile = this.content.profiles?.find(profile => profile.id === profileId);
+    return profile ? copy(profile) : null;
   }
 
   /**
@@ -618,7 +637,7 @@ export class Archimate {
    * `Element.profiles`; validateModel() reports references to profiles that do not exist.
    */
   public setProfiles(profiles: Profile[] | undefined): void {
-    this.content.profiles = profiles && profiles.length > 0 ? [...profiles] : undefined;
+    this.content.profiles = profiles && profiles.length > 0 ? profiles.map(copy) : undefined;
   }
 
   /**
@@ -767,10 +786,12 @@ export class Archimate {
   }
 
   /**
-   * Finds the elements, relationships and views of a type
+   * Finds copies of the elements, relationships and views of a type
    */
   public findElementsByType(elementType: ArchimateModelType): Element[] {
-    return this.allElements().filter(el => el.type === elementType);
+    return this.allElements()
+      .filter(el => el.type === elementType)
+      .map(copy);
   }
 
   /**
@@ -781,21 +802,21 @@ export class Archimate {
   }
 
   /**
-   * Finds the elements, relationships or views in a top-level folder, including its nested folders
+   * Finds copies of the elements, relationships or views in a top-level folder, including its nested folders
    */
   public findElementsByFolder(folderKey: FolderKey): Element[] {
-    const folder = this.model[folderKey];
-    return folder.elements || [];
+    return (this.model[folderKey].elements || []).map(copy);
   }
 
   /**
-   * Returns the nested folders of a top-level folder, in document order.
+   * Returns copies of the nested folders of a top-level folder, in document order. Change them with the folder
+   * methods.
    *
    * Elements in nested folders are also included in `findElementsByFolder`;
    * a nested folder lists the ids of the elements placed directly in it.
    */
   public getFolders(folderKey: FolderKey): Folder[] {
-    return this.model[folderKey].folders || [];
+    return (this.model[folderKey].folders || []).map(copy);
   }
 
   /**

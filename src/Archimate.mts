@@ -20,6 +20,8 @@ import { ViewManager } from './internal/ViewManager.mjs';
 import { removeFromNestedFolders } from './internal/NestedFolders.mjs';
 import { toArray } from './internal/Arrays.mjs';
 import { randomArchiId } from './internal/Ids.mjs';
+import { readSnapshot, writeSnapshot } from './internal/Snapshot.mjs';
+import type { ModelSnapshot } from './interfaces/ModelSnapshot.mjs';
 import { splitIds } from './internal/ViewChildMapper.mjs';
 import {
   folderType,
@@ -501,18 +503,71 @@ export class Archimate {
     const parser = new Parser(this.model);
     this.model = parser.parse(input);
     this.content = parser.parseModelContent(input);
-    const defaultModelMetadata = this.defaultModelMetadata();
     this.xmlMetadata = input['?xml'] || this.defaultXmlMetadata();
     const namespaces = Object.fromEntries(
       Object.entries(input['archimate:model'] ?? {}).filter(([key, value]) => key.startsWith('@_xmlns:') && value)
     );
-    this.modelMetadata = {
+    const root = input['archimate:model'];
+    this.modelMetadata = this.rootAttributes(namespaces, root?.['@_name'] ?? '', root?.['@_id'], root?.['@_version']);
+  }
+
+  /**
+   * The model's root attributes from what a file or snapshot declares, with defaults for a missing id or version.
+   */
+  private rootAttributes(
+    namespaces: Record<string, string>,
+    name: string,
+    id: string | undefined,
+    version: string | undefined
+  ): ModelAttributes {
+    const defaultModelMetadata = this.defaultModelMetadata();
+    return {
       ...defaultModelMetadata,
       ...namespaces,
-      '@_name': input['archimate:model']?.['@_name'] ?? '',
-      '@_id': input['archimate:model']?.['@_id'] || defaultModelMetadata['@_id'],
-      '@_version': input['archimate:model']?.['@_version'] || defaultModelMetadata['@_version'],
+      '@_name': name,
+      '@_id': id || defaultModelMetadata['@_id'],
+      '@_version': version || defaultModelMetadata['@_version'],
     };
+  }
+
+  /**
+   * Returns the model as plain, JSON-safe data, for undo steps, copies and comparisons without going through XML.
+   * The format is unstable and meant for use within one tsarchi version; see ModelSnapshot. Two models that toXml()
+   * would write the same way give the same snapshot, so `JSON.stringify` of two snapshots can be compared.
+   * The snapshot is new data: changing it does not change the model.
+   */
+  public snapshot(): ModelSnapshot {
+    return writeSnapshot(
+      this.model,
+      this.content,
+      this.xmlMetadata,
+      this.withRequiredNamespaces(this.modelMetadata),
+      this.defaultModelMetadata()
+    );
+  }
+
+  /**
+   * Replaces this model's content with a snapshot from snapshot(), as fromXml() would load the same model.
+   * The model keeps no reference to the snapshot. Like fromXml(), it does not validate the model.
+   * Throws an ArchimateParseError (`invalid-structure`) when the value is not a snapshot of a known version,
+   * and leaves the model unchanged.
+   */
+  public restore(snapshot: ModelSnapshot): void {
+    const { model, content, xmlMetadata, root } = readSnapshot(snapshot);
+    this.model = model;
+    this.content = content;
+    this.xmlMetadata = xmlMetadata;
+    this.modelMetadata = this.rootAttributes(root.namespaces, root.name, root.id, root.version);
+    this.viewManager = new ViewManager(this.model, () => this.generateUniqueId());
+  }
+
+  /**
+   * Creates a model from a snapshot from snapshot(). Throws as restore() does.
+   */
+  public static fromSnapshot(snapshot: ModelSnapshot): Archimate {
+    const archimate = new Archimate();
+    archimate.restore(snapshot);
+    return archimate;
   }
 
   /**

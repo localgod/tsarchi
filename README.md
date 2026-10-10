@@ -55,7 +55,7 @@ Version 4.0.0 narrows tsarchi to loading, editing, validating and saving models:
 - `upsertElement()` and `upsertRelationship()` match only on `id`. Without an `id` they always add, as names are not unique in a model. To update by name, look the element up first with `findElementsByName()` or `findRelationshipsBetween()` and pass its `id`.
 - Short relationship names such as `Flow` are no longer accepted; use the full type, `FlowRelationship`. `archimateRelationshipAliasTypes`, `ArchimateRelationshipAliasType` and `resolveRelationshipType()` are removed.
 - `TsArchi.load()` and `TsArchi.save()`, which read and wrote the raw XML shape, are removed. Use `loadModel()` and `saveModel()`.
-- `Archimate.parse()` and `serialize()` are no longer public. Use `Archimate.fromXml()` and `toXml()`.
+- `Archimate.parse()` and `serialize()` are no longer public. Use `Archimate.fromXml()` and `toXml()` to load and save, and `snapshot()`, `restore()` and `Archimate.fromSnapshot()` for undo steps and copies (see [Snapshots](#snapshots)).
 - `ViewManager`, `relationshipMatrixKeys` and `relationshipsMatrix` are no longer exported. Use the view methods on `Archimate` and `allowedRelationshipTypes()`.
 - `generateRandomId()` is no longer public. Use `generateUniqueId()`, which never returns an id that is in use.
 - Elements, relationships, nested folders and profiles are returned as copies, as views already are: `getElement()`, `getRelationship()`, `listElements()`, `listRelationships()`, the `find…` methods, `getFolders()`, `getProfiles()`, `getProfile()` and the return values of `upsertElement()`, `upsertRelationship()` and `updateElement()`. Changing a returned object no longer changes the model; pass the change to `updateElement()`. Diagram styling without a method of its own is changed the same way: edit `getElement(viewId).child` and write it back with `updateElement(viewId, { child })`.
@@ -134,6 +134,23 @@ try {
 ```
 
 `TsArchi.load` and `loadModel` throw the same `ArchimateParseError`, and pass on file read errors.
+
+### Snapshots
+
+`snapshot()` returns the model as plain, JSON-safe data, without going through XML. `restore()` puts a snapshot back into the instance it is called on, and `Archimate.fromSnapshot()` creates a new one. Use them for undo steps, copies, and moving a model to a worker or sandbox:
+
+```typescript
+const before = model.snapshot();
+model.deleteElement(elementId);
+model.restore(before); // undo: the same instance, as before the delete
+
+const copy = Archimate.fromSnapshot(JSON.parse(JSON.stringify(before)));
+```
+
+- Two models that `toXml()` would write the same way give the same snapshot, so `JSON.stringify(a.snapshot()) === JSON.stringify(b.snapshot())` tells whether they differ.
+- A snapshot is new data, and `restore()` keeps no reference to it: one snapshot can be restored any number of times.
+- `restore()` checks the snapshot's structure, not the model: on anything that is not a snapshot it throws an `ArchimateParseError` (`invalid-structure`) and leaves the model unchanged. Use `validateModel()` for the model itself.
+- The `ModelSnapshot` format is unstable: it may change in any release, listed under **Changed** in the changelog. Use snapshots within one process and one tsarchi version, and save models as `.archimate` XML.
 
 ### Browser Use
 

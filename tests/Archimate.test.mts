@@ -4,7 +4,6 @@ import {
   archimateBusinessElementTypes,
   archimateModelTypes,
   archimateMotivationElementTypes,
-  archimateRelationshipAliasTypes,
   archimateRelationshipTypes,
   elementTypeToFolderKey,
   folderType,
@@ -12,9 +11,10 @@ import {
   type ArchimateElementType,
   type ArchimateRelationshipType,
 } from '../src/constants/archimate-mappings.mjs';
-import { relationshipMatrixKeys, relationshipsMatrix } from '../src/constants/relationships-matrix.mjs';
+import { relationshipMatrixKeys, relationshipsMatrix } from '../src/internal/relationships-matrix.mjs';
 import type { Model } from '../src/interfaces/Model.mjs';
 import type { Relationship, RelationshipInput } from '../src/interfaces/Relationship.mjs';
+import { archimateFromSchema, archimateToSchema } from '../src/internal/SchemaAccess.mjs';
 
 vi.mock('../src/internal/Parser.mjs', () => ({
   Parser: vi.fn().mockImplementation(function () {
@@ -32,6 +32,9 @@ vi.mock('../src/internal/Serializer.mjs', () => ({
     };
   }),
 }));
+
+/** Spies on the private random id source, to make generateUniqueId hit an id that is in use. */
+const spyOnRandomId = (archimate: Archimate) => vi.spyOn(archimate as unknown as { generateRandomId(): string }, 'generateRandomId');
 
 describe('Archimate', () => {
   let archimate: Archimate;
@@ -94,9 +97,9 @@ describe('Archimate', () => {
     });
   });
 
-  describe('generateRandomId()', () => {
+  describe('generateUniqueId()', () => {
     it('should generate unique IDs starting with "id-" and length 35', () => {
-      const id = archimate.generateRandomId();
+      const id = archimate.generateUniqueId();
       expect(id.startsWith('id-')).toBe(true);
       expect(id.length).toBe(35);
     });
@@ -108,7 +111,7 @@ describe('Archimate', () => {
         type: 'ApplicationComponent',
       });
 
-      const randomSpy = vi.spyOn(archimate, 'generateRandomId').mockReturnValueOnce('id-existing').mockReturnValueOnce('id-unique');
+      const randomSpy = spyOnRandomId(archimate).mockReturnValueOnce('id-existing').mockReturnValueOnce('id-unique');
 
       expect(archimate.hasId('id-existing')).toBe(true);
       expect(archimate.hasId('id-missing')).toBe(false);
@@ -215,8 +218,8 @@ describe('Archimate', () => {
         expected: { newProp: 'value' },
       },
     ])('should upsert element correctly: $name', ({ initial, updates, expected, expectedId }) => {
-      archimate.upsertElement(initial as any);
-      updates.forEach(u => archimate.upsertElement({ ...initial, ...u } as any));
+      const { id } = archimate.upsertElement({ ...initial } as any);
+      updates.forEach(u => archimate.upsertElement({ ...initial, id, ...u } as any));
 
       const folderKey = 'application';
       const el = archimate.findElementInFolderByName(folderKey, initial.name);
@@ -227,6 +230,14 @@ describe('Archimate', () => {
       for (const [key, val] of Object.entries(expected)) {
         expect(el?.properties?.get(key)).toBe(val);
       }
+    });
+
+    it('should add an element without an id even when one with the same name and type exists', () => {
+      const first = archimate.upsertElement({ name: 'CRM', type: 'ApplicationComponent', documentation: 'Sales' });
+      const second = archimate.upsertElement({ name: 'CRM', type: 'ApplicationComponent', documentation: 'Support' });
+
+      expect(second.id).not.toBe(first.id);
+      expect(archimate.findElementsByName('CRM').map(el => el.documentation)).toEqual(['Sales', 'Support']);
     });
 
     it('should not add element if type is unknown', () => {
@@ -256,10 +267,7 @@ describe('Archimate', () => {
         name: 'Existing',
         type: 'ApplicationComponent',
       });
-      const randomSpy = vi
-        .spyOn(archimate, 'generateRandomId')
-        .mockReturnValueOnce('id-existing')
-        .mockReturnValueOnce('id-generated-element');
+      const randomSpy = spyOnRandomId(archimate).mockReturnValueOnce('id-existing').mockReturnValueOnce('id-generated-element');
 
       archimate.upsertElement({
         name: 'Generated ID Element',
@@ -501,6 +509,30 @@ describe('Archimate', () => {
       });
     });
 
+    it('should add a relationship without an id even when an identical one exists', () => {
+      const input = { name: 'Data', type: 'FlowRelationship', source: 'rel-app-a', target: 'rel-app-b' } as const;
+      const first = archimate.upsertRelationship({ ...input });
+      const second = archimate.upsertRelationship({ ...input, documentation: 'Second flow' });
+
+      expect(second.id).not.toBe(first.id);
+      expect(archimate.findRelationshipsBetween('rel-app-a', 'rel-app-b').map(rel => rel.id)).toEqual([first.id, second.id]);
+      expect(archimate.getRelationship(first.id)?.documentation).toBeUndefined();
+    });
+
+    it('should update the relationship with the given id', () => {
+      const { id } = archimate.upsertRelationship({ name: 'Data', type: 'FlowRelationship', source: 'rel-app-a', target: 'rel-app-b' });
+      archimate.upsertRelationship({
+        id,
+        name: 'Data',
+        type: 'FlowRelationship',
+        source: 'rel-app-a',
+        target: 'rel-app-b',
+        documentation: 'x',
+      });
+
+      expect(archimate.findRelationshipsBetween('rel-app-a', 'rel-app-b')).toEqual([expect.objectContaining({ id, documentation: 'x' })]);
+    });
+
     it('should create and retrieve relationships with required endpoints', () => {
       const relationship = archimate.upsertRelationship({
         id: 'formal-rel-a-b',
@@ -582,7 +614,7 @@ describe('Archimate', () => {
 
       archimate.upsertRelationship({ id: 'rel-g-ab', type: 'AggregationRelationship', source: 'rel-grouping', target: 'rel-a-b' });
       archimate.upsertRelationship({ id: 'rel-l-ab', type: 'CompositionRelationship', source: 'rel-location', target: 'rel-a-b' });
-      archimate.upsertRelationship({ id: 'rel-p-ab', type: 'Aggregation', source: 'rel-plateau', target: 'rel-a-b' });
+      archimate.upsertRelationship({ id: 'rel-p-ab', type: 'AggregationRelationship', source: 'rel-plateau', target: 'rel-a-b' });
 
       expect(archimate.validateModel()).toEqual([]);
     });
@@ -614,7 +646,7 @@ describe('Archimate', () => {
       archimate.upsertElement({ id: 'rel-process', name: 'Process', type: 'BusinessProcess' });
 
       archimate.upsertRelationship({ id: 'rel-serving', type: 'ServingRelationship', source: 'rel-service', target: 'rel-process' });
-      archimate.upsertRelationship({ id: 'rel-flow', type: 'Flow', source: 'rel-service', target: 'rel-process' });
+      archimate.upsertRelationship({ id: 'rel-flow', type: 'FlowRelationship', source: 'rel-service', target: 'rel-process' });
 
       expect(archimate.validateModel()).toEqual([]);
     });
@@ -638,39 +670,10 @@ describe('Archimate', () => {
 
     it('should reject a short-named type the matrix does not allow, reporting the full type', () => {
       expect(() =>
-        archimate.upsertRelationship({ id: 'rel-new', type: 'Influence', source: 'rel-app-a', target: 'rel-app-b' })
+        archimate.upsertRelationship({ id: 'rel-new', type: 'InfluenceRelationship', source: 'rel-app-a', target: 'rel-app-b' })
       ).toThrowError(
         'Relationship "rel-new" of type InfluenceRelationship is not allowed from ApplicationComponent "rel-app-a" to ApplicationComponent "rel-app-b".'
       );
-    });
-
-    it.each(archimateRelationshipAliasTypes)('should store the short name %s as the full relationship type', alias => {
-      // Grouping to Grouping allows every relationship type.
-      archimate.upsertElement({ id: 'rel-grouping-a', name: 'Grouping A', type: 'Grouping' });
-      archimate.upsertElement({ id: 'rel-grouping-b', name: 'Grouping B', type: 'Grouping' });
-
-      const relationship = archimate.upsertRelationship({
-        id: 'rel-alias',
-        type: alias,
-        source: 'rel-grouping-a',
-        target: 'rel-grouping-b',
-      });
-
-      expect(relationship.type).toBe(`${alias}Relationship`);
-      expect(archimate.getRelationship('rel-alias')?.type).toBe(`${alias}Relationship`);
-      expect(archimate.findRelationshipsBetween('rel-grouping-a', 'rel-grouping-b', { type: alias }).map(rel => rel.id)).toEqual([
-        'rel-alias',
-      ]);
-      expect(archimate.validateModel()).toEqual([]);
-    });
-
-    it('should match an existing relationship by its full type when given a short name', () => {
-      archimate.upsertRelationship({ name: 'Flow', type: 'FlowRelationship', source: 'rel-app-a', target: 'rel-app-b' });
-      archimate.upsertRelationship({ name: 'Flow', type: 'Flow', source: 'rel-app-a', target: 'rel-app-b', documentation: 'updated' });
-
-      expect(archimate.findRelationshipsBetween('rel-app-a', 'rel-app-b')).toEqual([
-        expect.objectContaining({ type: 'FlowRelationship', documentation: 'updated' }),
-      ]);
     });
 
     it.each(['UsedByRelationship', 'RepresentationRelationship', 'MaterialRelationship', 'UsedBy', 'Flow'])(
@@ -692,7 +695,7 @@ describe('Archimate', () => {
       }
     );
 
-    it.each(['UsedByRelationship', 'RepresentationRelationship', 'MaterialRelationship', 'UsedBy'])(
+    it.each(['UsedByRelationship', 'RepresentationRelationship', 'MaterialRelationship', 'UsedBy', 'Flow'])(
       'should reject %s in upsertRelationship()',
       type => {
         expect(() =>
@@ -722,7 +725,7 @@ describe('Archimate', () => {
         expect(() =>
           archimate.upsertRelationship({ id: 'j-in-2', type: 'ServingRelationship', source: 'rel-app-c', target: 'j-junction' })
         ).toThrowError('all relationships on a Junction must have the same type');
-        archimate.upsertRelationship({ id: 'j-out', type: 'Flow', source: 'j-junction', target: 'rel-app-b' });
+        archimate.upsertRelationship({ id: 'j-out', type: 'FlowRelationship', source: 'j-junction', target: 'rel-app-b' });
 
         ((archimate as any).model as Model).relations.elements!.push({
           id: 'j-bad',
@@ -777,7 +780,7 @@ describe('Archimate', () => {
         archimate.upsertElement({ id: 'j-location', name: 'Location', type: 'Location' });
         archimate.upsertRelationship({ id: 'j-in', type: 'FlowRelationship', source: 'rel-app-a', target: 'j-junction' });
         archimate.upsertRelationship({ id: 'j-group', type: 'AggregationRelationship', source: 'j-grouping', target: 'j-junction' });
-        archimate.upsertRelationship({ id: 'j-location-in', type: 'Composition', source: 'j-location', target: 'j-junction' });
+        archimate.upsertRelationship({ id: 'j-location-in', type: 'CompositionRelationship', source: 'j-location', target: 'j-junction' });
         archimate.upsertRelationship({ id: 'j-out', type: 'FlowRelationship', source: 'j-junction', target: 'rel-app-b' });
 
         expect(archimate.validateModel()).toEqual([]);
@@ -843,8 +846,7 @@ describe('Archimate', () => {
         source: 'rel-app-a',
         target: 'rel-app-b',
       });
-      const randomSpy = vi
-        .spyOn(archimate, 'generateRandomId')
+      const randomSpy = spyOnRandomId(archimate)
         .mockReturnValueOnce('id-existing-relationship')
         .mockReturnValueOnce('id-generated-relationship');
 
@@ -984,8 +986,7 @@ describe('Archimate', () => {
         name: 'App for View',
         type: 'ApplicationComponent',
       });
-      const randomSpy = vi
-        .spyOn(archimate, 'generateRandomId')
+      const randomSpy = spyOnRandomId(archimate)
         .mockReturnValueOnce('app-for-view')
         .mockReturnValueOnce('generated-view-id')
         .mockReturnValueOnce('app-for-view')
@@ -1160,23 +1161,20 @@ describe('Archimate', () => {
     });
   });
 
-  describe('parse()', () => {
+  describe('archimateFromSchema()', () => {
     it('should set model and name from parsed schema', () => {
       const input: any = { 'archimate:model': { '@_name': 'Parsed Model' } };
-      archimate.parse(input);
-      expect(archimate.getName()).toBe('Parsed Model');
+      expect(archimateFromSchema(input).getName()).toBe('Parsed Model');
     });
 
     it('should default name to an empty name if not provided', () => {
-      const input: any = {};
-      archimate.parse(input);
-      expect(archimate.getName()).toBe('');
+      expect(archimateFromSchema({} as any).getName()).toBe('');
     });
   });
 
-  describe('serialize()', () => {
+  describe('archimateToSchema()', () => {
     it('should call serializer and return serialized schema', () => {
-      const result = archimate.serialize();
+      const result = archimateToSchema(archimate);
       expect(result).toEqual({ mockSerialized: true });
     });
   });

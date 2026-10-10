@@ -6,14 +6,14 @@ import type { Schema } from '../src/interfaces/schema/Schema.mjs';
 import type { SourceConnection as SchemaSourceConnection } from '../src/interfaces/schema/SourceConnection.mjs';
 import { SourceConnectionMapper } from '../src/internal/SourceConnectionMapper.mjs';
 import type { Child } from '../src/interfaces/Child.mjs';
+import { archimateFromSchema, archimateToSchema } from '../src/internal/SchemaAccess.mjs';
 
 const fixturesDir = 'tests/fixtures/archi';
 
 async function parseFixture(name: string): Promise<Archimate> {
   const xml = await readFile(`${fixturesDir}/${name}`, 'utf8');
   const raw = new XMLParser({ ignoreAttributes: false }).parse(xml) as Schema;
-  const archimate = new Archimate();
-  archimate.parse(raw);
+  const archimate = archimateFromSchema(raw);
   return archimate;
 }
 
@@ -93,7 +93,7 @@ describe('Archi-produced models', () => {
   it('should keep connections nested in connections', async () => {
     const archimate = await parseFixture('testCopySnapshot.archimate');
     const codes = archimate.validateModel().map(issue => issue.code);
-    const connections = collectSourceConnections(archimate.serialize());
+    const connections = collectSourceConnections(archimateToSchema(archimate));
 
     expect(codes).not.toContain('view-connection-missing-source');
     expect(codes).not.toContain('view-connection-missing-target');
@@ -108,7 +108,7 @@ describe('Archi-produced models', () => {
 
   it('should serialize connections without xsi:type without adding the attribute', async () => {
     const archimate = await parseFixture('testCopySnapshot.archimate');
-    const connections = collectSourceConnections(archimate.serialize());
+    const connections = collectSourceConnections(archimateToSchema(archimate));
 
     expect(connections.length).toBeGreaterThan(0);
     expect(connections.every(connection => typeof connection['@_id'] === 'string')).toBe(true);
@@ -128,7 +128,7 @@ describe('Archi-produced models', () => {
 
   it('should keep all namespace declarations on the model root', async () => {
     const archimate = await parseFixture('test.archimate');
-    const model = archimate.serialize()['archimate:model'];
+    const model = archimateToSchema(archimate)['archimate:model'];
 
     expect(Object.keys(model).filter(key => key.startsWith('@_xmlns:'))).toEqual(['@_xmlns:xsi', '@_xmlns:archimate', '@_xmlns:canvas']);
     expect(model['@_xmlns:canvas']).toBe('http://www.archimatetool.com/archimate/canvas');
@@ -136,7 +136,7 @@ describe('Archi-produced models', () => {
 
   it('should keep the xsi:type prefix a type was loaded with', async () => {
     const archimate = await parseFixture('test.archimate');
-    const diagrams = archimate.serialize()['archimate:model'].folder.find(folder => folder['@_type'] === 'diagrams');
+    const diagrams = archimateToSchema(archimate)['archimate:model'].folder.find(folder => folder['@_type'] === 'diagrams');
     const canvas = diagrams?.element.find(element => element['@_id'] === '25d4e8d4-f410-4a1a-bc28-f184d66ea408');
     const childTypes = (Array.isArray(canvas?.child) ? canvas.child : [canvas?.child]).map(child => child?.['@_xsi:type']);
 
@@ -177,8 +177,8 @@ describe('Archi-produced models', () => {
     const archimate = new Archimate();
     archimate.upsertElement({ name: 'Canvas', type: 'CanvasModel' });
 
-    expect(archimate.serialize()['archimate:model']['@_xmlns:canvas']).toBe('http://www.archimatetool.com/archimate/canvas');
-    expect(new Archimate().serialize()['archimate:model']).not.toHaveProperty('@_xmlns:canvas');
+    expect(archimateToSchema(archimate)['archimate:model']['@_xmlns:canvas']).toBe('http://www.archimatetool.com/archimate/canvas');
+    expect(archimateToSchema(new Archimate())['archimate:model']).not.toHaveProperty('@_xmlns:canvas');
   });
 
   it('should load alternate figures, view references and access types', async () => {
@@ -291,7 +291,7 @@ describe('Archi-produced models', () => {
 
         expect(archimate.validateModel()).toEqual([expect.objectContaining({ code: 'missing-type', severity: 'error', id: 'e1' })]);
         expect(() => archimate.toXml()).toThrow('Archimate model validation failed');
-        expect(archimate.serialize()['archimate:model'].folder).not.toHaveProperty('element.@_xsi:type');
+        expect(archimateToSchema(archimate)['archimate:model'].folder).not.toHaveProperty('element.@_xsi:type');
       }
     );
 
@@ -319,7 +319,7 @@ describe('Archi-produced models', () => {
 
     archimate.setName('Renamed');
     expect(archimate.getName()).toBe('Renamed');
-    expect(archimate.serialize()['archimate:model']['@_name']).toBe('Renamed');
+    expect(archimateToSchema(archimate)['archimate:model']['@_name']).toBe('Renamed');
   });
 
   it('should list all elements and relationships', async () => {
@@ -338,10 +338,10 @@ describe('Archi-produced models', () => {
     expect(archimate.getPurpose()).toBe('A variety of testing scenarios');
 
     archimate.setPurpose('Changed');
-    expect(archimate.serialize()['archimate:model'].purpose).toBe('Changed');
+    expect(archimateToSchema(archimate)['archimate:model'].purpose).toBe('Changed');
 
     archimate.setPurpose(undefined);
-    expect(archimate.serialize()['archimate:model']).not.toHaveProperty('purpose');
+    expect(archimateToSchema(archimate)['archimate:model']).not.toHaveProperty('purpose');
   });
 
   it('should remove diagram model references when deleting the referenced view', async () => {

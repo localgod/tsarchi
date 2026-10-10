@@ -13,6 +13,23 @@ This project adheres to [Keep a CHANGELOG](http://keepachangelog.com/)
 - Association relationships have a `directed` field, read from and written to Archi's `directed="true"` attribute. Undirected associations leave it unset, as Archi does. It used to be kept only as `'@_directed'` in `unrecognized` ([#490](https://github.com/localgod/tsarchi/issues/490)).
 - Influence relationships have a `strength` field, read from and written to Archi's free-text `strength` attribute (for example `+` or `--`). It used to be kept only as `'@_strength'` in `unrecognized` ([#490](https://github.com/localgod/tsarchi/issues/490)).
 
+### Removed
+
+- ⚠️ `generateViewFromElements()`, `createViewByElementType()` and `createViewByFolder()` are removed. Laying out a view is not part of the ArchiMate exchange format, and tsarchi only loads, edits and saves models. Build views with `createView()`, `addDiagramObject()` and `addGroup()` with explicit bounds, and `addConnection()`; `findElementsByType()` and `findElementsByFolder()` still find the elements to place ([#492](https://github.com/localgod/tsarchi/issues/492)).
+- ⚠️ Short relationship names such as `Flow` are no longer accepted by `upsertRelationship()` and `findRelationshipsBetween()`; use the full type (`FlowRelationship`). `archimateRelationshipAliasTypes`, `ArchimateRelationshipAliasType` and `resolveRelationshipType()` are removed ([#492](https://github.com/localgod/tsarchi/issues/492)).
+- ⚠️ `TsArchi.load()` and `TsArchi.save()`, which read and wrote the raw XML-shaped schema without validation, are removed. Use `loadModel()` and `saveModel()` ([#492](https://github.com/localgod/tsarchi/issues/492)).
+- ⚠️ `Archimate.parse()` and `serialize()` are private, so the schema shape stays out of the public API. Use `Archimate.fromXml()` and `toXml()` ([#492](https://github.com/localgod/tsarchi/issues/492)).
+- ⚠️ `ViewManager`, `relationshipMatrixKeys` and `relationshipsMatrix` are no longer exported. The view methods on `Archimate` and `allowedRelationshipTypes()` cover them, and `ViewManager.deleteView()` skipped the clean-up that `Archimate.deleteView()` does ([#492](https://github.com/localgod/tsarchi/issues/492)).
+- ⚠️ `generateRandomId()` is private. `generateUniqueId()` returns an id that is not in use ([#492](https://github.com/localgod/tsarchi/issues/492)).
+
+### Changed
+
+- ⚠️ `upsertElement()` and `upsertRelationship()` match an existing element or relationship only on `id`. Without an `id` they always add a new one: an element used to be matched on `name` and `type`, and a relationship on `name`, `type`, `source` and `target`, which merged distinct elements that share a name ([#492](https://github.com/localgod/tsarchi/issues/492)).
+
+### Fixed
+
+- `upsertElement()`, `upsertRelationship()` and `updateElement()` store copies of what they are given. `upsertElement()` used to store the caller's object and set its `id`, so passing the same object again updated the element instead of adding one, and changing the object, or a `properties`, `features` or `profiles` value passed in, changed the model without going through the API ([#492](https://github.com/localgod/tsarchi/issues/492)).
+
 ## [3.0.0] - 2026-10-05
 
 ### Changed

@@ -9,12 +9,12 @@ import type { Child as SchemaChild } from '../src/interfaces/schema/Child.mjs';
 import type { Element as SchemaElement } from '../src/interfaces/schema/Element.mjs';
 import type { Feature as SchemaFeature } from '../src/interfaces/schema/Feature.mjs';
 import type { SourceConnection as SchemaSourceConnection } from '../src/interfaces/schema/SourceConnection.mjs';
+import { archimateFromSchema, archimateToSchema } from '../src/internal/SchemaAccess.mjs';
 
 async function parseFile(path: string): Promise<Archimate> {
   const xml = await readFile(path, 'utf8');
   const raw = new XMLParser({ ignoreAttributes: false }).parse(xml) as Schema;
-  const archimate = new Archimate();
-  archimate.parse(raw);
+  const archimate = archimateFromSchema(raw);
   return archimate;
 }
 
@@ -24,7 +24,7 @@ function viewChildren(archimate: Archimate, viewId: string): Child[] {
 }
 
 function schemaChild(archimate: Archimate, viewId: string, childId: string): SchemaChild | undefined {
-  const diagrams = archimate.serialize()['archimate:model'].folder.find(folder => folder['@_type'] === 'diagrams');
+  const diagrams = archimateToSchema(archimate)['archimate:model'].folder.find(folder => folder['@_type'] === 'diagrams');
   const elements = diagrams?.element as SchemaElement | SchemaElement[] | undefined;
   const view = (Array.isArray(elements) ? elements : elements ? [elements] : []).find(element => element['@_id'] === viewId);
   const children = view?.child as SchemaChild | SchemaChild[] | undefined;

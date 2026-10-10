@@ -1,13 +1,13 @@
 // scripts/generate-relationships-matrix.js
 //
-// Regenerates src/constants/relationships-matrix.mts from Archi's relationships matrix.
+// Regenerates src/internal/relationships-matrix.mts from Archi's relationships matrix.
 // Usage: node scripts/generate-relationships-matrix.js [archi-commit]
 import fs from 'fs';
 import path from 'path';
 
 const commit = process.argv[2] || '6d236081d9460f063076dbb6225f8645c5f5a7a5';
 const base = `https://raw.githubusercontent.com/archimatetool/archi/${commit}/com.archimatetool.model/model`;
-const outFile = path.resolve('./src/constants/relationships-matrix.mts');
+const outFile = path.resolve('./src/internal/relationships-matrix.mts');
 
 async function fetchText(name) {
   const response = await fetch(`${base}/${name}`);

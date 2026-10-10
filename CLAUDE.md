@@ -5,14 +5,15 @@ TypeScript library that loads, edits, validates and saves Archi (`.archimate`) m
 ## Commands
 
 - `npm test` — builds (`pretest`), then runs vitest. Tests import from `src`, but `prebuild` regenerates `src/index.mts`.
-- `npm run lint` / `npm run format` (`npm run formatfix` to fix) — oxlint and oxfmt over `src`, `tests`, `scripts` and README, LICENSE, CHANGELOG, CONTRIBUTING. `.oxfmtrc.json` sets the code style (single quotes, 140 columns) and skips the generated `src/index.mts` and `src/constants/relationships-matrix.mts`. `.oxlintrc.json` keeps oxlint's default rules and adds `no-console` for `src/`: the library must not write to the console.
+- `npm run lint` / `npm run format` (`npm run formatfix` to fix) — oxlint and oxfmt over `src`, `tests`, `scripts` and README, LICENSE, CHANGELOG, CONTRIBUTING. `.oxfmtrc.json` sets the code style (single quotes, 140 columns) and skips the generated `src/index.mts` and `src/internal/relationships-matrix.mts`. `.oxlintrc.json` keeps oxlint's default rules and adds `no-console` for `src/`: the library must not write to the console.
 - `.claude/settings.json` runs `.claude/hooks/oxlint.sh` after every Edit/Write of a `.mts`/`.ts`/`.mjs`/`.js` file and reports oxlint errors and warnings back to Claude. `.claude/hooks/oxfmt.sh` formats the edited file if `npm run format` checks it.
 - `npm run roundtrip:diff -- [file|dir ...]` — load → serialize → diff without validation, grouped by what was lost. Defaults to all fixtures. Use it before and after any parse/serialize change (see the `archi-roundtrip-diff` skill).
 - `npm run compare` — strict round-trip of `tests/fixtures/roundtrip` (same check as `RoundtripFixtures.test.mts`).
 
 ## Layout
 
-- `src/Archimate.mts` — public model API; `parse()` / `serialize()` / `validateModel()`.
+- `src/Archimate.mts` — public model API; `fromXml()` / `toXml()` / `validateModel()`. Schema-level load and save (`parse` / `serialize`) are private; tests and the round-trip tools reach them through `src/internal/SchemaAccess.mts`.
+- `src/internal/ViewManager.mts` — view editing behind the `Archimate` view methods.
 - `src/internal/Parser.mts`, `src/internal/Serializer.mts` — schema (XML-shaped) ⇄ domain model.
 - `src/internal/DiagramAttributeMapper.mts` — attribute tables (`childAttributes`, `connectionAttributes`, `childTextElements`) that drive both parse and serialize of diagram children and connections.
 - `src/internal/SourceConnectionMapper.mts`, `src/internal/BoundMapper.mts` — view connections and bounds.
@@ -34,6 +35,10 @@ TypeScript library that loads, edits, validates and saves Archi (`.archimate`) m
 
 - `tests/fixtures/archi/` — unmodified files from the Archi repo, provenance listed in its `README.md`. They may still fail validation or round-trip; `tests/ArchiFixtures.test.mts` covers them.
 - `tests/fixtures/roundtrip/` — hand-written fixtures that must validate and round-trip exactly. Every file here is picked up automatically.
+
+## Scope
+
+tsarchi loads, edits, validates and saves `.archimate` files. Layout (positioning diagram objects), name-based matching and other application conventions belong to callers, not the library. Views are built from primitives with explicit bounds: `createView`, `addDiagramObject`, `addGroup`, `addConnection`.
 
 ## Changes
 

@@ -16,7 +16,7 @@ import { ArchimateParseError } from './interfaces/ArchimateParseError.mjs';
 import { Parser } from './internal/Parser.mjs';
 import { parseArchimateXml, buildArchimateXml } from './internal/Xml.mjs';
 import { Serializer } from './internal/Serializer.mjs';
-import { ViewManager } from './ViewManager.mjs';
+import { ViewManager } from './internal/ViewManager.mjs';
 import { removeFromNestedFolders } from './internal/NestedFolders.mjs';
 import { toArray } from './internal/Arrays.mjs';
 import { randomArchiId } from './internal/Ids.mjs';
@@ -29,10 +29,9 @@ import {
   archimateNamespace,
   canvasNamespace,
   allowedRelationshipTypes,
-  resolveRelationshipType,
 } from './constants/archimate-mappings.mjs';
-import { relationshipMatrixKeys } from './constants/relationships-matrix.mjs';
-import type { ArchimateModelType, ArchimateRelationshipAliasType, ArchimateRelationshipType } from './constants/archimate-mappings.mjs';
+import { relationshipMatrixKeys } from './internal/relationships-matrix.mjs';
+import type { ArchimateModelType, ArchimateRelationshipType } from './constants/archimate-mappings.mjs';
 
 /**
  * Codes for models Archi opens and saves, but that break a naming convention or an ArchiMate rule
@@ -76,9 +75,6 @@ export class Archimate {
 
   private viewManager: ViewManager;
 
-  /** Every id in the model while a bulk operation runs, so generateUniqueId does not walk the model for each new id. */
-  private idScope?: Set<string>;
-
   public constructor() {
     this.content = {};
     this.xmlMetadata = this.defaultXmlMetadata();
@@ -112,7 +108,7 @@ export class Archimate {
     }, {} as Model);
   }
 
-  public generateRandomId(): string {
+  private generateRandomId(): string {
     return randomArchiId();
   }
 
@@ -134,26 +130,11 @@ export class Archimate {
   public generateUniqueId(): string {
     let id = this.generateRandomId();
 
-    while (this.idScope ? this.idScope.has(id) : this.hasId(id)) {
+    while (this.hasId(id)) {
       id = this.generateRandomId();
     }
 
-    this.idScope?.add(id);
     return id;
-  }
-
-  /**
-   * Runs a bulk operation with the model's ids collected once. Only use it for operations that add ids through
-   * generateUniqueId.
-   */
-  private withIdScope<T>(run: () => T): T {
-    if (this.idScope) return run();
-    this.idScope = new Set(this.modelIds());
-    try {
-      return run();
-    } finally {
-      this.idScope = undefined;
-    }
   }
 
   /**
@@ -188,12 +169,12 @@ export class Archimate {
 
   /**
    * Inserts or updates an element in the appropriate folder.
-   * Updates are matched on `id` when one is given. Without an `id`, a named
-   * element matches an existing element with the same `name` + `type`;
-   * unnamed elements (such as junctions) are always added.
+   * Updates are matched on `id`. An element without an `id` is always added
+   * with a new one: names are not unique in a model, so they are never matched.
    * Throws when the given `id` is already used by something other than an
    * element in the target folder.
    * Only provided properties are overwritten; others remain unchanged.
+   * The model stores a copy: the given object is not changed or kept.
    * @param element Partial or full element data to insert or update.
    * @returns The inserted or updated element as stored in the model.
    */
@@ -210,27 +191,21 @@ export class Archimate {
       folder.elements = [];
     }
 
-    const existingIndex = element.id
-      ? folder.elements.findIndex(e => e.id === element.id)
-      : element.name
-        ? folder.elements.findIndex(e => e.name === element.name && e.type === element.type)
-        : -1;
+    const existingIndex = element.id ? folder.elements.findIndex(e => e.id === element.id) : -1;
 
     if (existingIndex < 0 && element.id && this.hasId(element.id)) {
       throw new Error(`ID "${element.id}" is already in use.`);
     }
 
     if (existingIndex >= 0) {
-      // The element is updated in place; its id is the one matched or, when matched by name, left out.
+      // The element is updated in place.
       const existingElement = folder.elements[existingIndex];
       return Object.assign(existingElement, this.mergeElementPatch(existingElement, element));
-    } else {
-      if (!('id' in element) || !element.id) {
-        element.id = this.generateUniqueId();
-      }
-      folder.elements.push(element as Element);
-      return element as Element;
     }
+    // The model keeps its own copy, so the caller's object is left as it was and later changes to it are not seen.
+    const newElement: Element = { ...structuredClone(element), id: element.id || this.generateUniqueId() };
+    folder.elements.push(newElement);
+    return newElement;
   }
 
   /**
@@ -335,12 +310,10 @@ export class Archimate {
   /**
    * Inserts or updates a relationship in the relations folder.
    *
-   * Updates are matched by id when provided, otherwise by name + type + source + target.
+   * Updates are matched on `id`. A relationship without an `id` is always added with a new one.
    */
-  public upsertRelationship(input: RelationshipInput): Relationship {
-    const type = resolveRelationshipType(input.type);
-    this.assertRelationshipType(type);
-    const relationship = { ...input, type };
+  public upsertRelationship(relationship: RelationshipInput): Relationship {
+    this.assertRelationshipType(relationship.type);
     const source = this.relationshipEndpoint(relationship.source, 'source');
     const target = this.relationshipEndpoint(relationship.target, 'target');
     const typeIssue = this.relationshipTypeIssue(
@@ -355,15 +328,7 @@ export class Archimate {
     const folder = this.model.relations;
     if (!folder.elements) folder.elements = [];
 
-    const existingIndex = relationship.id
-      ? folder.elements.findIndex(el => el.id === relationship.id)
-      : folder.elements.findIndex(
-          el =>
-            el.name === relationship.name &&
-            el.type === relationship.type &&
-            el.source === relationship.source &&
-            el.target === relationship.target
-        );
+    const existingIndex = relationship.id ? folder.elements.findIndex(el => el.id === relationship.id) : -1;
 
     if (existingIndex >= 0) {
       const updatedRelationship = this.mergeElementPatch(folder.elements[existingIndex], relationship) as Relationship;
@@ -385,8 +350,10 @@ export class Archimate {
     if (relationship.strength !== undefined) newRelationship.strength = relationship.strength;
     if (relationship.profiles !== undefined) newRelationship.profiles = relationship.profiles;
     if (relationship.features !== undefined) newRelationship.features = relationship.features;
-    folder.elements.push(newRelationship);
-    return newRelationship;
+    // Maps and arrays are copied, so later changes to the caller's input are not seen.
+    const storedRelationship = structuredClone(newRelationship);
+    folder.elements.push(storedRelationship);
+    return storedRelationship;
   }
 
   /**
@@ -433,14 +400,14 @@ export class Archimate {
     targetElementId: string,
     options?: {
       bidirectional?: boolean;
-      type?: ArchimateRelationshipType | ArchimateRelationshipAliasType;
+      type?: ArchimateRelationshipType;
     }
   ): Relationship[] {
     return (this.model.relations.elements || []).filter(relationship => {
       const directMatch = relationship.source === sourceElementId && relationship.target === targetElementId;
       const reverseMatch =
         options?.bidirectional === true && relationship.source === targetElementId && relationship.target === sourceElementId;
-      const typeMatch = options?.type ? relationship.type === resolveRelationshipType(options.type) : true;
+      const typeMatch = options?.type ? relationship.type === options.type : true;
 
       return typeMatch && (directMatch || reverseMatch);
     }) as Relationship[];
@@ -512,7 +479,7 @@ export class Archimate {
     }
   }
 
-  public parse(input: ArchimateSchema): void {
+  private parse(input: ArchimateSchema): void {
     const parser = new Parser(this.model);
     this.model = parser.parse(input);
     this.content = parser.parseModelContent(input);
@@ -556,7 +523,7 @@ export class Archimate {
     return buildArchimateXml(this.serialize());
   }
 
-  public serialize(): ArchimateSchema {
+  private serialize(): ArchimateSchema {
     const serializer = new Serializer(this.model);
     return serializer.serialize(this.withRequiredNamespaces(this.modelMetadata), this.xmlMetadata, this.content);
   }
@@ -773,21 +740,6 @@ export class Archimate {
   }
 
   /**
-   * Auto-generates a view based on elements and their relationships
-   */
-  public generateViewFromElements(
-    name: string,
-    elementIds: string[],
-    options?: {
-      includeRelationships?: boolean;
-      layoutType?: 'hierarchical' | 'circular' | 'grid';
-      viewpoint?: string;
-    }
-  ): View | null {
-    return this.withIdScope(() => this.viewManager.generateViewFromElements(name, elementIds, options));
-  }
-
-  /**
    * Updates visual properties of a diagram object
    */
   public updateDiagramObjectStyle(
@@ -815,7 +767,7 @@ export class Archimate {
   }
 
   /**
-   * Helper method to find elements by type for view generation
+   * Finds the elements, relationships and views of a type
    */
   public findElementsByType(elementType: ArchimateModelType): Element[] {
     return this.allElements().filter(el => el.type === elementType);
@@ -829,7 +781,7 @@ export class Archimate {
   }
 
   /**
-   * Helper method to find elements by folder for view generation
+   * Finds the elements, relationships or views in a top-level folder, including its nested folders
    */
   public findElementsByFolder(folderKey: FolderKey): Element[] {
     const folder = this.model[folderKey];
@@ -1034,42 +986,6 @@ export class Archimate {
     };
   }
 
-  /**
-   * Creates a view showing all elements of a specific type
-   */
-  public createViewByElementType(
-    viewName: string,
-    elementType: ArchimateModelType,
-    options?: {
-      layoutType?: 'hierarchical' | 'circular' | 'grid';
-      includeRelationships?: boolean;
-    }
-  ): View | null {
-    const elements = this.findElementsByType(elementType);
-    if (elements.length === 0) return null;
-
-    const elementIds = elements.map(el => el.id);
-    return this.generateViewFromElements(viewName, elementIds, options);
-  }
-
-  /**
-   * Creates a view showing all elements from a specific folder
-   */
-  public createViewByFolder(
-    viewName: string,
-    folderKey: FolderKey,
-    options?: {
-      layoutType?: 'hierarchical' | 'circular' | 'grid';
-      includeRelationships?: boolean;
-    }
-  ): View | null {
-    const elements = this.findElementsByFolder(folderKey);
-    if (elements.length === 0) return null;
-
-    const elementIds = elements.map(el => el.id);
-    return this.generateViewFromElements(viewName, elementIds, options);
-  }
-
   private findElementLocationById(elementId: string): {
     folderKey: FolderKey;
     folder: Model[FolderKey];
@@ -1113,7 +1029,7 @@ export class Archimate {
           updatedElement.properties.set(propKey, propValue);
         }
       } else {
-        (updatedElement as any)[key] = value;
+        (updatedElement as any)[key] = structuredClone(value);
       }
     }
 

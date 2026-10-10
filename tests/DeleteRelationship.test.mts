@@ -3,12 +3,12 @@ import { readFile } from 'fs/promises';
 import { XMLParser } from 'fast-xml-parser';
 import { Archimate } from '../src/Archimate.mjs';
 import type { Schema } from '../src/interfaces/schema/Schema.mjs';
+import { archimateFromSchema, archimateToSchema } from '../src/internal/SchemaAccess.mjs';
 
 async function parseFile(path: string): Promise<Archimate> {
   const xml = await readFile(path, 'utf8');
   const raw = new XMLParser({ ignoreAttributes: false }).parse(xml) as Schema;
-  const archimate = new Archimate();
-  archimate.parse(raw);
+  const archimate = archimateFromSchema(raw);
   return archimate;
 }
 
@@ -35,7 +35,7 @@ describe('deleteRelationship on a loaded model', () => {
     expect(archimate.deleteRelationship('id-assignment')).toBe(true);
 
     expect(archimate.validateModel()).toEqual([]);
-    const saved = collectById(archimate.serialize());
+    const saved = collectById(archimateToSchema(archimate));
     expect(saved.has('id-assignment-connection')).toBe(false);
     expect(saved.has('id-assignment-association-connection')).toBe(false);
     expect(saved.has('id-contract-connection')).toBe(false);
@@ -51,7 +51,7 @@ describe('deleteRelationship on a loaded model', () => {
     expect(archimate.deleteRelationship('id-contract-association')).toBe(true);
 
     expect(archimate.validateModel()).toEqual([]);
-    const saved = collectById(archimate.serialize());
+    const saved = collectById(archimateToSchema(archimate));
     expect(saved.has('id-contract-connection')).toBe(false);
     expect(saved.get('id-assignment-connection')).not.toHaveProperty('@_targetConnections');
     expect(saved.has('id-assignment-association-connection')).toBe(true);
@@ -63,7 +63,7 @@ describe('deleteRelationship on a loaded model', () => {
     expect(archimate.deleteRelationship('id-assignment-association')).toBe(true);
 
     expect(archimate.validateModel()).toEqual([]);
-    const saved = collectById(archimate.serialize());
+    const saved = collectById(archimateToSchema(archimate));
     expect(saved.has('id-assignment-association-connection')).toBe(false);
     expect(saved.get('id-assignment-connection')).not.toHaveProperty('sourceConnection');
     expect(saved.get('id-assignment-connection')).toHaveProperty('bendpoint');
@@ -79,7 +79,7 @@ describe('deleteRelationship on a loaded model', () => {
 
     // testDeleteHandler also has two relationships Archi's matrix rejects, reported as warnings.
     expect(archimate.validateModel().filter(issue => issue.severity === 'error')).toEqual([]);
-    const saved = collectById(archimate.serialize());
+    const saved = collectById(archimateToSchema(archimate));
     for (const id of ['5c85e0d2', '7958363b', 'db268768', '8cb15a1c']) {
       expect(saved.has(id)).toBe(false);
     }
@@ -95,7 +95,7 @@ describe('deleteRelationship on a loaded model', () => {
     expect(archimate.deleteRelationship('1788')).toBe(true);
 
     expect(archimate.validateModel()).toEqual([]);
-    const saved = collectById(archimate.serialize());
+    const saved = collectById(archimateToSchema(archimate));
     expect(saved.has('3751')).toBe(false);
     expect(saved.get('3735')?.['@_targetConnections']).toBe('3744');
   });

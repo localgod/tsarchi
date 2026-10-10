@@ -20,7 +20,10 @@
   <folder name="Technology &amp; Physical" id="id-rel-props-technology" type="technology">
     <element xsi:type="archimate:Node" name="Web Cluster" id="id-web-cluster"/>
   </folder>
-  <folder name="Motivation" id="id-rel-props-motivation" type="motivation"/>
+  <folder name="Motivation" id="id-rel-props-motivation" type="motivation">
+    <element xsi:type="archimate:Driver" name="Customer Satisfaction" id="id-driver"/>
+    <element xsi:type="archimate:Goal" name="Faster Onboarding" id="id-goal"/>
+  </folder>
   <folder name="Implementation &amp; Migration" id="id-rel-props-implementation" type="implementation_migration"/>
   <folder name="Other" id="id-rel-props-other" type="other"/>
   <folder name="Relations" id="id-rel-props-relations" type="relations">
@@ -29,6 +32,10 @@
       <property key="protocol" value="https"/>
     </element>
     <element xsi:type="archimate:RealizationRelationship" name="realizes" id="id-realization" source="id-web-cluster" target="id-portal"/>
+    <element xsi:type="archimate:AssociationRelationship" name="uses" id="id-association-directed" source="id-customer" target="id-portal" directed="true"/>
+    <element xsi:type="archimate:AssociationRelationship" id="id-association" source="id-customer" target="id-portal-service"/>
+    <element xsi:type="archimate:InfluenceRelationship" id="id-influence-strength" source="id-goal" target="id-driver" strength="++"/>
+    <element xsi:type="archimate:InfluenceRelationship" id="id-influence" source="id-driver" target="id-goal"/>
   </folder>
   <folder name="Views" id="id-rel-props-views" type="diagrams"/>
 </archimate:model>

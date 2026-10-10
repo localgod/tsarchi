@@ -194,6 +194,30 @@ model.upsertRelationship({
 });
 ```
 
+Association relationships keep Archi's `directed` flag. It is `true` for a directed association and absent for an undirected one:
+
+```typescript
+model.upsertRelationship({
+  name: "uses",
+  type: "AssociationRelationship",
+  source: "actor-id",
+  target: "role-id",
+  directed: true,
+});
+```
+
+Influence relationships keep Archi's free-text `strength` (for example `+`, `--` or `5`), absent when none is set:
+
+```typescript
+model.upsertRelationship({
+  name: "supports",
+  type: "InfluenceRelationship",
+  source: "goal-id",
+  target: "driver-id",
+  strength: "+",
+});
+```
+
 `updateElement` changes an element, relationship or view by id. Keys left out are unchanged, and a key set to `undefined` removes that field (a removed `name` becomes empty, which is saved without a `name` attribute, as Archi does). `properties` is merged into the existing properties:
 
 ```typescript

@@ -20,6 +20,10 @@ export interface Element {
   connectionRouterType?: number;
   /** AccessRelationship: 0 write (Archi's default, not written), 1 read, 2 unspecified, 3 read/write. */
   accessType?: number;
+  /** AssociationRelationship: true for a directed association; absent (Archi's default, not written) for undirected. */
+  directed?: boolean;
+  /** InfluenceRelationship: free-text strength such as '+', '--' or '5'; absent (Archi's default, not written) if none. */
+  strength?: string;
   /** Junction: 'or' for an OR junction; absent (Archi's default, not written) for AND. */
   junctionType?: string;
   /**

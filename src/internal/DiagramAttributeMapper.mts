@@ -84,10 +84,13 @@ export const viewAttributes: readonly AttributeSpec[] = [
 ];
 
 /**
- * Attributes Archi writes on an Access relationship or a Junction, after the source and target of a relationship.
+ * Attributes Archi writes on an Access, Association or Influence relationship or a Junction, after the source and
+ * target of a relationship.
  */
 export const conceptAttributes: readonly AttributeSpec[] = [
   ['accessType', 'accessType', 'number'],
+  ['directed', 'directed', 'boolean'],
+  ['strength', 'strength', 'string'],
   ['junctionType', 'type', 'string'],
 ];
 

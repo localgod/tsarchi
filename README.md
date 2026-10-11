@@ -298,11 +298,42 @@ if (isArchimateModelType(elementType)) {
 }
 ```
 
+To pick a type or an Archi code by name instead of typing its string or number, use the named constants. They are plain frozen objects, so they also work in JavaScript without TypeScript (for example in QuickJS), where a misspelt name gives `undefined` and the method it is passed to throws:
+
+```typescript
+import { ArchimateType, AccessType, TopLevelFolder } from "tsarchi";
+
+model.findElementsByType(ArchimateType.ApplicationComponent);
+model.findElementsByFolder(TopLevelFolder.Business);
+model.upsertRelationship({
+  name: "",
+  type: ArchimateType.AccessRelationship,
+  source,
+  target,
+  accessType: AccessType.Read,
+});
+```
+
+| Constant                                 | Values for                                                                          |
+| ---------------------------------------- | ----------------------------------------------------------------------------------- |
+| `ArchimateType`                          | element, relationship and view types                                                |
+| `TopLevelFolder`                         | the folder key of `findElementsByFolder`, `getFolders`, `getFolder`, `updateFolder` |
+| `RelationshipDirection`                  | the direction of `findRelationshipsForElement`                                      |
+| `Viewpoint`                              | the `viewpoint` of `createView`                                                     |
+| `AccessType`                             | `accessType` of an Access relationship                                              |
+| `TextAlignment`                          | `textAlignment` of diagram objects and groups                                       |
+| `TextPosition`, `ConnectionTextPosition` | `textPosition` of diagram objects and of view connections                           |
+| `ConnectionRouterType`                   | `connectionRouterType` of a view                                                    |
+| `GroupBorderType`, `NoteBorderType`      | `borderType` of groups and notes                                                    |
+
+Methods that take one of these throw on a value that is not in the list, instead of finding nothing or writing a value Archi does not know.
+
 ### View Management
 
 TSArchi provides comprehensive view management capabilities for creating and manipulating ArchiMate diagrams:
 
 ```typescript
+import { TextAlignment, Viewpoint } from "tsarchi";
 import { TsArchi } from "tsarchi/node";
 
 const tsArchi = new TsArchi();
@@ -310,7 +341,7 @@ const model = await tsArchi.loadModel("./model.archimate");
 
 // Create a new view
 const view = model.createView("Application Overview", {
-  viewpoint: "application",
+  viewpoint: Viewpoint.ApplicationCooperation,
   documentation: "Overview of application components",
 });
 
@@ -320,7 +351,7 @@ const bounds2 = { x: 300, y: 100, width: 120, height: 55 };
 
 const obj1 = model.addDiagramObject(view.id, "app-component-1-id", bounds1, {
   fillColor: "#c9e7b7",
-  textAlignment: 1,
+  textAlignment: TextAlignment.Left,
 });
 
 const obj2 = model.addDiagramObject(view.id, "app-component-2-id", bounds2, {
@@ -352,12 +383,14 @@ model.addDiagramObjectToGroup(view.id, group.id, "another-element-id", {
 ### View Management Operations
 
 ```typescript
+import { ArchimateType } from "tsarchi";
+
 // List all views (ArchiMate, sketch and canvas)
 const allViews = model.listViews();
 console.log(`Found ${allViews.length} views`);
 
 // List only ArchiMate views
-const archimateViews = model.listViews({ type: "ArchimateDiagramModel" });
+const archimateViews = model.listViews({ type: ArchimateType.ArchimateDiagramModel });
 
 // Get specific view. Nested objects are in `children`, connections in `sourceConnections`
 // and connection ids ending on an object in `targetConnections`. The view is a copy:
@@ -371,7 +404,7 @@ for (const child of view?.children ?? []) {
 model.updateDiagramObjectStyle("view-id", "object-id", {
   fillColor: "#ff6b6b",
   bounds: { x: 150, y: 150, width: 140, height: 65 },
-  textAlignment: 2,
+  textAlignment: TextAlignment.Center,
 });
 
 // Delete a view, and the references to it in other views

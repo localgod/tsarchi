@@ -1,6 +1,7 @@
 // Auto-generated index.mts
 
 export * from "./Archimate.mjs";
+export * from "./constants/archi-codes.mjs";
 export * from "./constants/archimate-mappings.mjs";
 export * from "./interfaces/ArchimateParseError.mjs";
 export * from "./interfaces/Bounds.mjs";

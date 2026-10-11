@@ -10,6 +10,7 @@ This project adheres to [Keep a CHANGELOG](http://keepachangelog.com/)
 
 ### Added
 
+- `deleteElements(ids)` deletes several elements, relationships or views at once and returns the ids it found. It removes the same as calling `deleteElement` for each id, but in one pass over the model and its views: deleting 1,000 of 10,000 elements in a model with 200 views takes about 16 ms instead of 2.9 s ([#501](https://github.com/localgod/tsarchi/issues/501)).
 - `ArchimateType` names every element, relationship and view type, e.g. `ArchimateType.ApplicationComponent`, so JavaScript callers without TypeScript's type checks (such as QuickJS scripts) can pick a type without typing its string. It is frozen: a misspelt name is `undefined` ([#505](https://github.com/localgod/tsarchi/issues/505)).
 - Named constants for the other codes and fixed strings Archi writes, with Archi's own values: `TopLevelFolder` (folder keys), `RelationshipDirection`, `Viewpoint`, `AccessType`, `TextAlignment`, `TextPosition`, `ConnectionTextPosition`, `ConnectionRouterType`, `GroupBorderType` and `NoteBorderType`, e.g. `TextAlignment.Left` instead of `1`. They are frozen like `ArchimateType` ([#505](https://github.com/localgod/tsarchi/issues/505)).
 

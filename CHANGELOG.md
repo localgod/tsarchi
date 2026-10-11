@@ -8,6 +8,8 @@ This project adheres to [Keep a CHANGELOG](http://keepachangelog.com/)
 
 ## [Unreleased]
 
+## [4.2.0] - 2026-10-11
+
 ### Added
 
 - `deleteElements(ids)` deletes several elements, relationships or views at once and returns the ids it found. It removes the same as calling `deleteElement` for each id, but in one pass over the model and its views: deleting 1,000 of 10,000 elements in a model with 200 views takes about 16 ms instead of 2.9 s ([#501](https://github.com/localgod/tsarchi/issues/501)).
@@ -224,7 +226,8 @@ Unpublished from npm. Its changes were released in 1.0.2.
 - A `sync` command-line script that loads a model from `-i` and saves it to `-o`.
 - The package contains the TypeScript sources only, without compiled JavaScript.
 
-[Unreleased]: https://github.com/localgod/tsarchi/compare/4.1.0...HEAD
+[Unreleased]: https://github.com/localgod/tsarchi/compare/4.2.0...HEAD
+[4.2.0]: https://github.com/localgod/tsarchi/compare/4.1.0...4.2.0
 [4.1.0]: https://github.com/localgod/tsarchi/compare/4.0.0...4.1.0
 [4.0.0]: https://github.com/localgod/tsarchi/compare/3.0.0...4.0.0
 [3.0.0]: https://github.com/localgod/tsarchi/compare/2.2.0...3.0.0

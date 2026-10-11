@@ -54,14 +54,14 @@ describe('ViewManager', () => {
     it('should create a new view with basic properties', () => {
       const view = archimate.createView('Test View', {
         documentation: 'Test documentation',
-        viewpoint: 'application',
+        viewpoint: 'application_cooperation',
       });
 
       expect(view).toBeDefined();
       expect(view.name).toBe('Test View');
       expect(view.type).toBe('ArchimateDiagramModel');
       expect(view.documentation).toBe('Test documentation');
-      expect(view.viewpoint).toBe('application');
+      expect(view.viewpoint).toBe('application_cooperation');
       expect(view.children).toEqual([]);
     });
 

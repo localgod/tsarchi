@@ -8,6 +8,16 @@ This project adheres to [Keep a CHANGELOG](http://keepachangelog.com/)
 
 ## [Unreleased]
 
+### Added
+
+- `ArchimateType` names every element, relationship and view type, e.g. `ArchimateType.ApplicationComponent`, so JavaScript callers without TypeScript's type checks (such as QuickJS scripts) can pick a type without typing its string. It is frozen: a misspelt name is `undefined` ([#505](https://github.com/localgod/tsarchi/issues/505)).
+- Named constants for the other codes and fixed strings Archi writes, with Archi's own values: `TopLevelFolder` (folder keys), `RelationshipDirection`, `Viewpoint`, `AccessType`, `TextAlignment`, `TextPosition`, `ConnectionTextPosition`, `ConnectionRouterType`, `GroupBorderType` and `NoteBorderType`, e.g. `TextAlignment.Left` instead of `1`. They are frozen like `ArchimateType` ([#505](https://github.com/localgod/tsarchi/issues/505)).
+
+### Changed
+
+- `findElementsByType` throws on a type that is not an ArchiMate element, relationship or view type, including `undefined`, instead of returning an empty array. TypeScript callers could not pass such a type without a cast; JavaScript callers now get an error for a misspelt type instead of silently finding nothing ([#505](https://github.com/localgod/tsarchi/issues/505)).
+- The other methods that take one of these values throw on a value that is not in the list, naming the allowed ones, instead of returning nothing, failing with a `TypeError` or writing a value Archi does not know: the folder key of `findElementsByFolder`, `getFolders`, `getFolder` and `updateFolder`; the direction of `findRelationshipsForElement`; the relationship type of `findRelationshipsBetween`; the view type of `listViews`; the viewpoint of `createView`; the `textAlignment` of `addDiagramObject`, `addDiagramObjectToGroup`, `addGroup` and `updateDiagramObjectStyle`; the `textPosition` of `addConnection`; and the `accessType` of `upsertRelationship`. Options left out or set to `undefined` are still ignored ([#505](https://github.com/localgod/tsarchi/issues/505)).
+
 ### Fixed
 
 - The getters that return copies of elements, relationships and views (`listElements`, `listRelationships`, `getElement`, `findElementsByType` and the other `find…` methods) were up to 25× slower than in 3.0.0 on large models, as every copy went through `structuredClone`. They now copy the Maps of strings directly and use `structuredClone` only for a view's children and `unrecognized` XML: `listElements()` on 5,000 elements takes about 0.5 ms instead of 4 ms. Copies are still deep ([#500](https://github.com/localgod/tsarchi/issues/500)).

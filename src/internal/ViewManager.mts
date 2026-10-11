@@ -9,6 +9,8 @@ import { removeFromNestedFolders } from './NestedFolders.mjs';
 import { toArray } from './Arrays.mjs';
 import { randomArchiId } from './Ids.mjs';
 import { ModelIndex } from './ModelIndex.mjs';
+import { assertOptionalCode } from './Codes.mjs';
+import { ConnectionTextPosition, TextAlignment, Viewpoint } from '../constants/archi-codes.mjs';
 import { splitIds, toViewChild, toViewConnection } from './ViewChildMapper.mjs';
 
 /**
@@ -39,6 +41,7 @@ export class ViewManager {
       documentation?: string;
     }
   ): View {
+    assertOptionalCode('viewpoint', options?.viewpoint, Viewpoint);
     const element: Element = { id: this.generateUniqueId(), name, type: 'ArchimateDiagramModel', child: [] };
     if (options?.viewpoint !== undefined) element.viewpoint = options.viewpoint;
     if (options?.background !== undefined) element.background = options.background;
@@ -65,6 +68,9 @@ export class ViewManager {
    * Lists all views in the model (ArchiMate, sketch and canvas), optionally only those of one type
    */
   listViews(options?: { type?: View['type'] }): View[] {
+    if (options?.type !== undefined && !isArchimateViewType(options.type)) {
+      throw new Error(`Unknown view type "${options.type}".`);
+    }
     if (!this.model.diagrams.elements) return [];
 
     return this.model.diagrams.elements
@@ -86,6 +92,7 @@ export class ViewManager {
       textAlignment?: number;
     }
   ): ViewDiagramObject | null {
+    assertOptionalCode('textAlignment', options?.textAlignment, TextAlignment);
     const viewElement = this.findView(viewId);
     if (!viewElement) return null;
 
@@ -109,6 +116,7 @@ export class ViewManager {
       documentation?: string;
     }
   ): ViewGroup | null {
+    assertOptionalCode('textAlignment', options?.textAlignment, TextAlignment);
     const viewElement = this.findView(viewId);
     if (!viewElement) return null;
 
@@ -133,6 +141,7 @@ export class ViewManager {
       textAlignment?: number;
     }
   ): ViewDiagramObject | null {
+    assertOptionalCode('textAlignment', options?.textAlignment, TextAlignment);
     const viewElement = this.findView(viewId);
     if (!viewElement) return null;
 
@@ -162,6 +171,7 @@ export class ViewManager {
       textPosition?: number;
     }
   ): ViewConnection | null {
+    assertOptionalCode('textPosition', options?.textPosition, ConnectionTextPosition);
     const viewElement = this.findView(viewId);
     if (!viewElement) return null;
 
@@ -211,6 +221,7 @@ export class ViewManager {
       textAlignment?: number;
     }
   ): boolean {
+    assertOptionalCode('textAlignment', style.textAlignment, TextAlignment);
     const viewElement = this.findView(viewId);
     if (!viewElement) return false;
 

@@ -4,7 +4,11 @@
     {
       "files": ["src/**"],
       "rules": {
-        "no-console": "error"
+        "no-console": "error",
+        "no-restricted-globals": [
+          "error",
+          { "name": "structuredClone", "message": "QuickJS has no structuredClone; use deepCopy from src/internal/Copy.mts." }
+        ]
       }
     }
   ]

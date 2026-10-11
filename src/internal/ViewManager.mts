@@ -7,6 +7,7 @@ import type { Bounds } from '../interfaces/Bounds.mjs';
 import { isArchimateViewType } from '../constants/archimate-mappings.mjs';
 import { removeFromNestedFolders } from './NestedFolders.mjs';
 import { toArray } from './Arrays.mjs';
+import { deepCopy } from './Copy.mjs';
 import { randomArchiId } from './Ids.mjs';
 import { ModelIndex } from './ModelIndex.mjs';
 import { splitIds, toViewChild, toViewConnection } from './ViewChildMapper.mjs';
@@ -289,7 +290,7 @@ export class ViewManager {
     if (element.background !== undefined) view.background = element.background;
     if (element.connectionRouterType !== undefined) view.connectionRouterType = element.connectionRouterType;
     if (element.features !== undefined) view.features = new Map(element.features);
-    if (element.unrecognized !== undefined) view.unrecognized = structuredClone(element.unrecognized);
+    if (element.unrecognized !== undefined) view.unrecognized = deepCopy(element.unrecognized);
     return view;
   }
 

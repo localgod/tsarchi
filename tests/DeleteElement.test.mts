@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { readFile } from 'fs/promises';
 import { XMLParser } from 'fast-xml-parser';
 import { Archimate } from '../src/Archimate.mjs';
@@ -69,5 +69,81 @@ describe('deleteElement', () => {
     expect(saved.has('id-nested-portal-object')).toBe(false);
     expect(saved.has('id-portal-object')).toBe(true);
     expect(saved.has('id-group-portal-object')).toBe(true);
+  });
+});
+
+describe('deleteElements', () => {
+  const fixtures = [
+    'tests/fixtures/archi/Archisurance.archimate',
+    'tests/fixtures/archi/testDeleteHandler.archimate',
+    nestedDiagramObjects,
+    'tests/fixtures/roundtrip/nested-folders.archimate',
+    'tests/fixtures/roundtrip/connection-to-connection.archimate',
+    'tests/fixtures/roundtrip/junctions.archimate',
+  ];
+
+  /** Every nth id of the model's elements, relationships and views, starting at offset. */
+  function everyNth(archimate: Archimate, n: number, offset: number, kinds: ('elements' | 'relationships' | 'views')[]): string[] {
+    const ids = [
+      ...(kinds.includes('elements') ? archimate.listElements() : []),
+      ...(kinds.includes('relationships') ? archimate.listRelationships() : []),
+      ...(kinds.includes('views') ? archimate.listViews() : []),
+    ].map(item => item.id);
+    return ids.filter((_, i) => i % n === offset);
+  }
+
+  describe.each(fixtures)('%s', fixture => {
+    it.each([
+      ['elements', 3, 0, ['elements']],
+      ['relationships', 2, 1, ['relationships']],
+      ['elements, relationships and views', 4, 2, ['elements', 'relationships', 'views']],
+      ['everything', 1, 0, ['elements', 'relationships', 'views']],
+    ] as const)('should remove the same as deleteElement for each id, deleting %s', async (_, n, offset, kinds) => {
+      const one = await parseFile(fixture);
+      const batch = await parseFile(fixture);
+      const ids = everyNth(one, n, offset, [...kinds]);
+
+      const existing = ids.filter(id => batch.getElement(id) !== null);
+      for (const id of ids) one.deleteElement(id);
+
+      expect(batch.deleteElements(ids)).toEqual(existing);
+
+      expect(batch.snapshot()).toEqual(one.snapshot());
+      expect(batch.validateModel()).toEqual(one.validateModel());
+    });
+  });
+
+  it('should return the ids found, once each, in the given order', async () => {
+    const archimate = await parseFile(nestedDiagramObjects);
+    const [first, second] = archimate.listElements().map(element => element.id);
+
+    expect(archimate.deleteElements([second, 'missing', first, second])).toEqual([second, first]);
+    expect(archimate.getElement(first)).toBeNull();
+    expect(archimate.deleteElements(['missing'])).toEqual([]);
+    expect(archimate.deleteElements([])).toEqual([]);
+  });
+
+  it('should count a relationship removed with an element in the list as found', async () => {
+    const archimate = await parseFile(nestedDiagramObjects);
+    const relationship = archimate.listRelationships()[0];
+
+    expect(archimate.deleteElements([relationship.source, relationship.id])).toEqual([relationship.source, relationship.id]);
+    expect(archimate.getRelationship(relationship.id)).toBeNull();
+  });
+
+  it('should go through the views once, not once per id', async () => {
+    const archimate = await parseFile('tests/fixtures/archi/Archisurance.archimate');
+    const ids = everyNth(archimate, 5, 0, ['elements', 'relationships']);
+    type Internals = { removeViewChildren: () => void; removeViewConnectionsForRelationships: () => void };
+    const children = vi.spyOn(Archimate.prototype as unknown as Internals, 'removeViewChildren');
+    const connections = vi.spyOn(Archimate.prototype as unknown as Internals, 'removeViewConnectionsForRelationships');
+
+    archimate.deleteElements(ids);
+
+    expect(ids.length).toBeGreaterThan(20);
+    expect(children).toHaveBeenCalledTimes(1);
+    expect(connections).toHaveBeenCalledTimes(1);
+    children.mockRestore();
+    connections.mockRestore();
   });
 });

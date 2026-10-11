@@ -302,30 +302,63 @@ export class Archimate {
     if (!location) return false;
 
     location.folder.elements!.splice(location.index, 1);
-    this.removeWithDeletedElements(location.folderKey, new Set([elementId]));
+    this.removeWithDeletedElements(new Map([[location.folderKey, new Set([elementId])]]));
     this.index.clear();
     return true;
   }
 
   /**
-   * Removes what goes with elements or relationships deleted from a top-level folder: their places in nested
+   * Deletes several elements, relationships or views at once, removing the same as calling `deleteElement` for each of
+   * them, but in one pass over the model and its views instead of one per id. Ids not found, including those of
+   * relationships already removed with an element in the list, are skipped. Returns the ids that were found.
+   */
+  public deleteElements(elementIds: Iterable<string>): string[] {
+    const deleted = new Map<FolderKey, Set<Element>>();
+    const found: string[] = [];
+    for (const id of new Set(elementIds)) {
+      const entry = this.index.element(id);
+      if (!entry) continue;
+      found.push(id);
+      const elements = deleted.get(entry.folderKey) ?? new Set();
+      elements.add(entry.element);
+      deleted.set(entry.folderKey, elements);
+    }
+    if (found.length === 0) return found;
+
+    const deletedIds = new Map<FolderKey, Set<string>>();
+    for (const [folderKey, elements] of deleted) {
+      const folder = this.model[folderKey];
+      folder.elements = folder.elements!.filter(element => !elements.has(element));
+      deletedIds.set(folderKey, new Set(Array.from(elements, element => element.id)));
+    }
+    this.removeWithDeletedElements(deletedIds);
+    this.index.clear();
+    return found;
+  }
+
+  /**
+   * Removes what goes with elements or relationships deleted from top-level folders: their places in nested
    * folders, the relationships attached to them (transitively), and the diagram objects and view connections
    * that show any of them.
    */
-  private removeWithDeletedElements(folderKey: FolderKey, deletedIds: ReadonlySet<string>): void {
-    removeFromNestedFolders(this.model[folderKey].folders || [], deletedIds);
+  private removeWithDeletedElements(deletedIds: ReadonlyMap<FolderKey, ReadonlySet<string>>): void {
+    const elementIds = new Set<string>();
+    const removedRelationshipIds = new Set<string>();
+    for (const [folderKey, ids] of deletedIds) {
+      removeFromNestedFolders(this.model[folderKey].folders || [], ids);
+      for (const id of ids) (folderKey === 'relations' ? removedRelationshipIds : elementIds).add(id);
+    }
 
-    const removedRelationshipIds = new Set<string>(folderKey === 'relations' ? deletedIds : []);
-    for (const relationship of this.removeRelationshipsForElements(deletedIds)) {
+    for (const relationship of this.removeRelationshipsForElements(new Set([...elementIds, ...removedRelationshipIds]))) {
       removedRelationshipIds.add(relationship.id);
     }
     if (removedRelationshipIds.size > 0) {
       removeFromNestedFolders(this.model.relations.folders || [], removedRelationshipIds);
       this.removeViewConnectionsForRelationships(removedRelationshipIds);
     }
-    if (folderKey !== 'relations') {
+    if (elementIds.size > 0) {
       this.removeViewChildren(
-        child => child.type === 'DiagramObject' && child.archimateElement !== undefined && deletedIds.has(child.archimateElement)
+        child => child.type === 'DiagramObject' && child.archimateElement !== undefined && elementIds.has(child.archimateElement)
       );
     }
   }
@@ -1015,7 +1048,7 @@ export class Archimate {
         if (!deletedIds.has(element.id)) elements[kept++] = element;
       }
       elements.length = kept;
-      this.removeWithDeletedElements(location.folderKey, deletedIds);
+      this.removeWithDeletedElements(new Map([[location.folderKey, deletedIds]]));
     }
     this.index.clear();
     return true;

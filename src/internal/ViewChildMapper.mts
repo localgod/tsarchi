@@ -3,6 +3,7 @@ import type { SourceConnection } from '../interfaces/SourceConnection.mjs';
 import type { ViewChild } from '../interfaces/ViewChild.mjs';
 import type { ViewConnection } from '../interfaces/View.mjs';
 import { toArray } from './Arrays.mjs';
+import { deepCopy } from './Copy.mjs';
 
 /**
  * Archi stores the ids of the connections that end on an object or connection in one space-separated attribute.
@@ -20,7 +21,7 @@ function copyValues<T extends object>(source: T): T {
     if (value instanceof Map) copy[key] = new Map(value);
     else if (key === 'bounds' && value) copy[key] = { ...value };
     else if (key === 'bendpoints' && Array.isArray(value)) copy[key] = value.map(bendpoint => ({ ...bendpoint }));
-    else if (key === 'unrecognized' && value) copy[key] = structuredClone(value);
+    else if (key === 'unrecognized' && value) copy[key] = deepCopy(value);
   }
   return copy as T;
 }

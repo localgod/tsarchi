@@ -20,6 +20,7 @@ import { ViewManager } from './internal/ViewManager.mjs';
 import { ModelIndex, relationshipsByEndpoint } from './internal/ModelIndex.mjs';
 import { removeFromNestedFolders } from './internal/NestedFolders.mjs';
 import { toArray } from './internal/Arrays.mjs';
+import { deepCopy } from './internal/Copy.mjs';
 import { randomArchiId } from './internal/Ids.mjs';
 import { readSnapshot, writeSnapshot } from './internal/Snapshot.mjs';
 import type { ModelSnapshot } from './interfaces/ModelSnapshot.mjs';
@@ -55,18 +56,18 @@ type PendingIssue = Omit<ValidationIssue, 'severity'>;
 const matrixRelationshipTypes: ReadonlySet<string> = new Set(Object.values(relationshipMatrixKeys));
 
 /** A deep copy of a stored object, so that what the API returns cannot change the model. */
-const copy = <T,>(value: T): T => structuredClone(value);
+const copy = <T,>(value: T): T => deepCopy(value);
 
 /**
  * A deep copy of a stored element, relationship or view, much faster than `copy` on large models. Most values are
  * strings, numbers and booleans; the Maps hold strings only, so a new Map is a deep copy. Any other object (a
- * view's `child` tree, `unrecognized`) goes through `structuredClone`.
+ * view's `child` tree, `unrecognized`) is copied with `deepCopy`.
  */
 const copyElement = <T extends Element>(element: T): T => {
   const result = { ...element } as Record<string, unknown>;
   for (const key in result) {
     const value = result[key];
-    if (typeof value === 'object' && value !== null) result[key] = value instanceof Map ? new Map(value) : structuredClone(value);
+    if (typeof value === 'object' && value !== null) result[key] = value instanceof Map ? new Map(value) : deepCopy(value);
   }
   return result as T;
 };
@@ -214,7 +215,7 @@ export class Archimate {
       return copyElement(existingElement);
     }
     // The model keeps its own copy, so the caller's object is left as it was and later changes to it are not seen.
-    const newElement: Element = { ...structuredClone(element), id: element.id || this.generateUniqueId() };
+    const newElement: Element = { ...deepCopy(element), id: element.id || this.generateUniqueId() };
     folder.elements.push(newElement);
     this.index.added(folderKey, newElement);
     return copyElement(newElement);
@@ -376,7 +377,7 @@ export class Archimate {
     if (relationship.profiles !== undefined) newRelationship.profiles = relationship.profiles;
     if (relationship.features !== undefined) newRelationship.features = relationship.features;
     // Maps and arrays are copied, so later changes to the caller's input are not seen.
-    const storedRelationship = structuredClone(newRelationship);
+    const storedRelationship = deepCopy(newRelationship);
     folder.elements.push(storedRelationship);
     this.index.added('relations', storedRelationship);
     return copyElement(storedRelationship);
@@ -1132,7 +1133,7 @@ export class Archimate {
           updatedElement.properties.set(propKey, propValue);
         }
       } else {
-        (updatedElement as any)[key] = structuredClone(value);
+        (updatedElement as any)[key] = deepCopy(value);
       }
     }
 

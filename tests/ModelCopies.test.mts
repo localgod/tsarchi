@@ -135,12 +135,42 @@ describe('objects returned by the model are copies', () => {
     expect(archimate.getRelationship('flow')?.target).toBe('app-b');
   });
 
-  it('should not change the model when a view from getElement is changed', () => {
+  it.each(elementGetters)(
+    'should not change the model when the features or unrecognized XML of the element from %s are changed',
+    (_, get) => {
+      const archimate = Archimate.fromXml(`<?xml version="1.0" encoding="UTF-8"?>
+<archimate:model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:archimate="http://www.archimatetool.com/archimate" name="M" id="m" version="5.0.0">
+  <folder name="Application" id="fa" type="application">
+    <element xsi:type="archimate:ApplicationComponent" name="A" id="app-a" extra="1">
+      <note text="x"/>
+      <feature name="iconColor" value="#ff0000"/>
+    </element>
+  </folder>
+</archimate:model>`);
+      const element = get(archimate);
+      element.features!.set('iconColor', '#00ff00');
+      (element.unrecognized!.note as Record<string, string>)['@_text'] = 'changed';
+
+      const stored = archimate.getElement('app-a')!;
+      expect(stored.features?.get('iconColor')).toBe('#ff0000');
+      expect(stored.unrecognized).toEqual({ note: { '@_text': 'x' }, '@_extra': '1' });
+    }
+  );
+
+  const viewGetters: [string, (archimate: Archimate, viewId: string) => Element][] = [
+    ['getElement', (archimate, viewId) => archimate.getElement(viewId)!],
+    ['findElementsByName', archimate => archimate.findElementsByName('View')[0]],
+    ['findElementsByType', archimate => archimate.findElementsByType('ArchimateDiagramModel')[0]],
+    ['findElementsByFolder', archimate => archimate.findElementsByFolder('diagrams')[0]],
+    ['findElementInFolderByName', archimate => archimate.findElementInFolderByName('diagrams', 'View')!],
+  ];
+
+  it.each(viewGetters)('should not change the model when a view from %s is changed', (_, get) => {
     const archimate = model();
     const view = archimate.createView('View');
     archimate.addDiagramObject(view.id, 'app-a', { x: 0, y: 0, width: 120, height: 55 });
 
-    const element = archimate.getElement(view.id)!;
+    const element = get(archimate, view.id);
     (element.child as Child[])[0].fillColor = '#ff0000';
 
     expect(archimate.getView(view.id)?.children[0]).not.toHaveProperty('fillColor');

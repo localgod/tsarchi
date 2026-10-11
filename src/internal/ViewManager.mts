@@ -8,6 +8,7 @@ import { isArchimateViewType } from '../constants/archimate-mappings.mjs';
 import { removeFromNestedFolders } from './NestedFolders.mjs';
 import { toArray } from './Arrays.mjs';
 import { randomArchiId } from './Ids.mjs';
+import { ModelIndex } from './ModelIndex.mjs';
 import { splitIds, toViewChild, toViewConnection } from './ViewChildMapper.mjs';
 
 /**
@@ -18,10 +19,13 @@ import { splitIds, toViewChild, toViewConnection } from './ViewChildMapper.mjs';
 export class ViewManager {
   private model: Model;
   private generateUniqueId: () => string;
+  /** Lookups by id, shared with the Archimate that owns the model; the methods below keep it current. */
+  private index: ModelIndex;
 
-  constructor(model: Model, generateUniqueId?: () => string) {
+  constructor(model: Model, generateUniqueId?: () => string, index?: ModelIndex) {
     this.model = model;
     this.generateUniqueId = generateUniqueId || randomArchiId;
+    this.index = index || new ModelIndex(() => model);
   }
 
   /**
@@ -44,6 +48,7 @@ export class ViewManager {
       this.model.diagrams.elements = [];
     }
     this.model.diagrams.elements.push(element);
+    this.index.added('diagrams', element);
 
     return this.elementToView(element);
   }
@@ -86,6 +91,7 @@ export class ViewManager {
 
     const diagramObject = this.newDiagramObject(elementId, bounds, options);
     this.childrenOf(viewElement).push(diagramObject);
+    this.index.addId(diagramObject.id);
     return toViewChild(diagramObject) as ViewDiagramObject;
   }
 
@@ -108,6 +114,7 @@ export class ViewManager {
 
     const group: Child = { id: this.generateUniqueId(), type: 'Group', name, bounds: { ...bounds }, ...options };
     this.childrenOf(viewElement).push(group);
+    this.index.addId(group.id);
     return toViewChild(group) as ViewGroup;
   }
 
@@ -136,6 +143,7 @@ export class ViewManager {
 
     const diagramObject = this.newDiagramObject(elementId, bounds, options);
     group.child = [...(group.child ?? []), diagramObject];
+    this.index.addId(diagramObject.id);
     return toViewChild(diagramObject) as ViewDiagramObject;
   }
 
@@ -184,6 +192,7 @@ export class ViewManager {
 
     sourceObject.sourceConnection = [...toArray(sourceObject.sourceConnection), connection];
     targetObject.targetConnections = [...splitIds(targetObject.targetConnections), connection.id].join(' ');
+    this.index.addId(connection.id);
 
     return toViewConnection(connection);
   }
@@ -223,14 +232,15 @@ export class ViewManager {
 
     this.model.diagrams.elements.splice(index, 1);
     removeFromNestedFolders(this.model.diagrams.folders || [], new Set([viewId]));
+    this.index.clear();
     return true;
   }
 
   // Private helper methods
 
   private findView(viewId: string): Element | null {
-    const viewElement = this.model.diagrams.elements?.find(el => el.id === viewId);
-    return viewElement && isArchimateViewType(viewElement.type) ? viewElement : null;
+    const entry = this.index.element(viewId);
+    return entry?.folderKey === 'diagrams' && isArchimateViewType(entry.element.type) ? entry.element : null;
   }
 
   /**
@@ -284,13 +294,6 @@ export class ViewManager {
   }
 
   private findElementById(elementId: string): Element | null {
-    for (const folderKey of Object.keys(this.model) as Array<keyof Model>) {
-      const folder = this.model[folderKey];
-      if (folder.elements) {
-        const element = folder.elements.find(el => el.id === elementId);
-        if (element) return element;
-      }
-    }
-    return null;
+    return this.index.element(elementId)?.element ?? null;
   }
 }

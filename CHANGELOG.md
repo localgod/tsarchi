@@ -8,6 +8,12 @@ This project adheres to [Keep a CHANGELOG](http://keepachangelog.com/)
 
 ## [Unreleased]
 
+### Fixed
+
+- The getters that return copies of elements, relationships and views (`listElements`, `listRelationships`, `getElement`, `findElementsByType` and the other `find…` methods) were up to 25× slower than in 3.0.0 on large models, as every copy went through `structuredClone`. They now copy the Maps of strings directly and use `structuredClone` only for a view's children and `unrecognized` XML: `listElements()` on 5,000 elements takes about 0.5 ms instead of 4 ms. Copies are still deep ([#500](https://github.com/localgod/tsarchi/issues/500)).
+- Building a model took time that grew with the square of its size: every new element, relationship, view, diagram object, connection and folder walked every id in the model to check the new id was unused, so adding 10,000 diagram objects with their connections took about 30 s. Ids, elements by id and relationships by endpoint are now looked up in an index built once and kept current as the model changes, so the same build takes about 30 ms. `getElement`, `getRelationship`, `findRelationshipsForElement` and `upsertRelationship` use it too ([#500](https://github.com/localgod/tsarchi/issues/500)).
+- `upsertRelationship` accepted an id already used by another element, view, diagram object or folder, which made the model fail validation with `duplicate-id` and could not be saved. It now throws, as `upsertElement` does ([#500](https://github.com/localgod/tsarchi/issues/500)).
+
 ## [4.1.0] - 2026-10-10
 
 ### Added

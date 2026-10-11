@@ -35,6 +35,8 @@ import {
   allowedRelationshipTypes,
 } from './constants/archimate-mappings.mjs';
 import { relationshipMatrixKeys } from './internal/relationships-matrix.mjs';
+import { AccessType, RelationshipDirection, TopLevelFolder } from './constants/archi-codes.mjs';
+import { assertCode, assertOptionalCode } from './internal/Codes.mjs';
 import type { ArchimateModelType, ArchimateRelationshipType } from './constants/archimate-mappings.mjs';
 
 /**
@@ -336,6 +338,7 @@ export class Archimate {
    */
   public upsertRelationship(relationship: RelationshipInput): Relationship {
     this.assertRelationshipType(relationship.type);
+    assertOptionalCode('accessType', relationship.accessType, AccessType);
     const source = this.relationshipEndpoint(relationship.source, 'source');
     const target = this.relationshipEndpoint(relationship.target, 'target');
     const typeIssue = this.relationshipTypeIssue(
@@ -413,6 +416,7 @@ export class Archimate {
    * Finds copies of the relationships connected to an element.
    */
   public findRelationshipsForElement(elementId: string, direction: 'source' | 'target' | 'both' = 'both'): Relationship[] {
+    assertCode('direction', direction, RelationshipDirection);
     return this.relationshipsForElement(elementId, direction).map(copyElement);
   }
 
@@ -436,6 +440,7 @@ export class Archimate {
       type?: ArchimateRelationshipType;
     }
   ): Relationship[] {
+    if (options?.type !== undefined) this.assertRelationshipType(options.type);
     return (this.model.relations.elements || [])
       .filter(relationship => {
         const directMatch = relationship.source === sourceElementId && relationship.target === targetElementId;
@@ -860,9 +865,13 @@ export class Archimate {
   }
 
   /**
-   * Finds copies of the elements, relationships and views of a type
+   * Finds copies of the elements, relationships and views of a type. Throws on a type that is not an ArchiMate element,
+   * relationship or view type, so a misspelt type fails instead of returning no elements.
    */
   public findElementsByType(elementType: ArchimateModelType): Element[] {
+    if (!isArchimateModelType(elementType)) {
+      throw new Error(`Unknown element type "${elementType}".`);
+    }
     return this.allElements()
       .filter(el => el.type === elementType)
       .map(copyElement);
@@ -879,7 +888,7 @@ export class Archimate {
    * Finds copies of the elements, relationships or views in a top-level folder, including its nested folders
    */
   public findElementsByFolder(folderKey: FolderKey): Element[] {
-    return (this.model[folderKey].elements || []).map(copyElement);
+    return (this.topLevelFolder(folderKey).elements || []).map(copyElement);
   }
 
   /**
@@ -890,7 +899,7 @@ export class Archimate {
    * a nested folder lists the ids of the elements placed directly in it.
    */
   public getFolders(folderKey: FolderKey): Folder[] {
-    return (this.model[folderKey].folders || []).map(copy);
+    return (this.topLevelFolder(folderKey).folders || []).map(copy);
   }
 
   /**
@@ -898,7 +907,7 @@ export class Archimate {
    * use `updateFolder` to change them.
    */
   public getFolder(folderKey: FolderKey): ModelFolderDetails {
-    return Archimate.folderDetails(this.model[folderKey]);
+    return Archimate.folderDetails(this.topLevelFolder(folderKey));
   }
 
   /**
@@ -906,7 +915,7 @@ export class Archimate {
    * A key set to undefined, an empty string or an empty map removes that detail; keys left out are unchanged.
    */
   public updateFolder(folderKey: FolderKey, patch: Partial<Omit<ModelFolderDetails, 'id'>>): ModelFolderDetails {
-    return Archimate.applyFolderPatch(this.model[folderKey], patch);
+    return Archimate.applyFolderPatch(this.topLevelFolder(folderKey), patch);
   }
 
   /**
@@ -1336,6 +1345,14 @@ export class Archimate {
       this.recordId(folder.id, folderPath, seenIds, issues);
       this.recordFolderIds(folder.folders || [], folderPath, seenIds, issues);
     }
+  }
+
+  /**
+   * The top-level folder for a folder key; throws on an unknown key.
+   */
+  private topLevelFolder(folderKey: FolderKey): ModelFolder {
+    assertCode('folder', folderKey, TopLevelFolder);
+    return this.model[folderKey];
   }
 
   private assertRelationshipType(type: string): asserts type is ArchimateRelationshipType {

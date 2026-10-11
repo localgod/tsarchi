@@ -5,6 +5,7 @@ import {
   archimateModelTypes,
   archimateMotivationElementTypes,
   archimateRelationshipTypes,
+  ArchimateType,
   elementTypeToFolderKey,
   folderType,
   isArchimateModelType,
@@ -123,6 +124,12 @@ describe('Archimate', () => {
   });
 
   describe('Archimate model type exports', () => {
+    it('should name every model type in ArchimateType and nothing else', () => {
+      expect(Object.keys(ArchimateType).toSorted()).toEqual([...archimateModelTypes].toSorted());
+      for (const type of archimateModelTypes) expect(ArchimateType[type]).toBe(type);
+      expect(Object.isFrozen(ArchimateType)).toBe(true);
+    });
+
     it.each(['Location', 'Grouping'] as const)('should place %s in the other folder', type => {
       archimate.upsertElement({ id: `other-${type}`, name: type, type });
 
@@ -327,6 +334,20 @@ describe('Archimate', () => {
       } finally {
         log.mockRestore();
       }
+    });
+  });
+
+  describe('findElementsByType()', () => {
+    it('should find elements, relationships and views by an ArchimateType value', () => {
+      archimate.upsertElement({ id: 'app-1', name: 'App', type: ArchimateType.ApplicationComponent });
+      archimate.upsertElement({ id: 'actor-1', name: 'Actor', type: ArchimateType.BusinessActor });
+
+      expect(archimate.findElementsByType(ArchimateType.ApplicationComponent)).toEqual([expect.objectContaining({ id: 'app-1' })]);
+      expect(archimate.findElementsByType(ArchimateType.Capability)).toEqual([]);
+    });
+
+    it.each([['BusinessActr'], [''], [undefined]])('should throw on the unknown type %s', type => {
+      expect(() => archimate.findElementsByType(type as any)).toThrowError(`Unknown element type "${type}".`);
     });
   });
 

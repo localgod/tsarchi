@@ -1,3 +1,4 @@
+import { TextAlignment, Viewpoint } from '../src/constants/archi-codes.mjs';
 import { TsArchi } from '../src/node/TsArchi.mjs';
 
 // Simple argument parser
@@ -82,7 +83,7 @@ async function main() {
 
   // Create a comprehensive application view
   const appView = model.createView('Application Architecture', {
-    viewpoint: 'application',
+    viewpoint: Viewpoint.ApplicationCooperation,
     documentation: 'Overview of the application architecture',
   });
 
@@ -95,7 +96,7 @@ async function main() {
     { x: 100, y: 100, width: 140, height: 70 },
     {
       fillColor: '#c9e7b7',
-      textAlignment: 1,
+      textAlignment: TextAlignment.Left,
     }
   );
 
@@ -105,7 +106,7 @@ async function main() {
     { x: 100, y: 250, width: 140, height: 70 },
     {
       fillColor: '#ffd93d',
-      textAlignment: 1,
+      textAlignment: TextAlignment.Left,
     }
   );
 
@@ -115,7 +116,7 @@ async function main() {
     { x: 300, y: 100, width: 140, height: 70 },
     {
       fillColor: '#ff9999',
-      textAlignment: 1,
+      textAlignment: TextAlignment.Left,
     }
   );
 

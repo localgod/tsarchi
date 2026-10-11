@@ -155,6 +155,14 @@ export type ArchimateElementType =
   | ArchimateConnectorType;
 export type ArchimateModelType = ArchimateElementType | ArchimateRelationshipType | ArchimateViewType;
 
+/**
+ * Every element, relationship and view type by name, e.g. `ArchimateType.ApplicationComponent`, so plain-JavaScript
+ * callers can pick a type without typing its string.
+ */
+export const ArchimateType = Object.freeze(Object.fromEntries(archimateModelTypes.map(type => [type, type]))) as {
+  readonly [K in ArchimateModelType]: K;
+};
+
 export function isArchimateModelType(type: string): type is ArchimateModelType {
   return elementTypeToFolderKey.has(type as ArchimateModelType);
 }

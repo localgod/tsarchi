@@ -212,6 +212,12 @@ const between = model.findRelationshipsBetween("source-element-id", "target-elem
 model.deleteRelationship(relationship.id);
 ```
 
+To delete many elements or relationships, pass them to `deleteElements` in one call. It removes the same as `deleteElement` for each id, including attached relationships and the diagram objects and connections that show them, but goes through the model and its views once instead of once per id. It returns the ids it found:
+
+```typescript
+const deleted = model.deleteElements(unusedElementIds);
+```
+
 Access relationships keep Archi's `accessType` (0 write, 1 read, 2 unspecified, 3 read/write):
 
 ```typescript

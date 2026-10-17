@@ -85,7 +85,27 @@ describe('package integration', () => {
 
     expect(paths).toContain('dist/src/index.mjs');
     expect(paths).toContain('dist/src/node/index.mjs');
-    expect(paths.filter(path => !path.startsWith('dist/src/')).sort()).toEqual(['LICENSE.md', 'README.md', 'package.json']);
+    expect(paths.filter(path => !path.startsWith('dist/src/')).sort()).toEqual([
+      'LICENSE.md',
+      'README.md',
+      'dist/bundle/tsarchi.mjs',
+      'package.json',
+    ]);
+  });
+
+  it('exports a self-contained bundle with the same API as the package index', async () => {
+    const packageJson = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'));
+    expect(packageJson.exports['./bundle']).toEqual({ import: './dist/bundle/tsarchi.mjs', types: './dist/src/index.d.mts' });
+
+    const bundleUrl = new URL('../dist/bundle/tsarchi.mjs', import.meta.url);
+    const code = await readFile(bundleUrl, 'utf8');
+    // Nothing left to resolve: no import statements, and fast-xml-parser's license notice is kept
+    expect(code).not.toMatch(/^\s*import\s/m);
+    expect(code).toContain('Copyright (c) 2017 Amit Kumar Gupta');
+
+    const bundle = await import(bundleUrl.href);
+    const index = await import(new URL('../dist/src/index.mjs', import.meta.url).href);
+    expect(Object.keys(bundle).toSorted()).toEqual(Object.keys(index).toSorted());
   });
 });
 

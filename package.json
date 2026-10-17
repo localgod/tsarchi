@@ -14,16 +14,21 @@
       "import": "./dist/src/node/index.mjs",
       "types": "./dist/src/node/index.d.mts"
     },
+    "./bundle": {
+      "import": "./dist/bundle/tsarchi.mjs",
+      "types": "./dist/src/index.d.mts"
+    },
     "./package.json": "./package.json"
   },
   "sideEffects": false,
   "files": [
-    "dist/src"
+    "dist/src",
+    "dist/bundle"
   ],
   "scripts": {
     "prebuild": "node scripts/generate-index.js",
     "generate:relationships": "node scripts/generate-relationships-matrix.js",
-    "build": "tsc --project tsconfig.json",
+    "build": "tsc --project tsconfig.json && node scripts/build-bundle.js",
     "example": "node ./dist/examples/sample01.mjs --input sample.archimate --output out.archimate",
     "pretest": "npm run build",
     "test": "vitest",
@@ -60,6 +65,7 @@
     "oxlint": "^1.50.0",
     "quickjs-emscripten-core": "^0.32.0",
     "typescript": "^7.0.2",
+    "vite": "^8.3.2",
     "vitest": "^5.0.0"
   },
   "dependencies": {

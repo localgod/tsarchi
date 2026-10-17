@@ -36,6 +36,7 @@ TSArchi provides a TypeScript-based tool for parsing, modifying, and saving `.ar
 - **Element Upsert**: Insert or update elements and relationships by `id`, merging properties.
 - **Comprehensive Element Support**: Full support for all ArchiMate 3.x element types and relationships.
 - **Advanced View Management**: Create, update, and manage ArchiMate diagrams with visual positioning and styling.
+- **draw.io Export**: Write a view as a draw.io file, with plain rectangles or draw.io's ArchiMate 3 shapes.
 
 ## Installation
 
@@ -152,7 +153,19 @@ const copy = Archimate.fromSnapshot(JSON.parse(JSON.stringify(before)));
 - `restore()` checks the snapshot's structure, not the model: on anything that is not a snapshot it throws an `ArchimateParseError` (`invalid-structure`) and leaves the model unchanged. Use `validateModel()` for the model itself.
 - The `ModelSnapshot` format is unstable: it may change in any release, listed under **Changed** in the changelog. Use snapshots within one process and one tsarchi version, and save models as `.archimate` XML.
 
-### Browser Use
+### Exporting a View to draw.io
+
+`toDrawio(viewId)` returns a view as the text of a `.drawio` file (mxGraph XML), one page named after the view:
+
+```typescript
+const xml = model.toDrawio(viewId); // plain rectangles
+const stencilled = model.toDrawio(viewId, { stencils: true }); // draw.io's ArchiMate 3 shapes
+```
+
+- Diagram objects, groups and notes become vertices at their bounds, using Archi's default size where none is stored. Nested children sit inside their parent, so moving a group in draw.io moves its contents.
+- Connections become edges between the same cells, with bendpoints at the position Archi draws them and the relationship's ArchiMate line and arrow style. Connections that end on other connections stay connected.
+- Fill, line and font colours, opacity, line width, font and text alignment are kept; diagram objects without a fill get Archi's default for their layer.
+- Cell ids are the diagram object and connection ids. The export is one-way: tsarchi does not read draw.io files.
 
 The `tsarchi` entry point uses no Node built-ins, so it can be bundled for the browser. `TsArchi` reads and writes files with `fs/promises` and is exported from `tsarchi/node` instead. In a browser, load and save with `Archimate.fromXml` and `toXml`.
 

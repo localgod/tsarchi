@@ -10,12 +10,14 @@ import type { Child } from './interfaces/Child.mjs';
 import type { View } from './interfaces/View.mjs';
 import type { SourceConnection } from './interfaces/SourceConnection.mjs';
 import type { Bounds } from './interfaces/Bounds.mjs';
+import type { DrawioOptions } from './interfaces/DrawioOptions.mjs';
 import { ArchimateValidationError } from './interfaces/ValidationIssue.mjs';
 import type { ValidationIssue, ValidationIssueCode } from './interfaces/ValidationIssue.mjs';
 import { ArchimateParseError } from './interfaces/ArchimateParseError.mjs';
 import { Parser } from './internal/Parser.mjs';
 import { parseArchimateXml, buildArchimateXml } from './internal/Xml.mjs';
 import { Serializer } from './internal/Serializer.mjs';
+import { serializeDrawio } from './internal/DrawioSerializer.mjs';
 import { ViewManager } from './internal/ViewManager.mjs';
 import { ModelIndex, relationshipsByEndpoint } from './internal/ModelIndex.mjs';
 import { removeFromNestedFolders } from './internal/NestedFolders.mjs';
@@ -649,6 +651,24 @@ export class Archimate {
   public toXml(): string {
     this.assertValidModel();
     return buildArchimateXml(this.serialize());
+  }
+
+  /**
+   * Returns a view as the text of a draw.io file (mxGraph XML), one page named after the view. Diagram objects,
+   * groups and notes become vertices with their bounds, nested ones inside their parent, and connections become
+   * edges with their bendpoints and their relationship's line style. Cell ids are the diagram object and connection
+   * ids. The export is one-way: draw.io files cannot be read back.
+   * Throws if the model has no view with this id.
+   */
+  public toDrawio(viewId: string, options: DrawioOptions = {}): string {
+    const view = this.viewManager.getView(viewId);
+    if (!view) throw new Error(`View with ID ${viewId} not found in model`);
+    return serializeDrawio(
+      view,
+      id => this.index.element(id)?.element,
+      options,
+      id => this.index.hasId(id)
+    );
   }
 
   private serialize(): ArchimateSchema {

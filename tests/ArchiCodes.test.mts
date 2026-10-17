@@ -4,6 +4,7 @@ import {
   AccessType,
   ConnectionRouterType,
   ConnectionTextPosition,
+  DiagramObjectFigure,
   GroupBorderType,
   NoteBorderType,
   RelationshipDirection,
@@ -36,6 +37,7 @@ describe('Archi codes', () => {
       ConnectionRouterType,
       GroupBorderType,
       NoteBorderType,
+      DiagramObjectFigure,
       Viewpoint,
     ]) {
       expect(Object.isFrozen(codes)).toBe(true);

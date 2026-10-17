@@ -890,7 +890,9 @@ export class Archimate {
   }
 
   /**
-   * Updates visual properties of a diagram object
+   * Updates visual properties of a diagram object. `figure` switches an ArchiMate diagram object between its box
+   * (`DiagramObjectFigure.Default`) and Archi's alternate figure (`DiagramObjectFigure.Alternate`); it throws for any
+   * other kind of diagram child, such as a group or note.
    */
   public updateDiagramObjectStyle(
     viewId: string,
@@ -901,6 +903,7 @@ export class Archimate {
       fontColor?: string;
       bounds?: Bounds;
       textAlignment?: number;
+      figure?: number;
     }
   ): boolean {
     return this.viewManager.updateDiagramObjectStyle(viewId, objectId, style);

@@ -11,6 +11,7 @@ This project adheres to [Keep a CHANGELOG](http://keepachangelog.com/)
 ### Added
 
 - `toDrawio(viewId, options?)` writes a view as a draw.io file (mxGraph XML): diagram objects, groups and notes as vertices at their bounds, nested ones inside their parent, and connections as edges with their bendpoints and their relationship's ArchiMate line and arrow style. `{ stencils: true }` draws elements with draw.io's ArchiMate 3 shapes instead of plain rectangles ([#516](https://github.com/localgod/tsarchi/issues/516)).
+- `updateDiagramObjectStyle` takes `figure` to switch an ArchiMate diagram object between its box and Archi's alternate figure, named by the new `DiagramObjectFigure` constant. The default figure writes no `type` attribute, as in Archi. It throws on a value other than 0 or 1, and on a diagram child that is not an ArchiMate diagram object, such as a group or note ([#515](https://github.com/localgod/tsarchi/issues/515)).
 
 ## [4.2.0] - 2026-10-11
 

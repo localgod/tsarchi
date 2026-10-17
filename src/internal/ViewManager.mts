@@ -11,7 +11,7 @@ import { deepCopy } from './Copy.mjs';
 import { randomArchiId } from './Ids.mjs';
 import { ModelIndex } from './ModelIndex.mjs';
 import { assertOptionalCode } from './Codes.mjs';
-import { ConnectionTextPosition, TextAlignment, Viewpoint } from '../constants/archi-codes.mjs';
+import { ConnectionTextPosition, DiagramObjectFigure, TextAlignment, Viewpoint } from '../constants/archi-codes.mjs';
 import { splitIds, toViewChild, toViewConnection } from './ViewChildMapper.mjs';
 
 /**
@@ -220,16 +220,25 @@ export class ViewManager {
       fontColor?: string;
       bounds?: Bounds;
       textAlignment?: number;
+      figure?: number;
     }
   ): boolean {
     assertOptionalCode('textAlignment', style.textAlignment, TextAlignment);
+    assertOptionalCode('figure', style.figure, DiagramObjectFigure);
     const viewElement = this.findView(viewId);
     if (!viewElement) return false;
 
     const diagramObject = this.findChild(this.childrenOf(viewElement), objectId);
     if (!diagramObject) return false;
+    if (style.figure !== undefined && diagramObject.type !== 'DiagramObject') {
+      throw new Error(`Diagram object ${objectId} is a ${diagramObject.type}; only an ArchiMate diagram object has an alternate figure`);
+    }
 
-    Object.assign(diagramObject, style, style.bounds && { bounds: { ...style.bounds } });
+    const { figure, ...rest } = style;
+    Object.assign(diagramObject, rest, style.bounds && { bounds: { ...style.bounds } });
+    // Archi leaves the default figure out of the file
+    if (figure === DiagramObjectFigure.Default) delete diagramObject.figure;
+    else if (figure !== undefined) diagramObject.figure = figure;
     return true;
   }
 

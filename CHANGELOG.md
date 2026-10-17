@@ -8,6 +8,10 @@ This project adheres to [Keep a CHANGELOG](http://keepachangelog.com/)
 
 ## [Unreleased]
 
+### Added
+
+- `toDrawio(viewId, options?)` writes a view as a draw.io file (mxGraph XML): diagram objects, groups and notes as vertices at their bounds, nested ones inside their parent, and connections as edges with their bendpoints and their relationship's ArchiMate line and arrow style. `{ stencils: true }` draws elements with draw.io's ArchiMate 3 shapes instead of plain rectangles ([#516](https://github.com/localgod/tsarchi/issues/516)).
+
 ## [4.2.0] - 2026-10-11
 
 ### Added

@@ -46,7 +46,7 @@ TSArchi requires [Node.js](https://nodejs.org/) 20 or later. Install it from npm
 npm install tsarchi
 ```
 
-The `tsarchi` entry point holds the model API and runs in Node.js and in the browser. `TsArchi`, which reads and writes files, is imported from `tsarchi/node`.
+The `tsarchi` entry point holds the model API and runs in Node.js and in the browser. `TsArchi`, which reads and writes files, is imported from `tsarchi/node`. `tsarchi/bundle` is the same API as one self-contained ES module, for engines such as QuickJS (see [QuickJS](#quickjs)).
 
 ## Upgrading from 3.x
 
@@ -135,6 +135,23 @@ try {
 ```
 
 `TsArchi.load` and `loadModel` throw the same `ArchimateParseError`, and pass on file read errors.
+
+### QuickJS
+
+QuickJS and other engines without a module resolver for `node_modules` cannot import `fast-xml-parser`, which `tsarchi` depends on. For them, the package ships `dist/bundle/tsarchi.mjs` (exported as `tsarchi/bundle`): the same API as `tsarchi`, with fast-xml-parser included, as one ES module of about 400 KB that imports nothing. Import it by its path, and load and save files with QuickJS's `std` module, as `TsArchi` needs Node's `fs`:
+
+```javascript
+import * as std from "std";
+import { Archimate } from "./node_modules/tsarchi/dist/bundle/tsarchi.mjs";
+
+const model = Archimate.fromXml(std.loadFile("model.archimate"));
+// ...
+const file = std.open("model.archimate", "w");
+file.puts(model.toXml());
+file.close();
+```
+
+`std.loadFile` returns `null` when the file cannot be read. With a bundler, import `tsarchi` as usual instead; the bundle is for engines that load one file as is.
 
 ### Snapshots
 

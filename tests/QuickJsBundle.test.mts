@@ -1,26 +1,10 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { readdir, readFile } from 'fs/promises';
-import { fileURLToPath } from 'url';
-import { build, type Rollup } from 'vite';
 import { newQuickJSWASMModuleFromVariant, type QuickJSWASMModule } from 'quickjs-emscripten-core';
 import releaseSyncVariant from '@jitl/quickjs-wasmfile-release-sync';
 import { Archimate } from '../src/Archimate.mjs';
 
 const roundtripDir = new URL('./fixtures/roundtrip/', import.meta.url);
-
-/** Bundles the built package index, with fast-xml-parser, into one ES module, as a QuickJS user would. */
-async function bundle(entry: string): Promise<string> {
-  const result = await build({
-    configFile: false,
-    logLevel: 'silent',
-    build: {
-      write: false,
-      minify: false,
-      lib: { entry: fileURLToPath(new URL(entry, import.meta.url)), formats: ['es'], fileName: 'index' },
-    },
-  });
-  return ((Array.isArray(result) ? result[0] : result) as Rollup.RolldownOutput).output[0].code;
-}
 
 /**
  * Runs a module in a fresh QuickJS context, where `tsarchi` imports the bundle and `input` holds the given value, and
@@ -57,7 +41,8 @@ describe('QuickJS bundle', () => {
 
   beforeAll(async () => {
     quickJs = await newQuickJSWASMModuleFromVariant(releaseSyncVariant);
-    tsarchi = await bundle('../dist/src/index.mjs');
+    // The self-contained bundle `npm run build` writes and the package exports as `tsarchi/bundle`
+    tsarchi = await readFile(new URL('../dist/bundle/tsarchi.mjs', import.meta.url), 'utf8');
   }, 60_000);
 
   it('loads and saves every round-trip fixture as in Node', async () => {

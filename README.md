@@ -231,6 +231,21 @@ To delete many elements or relationships, pass them to `deleteElements` in one c
 const deleted = model.deleteElements(unusedElementIds);
 ```
 
+`findReachableElements` finds the elements within a number of relationships of an element, for example to build a view of everything around it. It returns copies of the start element first and then the others by distance, each once. Relationships that end on another relationship are not followed:
+
+```typescript
+import { ArchimateType, TraversalDirection } from "tsarchi";
+
+// Everything within 2 relationships, either way
+const nearby = model.findReachableElements("element-id", 2);
+
+// Everything the element serves or sends a flow to, directly or indirectly
+const downstream = model.findReachableElements("element-id", Infinity, {
+  direction: TraversalDirection.Outgoing,
+  relationshipTypes: [ArchimateType.ServingRelationship, ArchimateType.FlowRelationship],
+});
+```
+
 Access relationships keep Archi's `accessType` (0 write, 1 read, 2 unspecified, 3 read/write):
 
 ```typescript
@@ -338,6 +353,7 @@ model.upsertRelationship({
 | `ArchimateType`                          | element, relationship and view types                                                |
 | `TopLevelFolder`                         | the folder key of `findElementsByFolder`, `getFolders`, `getFolder`, `updateFolder` |
 | `RelationshipDirection`                  | the direction of `findRelationshipsForElement`                                      |
+| `TraversalDirection`                     | the `direction` of `findReachableElements`                                          |
 | `Viewpoint`                              | the `viewpoint` of `createView`                                                     |
 | `AccessType`                             | `accessType` of an Access relationship                                              |
 | `TextAlignment`                          | `textAlignment` of diagram objects and groups                                       |

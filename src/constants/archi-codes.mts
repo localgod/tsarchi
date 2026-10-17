@@ -20,6 +20,9 @@ export const TopLevelFolder = Object.freeze({
 /** Which end of a relationship an element must be on, for `findRelationshipsForElement`. */
 export const RelationshipDirection = Object.freeze({ Source: 'source', Target: 'target', Both: 'both' } as const);
 
+/** Which way `findReachableElements` follows relationships: from source to target, from target to source, or either way. */
+export const TraversalDirection = Object.freeze({ Outgoing: 'outgoing', Incoming: 'incoming', Both: 'both' } as const);
+
 /** `accessType` of an Access relationship (`IAccessRelationship`). Write is Archi's default and is not written. */
 export const AccessType = Object.freeze({ Write: 0, Read: 1, Unspecified: 2, ReadWrite: 3 } as const);
 

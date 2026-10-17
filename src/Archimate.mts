@@ -37,7 +37,7 @@ import {
   allowedRelationshipTypes,
 } from './constants/archimate-mappings.mjs';
 import { relationshipMatrixKeys } from './internal/relationships-matrix.mjs';
-import { AccessType, RelationshipDirection, TopLevelFolder } from './constants/archi-codes.mjs';
+import { AccessType, RelationshipDirection, TopLevelFolder, TraversalDirection } from './constants/archi-codes.mjs';
 import { assertCode, assertOptionalCode } from './internal/Codes.mjs';
 import type { ArchimateModelType, ArchimateRelationshipType } from './constants/archimate-mappings.mjs';
 
@@ -75,6 +75,9 @@ const copyElement = <T extends Element>(element: T): T => {
   }
   return result as T;
 };
+
+/** Whether a folder holds ArchiMate elements, not relationships or views. */
+const isConceptElement = (folderKey: FolderKey): boolean => folderKey !== 'relations' && folderKey !== 'diagrams';
 
 /**
  * Ids a view's children and connections are checked against in validateModel.
@@ -486,6 +489,60 @@ export class Archimate {
         return typeMatch && (directMatch || reverseMatch);
       })
       .map(copyElement) as Relationship[];
+  }
+
+  /**
+   * Finds copies of the elements reachable from an element within `hops` relationships: the start element first, then
+   * the others by distance, each once. `hops` is a whole number of 0 or more, or `Infinity` for everything connected.
+   * `direction` follows relationships from source to target (`outgoing`), the other way (`incoming`) or either way
+   * (`both`, the default); `relationshipTypes` follows only relationships of these types. Relationships that end on
+   * another relationship are not followed. Throws on an unknown start id, a start that is a relationship or view, an
+   * invalid `hops`, or an unknown direction or relationship type, so a misspelt one fails instead of finding nothing.
+   */
+  public findReachableElements(
+    elementId: string,
+    hops: number,
+    options?: {
+      relationshipTypes?: ArchimateRelationshipType[];
+      direction?: 'outgoing' | 'incoming' | 'both';
+    }
+  ): Element[] {
+    const start = this.index.element(elementId);
+    if (!start) throw new Error(`Element with ID ${elementId} not found in model`);
+    if (!isConceptElement(start.folderKey)) {
+      throw new Error(`Element ${elementId} has type ${start.element.type}, which is not an element type`);
+    }
+    if (!(Number.isInteger(hops) && hops >= 0) && hops !== Infinity) {
+      throw new Error(`Invalid hops ${JSON.stringify(hops)}; expected a whole number of 0 or more, or Infinity.`);
+    }
+    const direction = options?.direction ?? TraversalDirection.Both;
+    assertCode('direction', direction, TraversalDirection);
+    let types: Set<string> | undefined;
+    if (options?.relationshipTypes !== undefined) {
+      if (!Array.isArray(options.relationshipTypes)) throw new Error('relationshipTypes must be an array of relationship types.');
+      for (const type of options.relationshipTypes) this.assertRelationshipType(type);
+      types = new Set(options.relationshipTypes);
+    }
+
+    const end = direction === 'outgoing' ? 'source' : direction === 'incoming' ? 'target' : 'both';
+    const found = new Map<string, Element>([[elementId, start.element]]);
+    let frontier = [elementId];
+    for (let hop = 0; hop < hops && frontier.length > 0; hop++) {
+      const next: string[] = [];
+      for (const id of frontier) {
+        for (const relationship of this.relationshipsForElement(id, end)) {
+          if (types && !types.has(relationship.type)) continue;
+          const otherId = relationship.source === id ? relationship.target : relationship.source;
+          if (found.has(otherId)) continue;
+          const other = this.index.element(otherId);
+          if (!other || !isConceptElement(other.folderKey)) continue;
+          found.set(otherId, other.element);
+          next.push(otherId);
+        }
+      }
+      frontier = next;
+    }
+    return [...found.values()].map(copyElement);
   }
 
   /**

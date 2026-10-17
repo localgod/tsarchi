@@ -11,6 +11,7 @@ import {
   TextAlignment,
   TextPosition,
   TopLevelFolder,
+  TraversalDirection,
   Viewpoint,
 } from '../src/constants/archi-codes.mjs';
 import { ArchimateType, folderType } from '../src/constants/archimate-mappings.mjs';
@@ -30,6 +31,7 @@ describe('Archi codes', () => {
     for (const codes of [
       TopLevelFolder,
       RelationshipDirection,
+      TraversalDirection,
       AccessType,
       TextAlignment,
       TextPosition,

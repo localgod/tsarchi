@@ -226,6 +226,51 @@ describe('ViewManager', () => {
     });
   });
 
+  describe('figure when adding diagram objects', () => {
+    const bounds = { x: 100, y: 100, width: 120, height: 55 };
+
+    it('should add a diagram object drawn as the alternate figure, at the top level and in a group', () => {
+      const view = archimate.createView('Test View');
+      const group = archimate.addGroup(view.id, 'Group', { x: 0, y: 200, width: 400, height: 200 })!;
+
+      const obj = archimate.addDiagramObject(view.id, 'app-1', bounds, { figure: DiagramObjectFigure.Alternate })!;
+      const nested = archimate.addDiagramObjectToGroup(view.id, group.id, 'app-2', bounds, { figure: DiagramObjectFigure.Alternate })!;
+
+      expect(obj.figure).toBe(1);
+      expect(nested.figure).toBe(1);
+      const xml = archimate.toXml();
+      expect(xml).toMatch(new RegExp(`<child xsi:type="archimate:DiagramObject" id="${obj.id}"[^>]* type="1"`));
+      expect(xml).toMatch(new RegExp(`<child xsi:type="archimate:DiagramObject" id="${nested.id}"[^>]* type="1"`));
+    });
+
+    it('should write no figure for the default figure', () => {
+      const view = archimate.createView('Test View');
+      const group = archimate.addGroup(view.id, 'Group', { x: 0, y: 200, width: 400, height: 200 })!;
+
+      const obj = archimate.addDiagramObject(view.id, 'app-1', bounds, { figure: DiagramObjectFigure.Default })!;
+      const nested = archimate.addDiagramObjectToGroup(view.id, group.id, 'app-2', bounds, { figure: DiagramObjectFigure.Default })!;
+
+      expect('figure' in obj).toBe(false);
+      expect('figure' in nested).toBe(false);
+      expect(archimate.toXml()).not.toMatch(/<child [^>]* type="/);
+    });
+
+    it('should refuse an unknown figure without adding anything', () => {
+      const view = archimate.createView('Test View');
+      const group = archimate.addGroup(view.id, 'Group', { x: 0, y: 200, width: 400, height: 200 })!;
+
+      expect(() => archimate.addDiagramObject(view.id, 'app-1', bounds, { figure: 2 })).toThrowError(
+        'Unknown figure 2; expected one of 0, 1.'
+      );
+      expect(() => archimate.addDiagramObjectToGroup(view.id, group.id, 'app-1', bounds, { figure: -1 })).toThrowError(
+        'Unknown figure -1; expected one of 0, 1.'
+      );
+      const children = archimate.getView(view.id)!.children;
+      expect(children).toHaveLength(1);
+      expect(children[0].children).toHaveLength(0);
+    });
+  });
+
   describe('deleteView', () => {
     it('should remove a view from the model', () => {
       const view = archimate.createView('Test View');

@@ -831,6 +831,7 @@ export class Archimate {
       lineColor?: string;
       fontColor?: string;
       textAlignment?: number;
+      figure?: number;
     }
   ) {
     return this.viewManager.addDiagramObject(viewId, elementId, bounds, options);
@@ -866,6 +867,7 @@ export class Archimate {
       lineColor?: string;
       fontColor?: string;
       textAlignment?: number;
+      figure?: number;
     }
   ) {
     return this.viewManager.addDiagramObjectToGroup(viewId, groupId, elementId, bounds, options);

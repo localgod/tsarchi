@@ -141,7 +141,7 @@ try {
 QuickJS and other engines without a module resolver for `node_modules` cannot import `fast-xml-parser`, which `tsarchi` depends on. For them, the package ships `dist/bundle/tsarchi.mjs` (exported as `tsarchi/bundle`): the same API as `tsarchi`, with fast-xml-parser included, as one ES module of about 400 KB that imports nothing. Import it by its path, and load and save files with QuickJS's `std` module, as `TsArchi` needs Node's `fs`:
 
 ```javascript
-import * as std from "std";
+import * as std from "std"; // "qjs:std" in quickjs-ng
 import { Archimate } from "./node_modules/tsarchi/dist/bundle/tsarchi.mjs";
 
 const model = Archimate.fromXml(std.loadFile("model.archimate"));
@@ -151,7 +151,7 @@ file.puts(model.toXml());
 file.close();
 ```
 
-`std.loadFile` returns `null` when the file cannot be read. With a bundler, import `tsarchi` as usual instead; the bundle is for engines that load one file as is.
+QuickJS names the module `std`; quickjs-ng, its maintained fork, names it `qjs:std` and does not accept `std`. Both run the example as is otherwise. `std.loadFile` returns `null` when the file cannot be read. With a bundler, import `tsarchi` as usual instead; the bundle is for engines that load one file as is.
 
 ### Snapshots
 

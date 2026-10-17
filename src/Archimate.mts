@@ -37,7 +37,14 @@ import {
   allowedRelationshipTypes,
 } from './constants/archimate-mappings.mjs';
 import { relationshipMatrixKeys } from './internal/relationships-matrix.mjs';
-import { AccessType, RelationshipDirection, TopLevelFolder, TraversalDirection } from './constants/archi-codes.mjs';
+import {
+  AccessType,
+  ConnectionRouterType,
+  RelationshipDirection,
+  TopLevelFolder,
+  TraversalDirection,
+  Viewpoint,
+} from './constants/archi-codes.mjs';
 import { assertCode, assertOptionalCode } from './internal/Codes.mjs';
 import type { ArchimateModelType, ArchimateRelationshipType } from './constants/archimate-mappings.mjs';
 
@@ -202,6 +209,7 @@ export class Archimate {
     if (!folderKey) {
       throw new Error(`Unknown element type "${element.type}".`);
     }
+    Archimate.assertElementCodes(element);
 
     const folder = this.model[folderKey];
 
@@ -266,6 +274,7 @@ export class Archimate {
    * Returns a copy of the updated element.
    */
   public updateElement(elementId: string, patch: Partial<Omit<Element, 'id'>>): Element | null {
+    Archimate.assertElementCodes(patch);
     const location = this.findElementLocationById(elementId);
     if (!location) return null;
 
@@ -1235,6 +1244,16 @@ export class Archimate {
     if (!entry) return null;
     const folder = this.model[entry.folderKey];
     return { folderKey: entry.folderKey, folder, element: entry.element, index: folder.elements!.indexOf(entry.element) };
+  }
+
+  /**
+   * Throws when an element, relationship or view sets `accessType`, `viewpoint` or `connectionRouterType` to a value
+   * Archi does not know. Fields left out or set to `undefined` are not checked.
+   */
+  private static assertElementCodes(fields: Partial<Element>): void {
+    assertOptionalCode('accessType', fields.accessType, AccessType);
+    assertOptionalCode('viewpoint', fields.viewpoint, Viewpoint);
+    assertOptionalCode('connectionRouterType', fields.connectionRouterType, ConnectionRouterType);
   }
 
   /**

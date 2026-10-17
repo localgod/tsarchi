@@ -142,4 +142,52 @@ describe('Archi codes', () => {
       );
     });
   });
+
+  describe('updateElement and upsertElement', () => {
+    it('should accept known codes and throw on unknown accessType, viewpoint and connectionRouterType', () => {
+      const access = archimate.upsertRelationship({ name: '', type: ArchimateType.AccessRelationship, source: 'app', target: 'data' });
+      const view = archimate.createView('View');
+
+      expect(archimate.updateElement(access.id, { accessType: AccessType.Read })?.accessType).toBe(1);
+      expect(archimate.updateElement(view.id, { viewpoint: Viewpoint.Layered })?.viewpoint).toBe('layered');
+      expect(archimate.updateElement(view.id, { connectionRouterType: ConnectionRouterType.Manhattan })?.connectionRouterType).toBe(2);
+
+      expect(() => archimate.updateElement(access.id, { accessType: 7 })).toThrowError('Unknown accessType 7; expected one of 0, 1, 2, 3.');
+      expect(() => archimate.updateElement(view.id, { viewpoint: 'application' })).toThrowError('Unknown viewpoint "application";');
+      expect(() => archimate.updateElement(view.id, { connectionRouterType: 1 })).toThrowError(
+        'Unknown connectionRouterType 1; expected one of 0, 2.'
+      );
+      expect(() => archimate.upsertElement({ ...archimate.getElement(view.id)!, viewpoint: 'application' })).toThrowError(
+        'Unknown viewpoint "application";'
+      );
+      expect(() =>
+        archimate.upsertElement({ name: 'View', type: ArchimateType.ArchimateDiagramModel, connectionRouterType: 1 })
+      ).toThrowError('Unknown connectionRouterType 1;');
+
+      // Nothing was written
+      expect(archimate.getElement(access.id)?.accessType).toBe(1);
+      expect(archimate.getElement(view.id)).toMatchObject({ viewpoint: 'layered', connectionRouterType: 2 });
+      expect(archimate.listViews()).toHaveLength(1);
+    });
+
+    it('should not check codes the patch leaves out, and still remove one set to undefined', () => {
+      const view = archimate.createView('View', { viewpoint: Viewpoint.Layered });
+
+      expect(archimate.updateElement(view.id, { name: 'Renamed' })?.viewpoint).toBe('layered');
+      expect(archimate.updateElement(view.id, { viewpoint: undefined })?.viewpoint).toBeUndefined();
+    });
+
+    it('should still update a loaded view whose viewpoint Archi no longer offers', () => {
+      const loaded = Archimate.fromXml(
+        `<?xml version="1.0" encoding="UTF-8"?>
+<archimate:model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:archimate="http://www.archimatetool.com/archimate" name="m" id="id-m" version="5.0.0">
+  <folder name="Views" id="id-views" type="diagrams">
+    <element xsi:type="archimate:ArchimateDiagramModel" name="View" id="id-view" viewpoint="retired"/>
+  </folder>
+</archimate:model>`
+      );
+
+      expect(loaded.updateElement('id-view', { name: 'Renamed' })).toMatchObject({ name: 'Renamed', viewpoint: 'retired' });
+    });
+  });
 });

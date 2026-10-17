@@ -344,6 +344,7 @@ model.upsertRelationship({
 | `TextPosition`, `ConnectionTextPosition` | `textPosition` of diagram objects and of view connections                           |
 | `ConnectionRouterType`                   | `connectionRouterType` of a view                                                    |
 | `GroupBorderType`, `NoteBorderType`      | `borderType` of groups and notes                                                    |
+| `DiagramObjectFigure`                    | `figure` of ArchiMate diagram objects: the box or Archi's alternate figure          |
 
 Methods that take one of these throw on a value that is not in the list, instead of finding nothing or writing a value Archi does not know.
 
@@ -352,7 +353,7 @@ Methods that take one of these throw on a value that is not in the list, instead
 TSArchi provides comprehensive view management capabilities for creating and manipulating ArchiMate diagrams:
 
 ```typescript
-import { TextAlignment, Viewpoint } from "tsarchi";
+import { DiagramObjectFigure, TextAlignment, Viewpoint } from "tsarchi";
 import { TsArchi } from "tsarchi/node";
 
 const tsArchi = new TsArchi();
@@ -425,6 +426,9 @@ model.updateDiagramObjectStyle("view-id", "object-id", {
   bounds: { x: 150, y: 150, width: 140, height: 65 },
   textAlignment: TextAlignment.Center,
 });
+
+// Draw an ArchiMate diagram object as Archi's alternate figure (DiagramObjectFigure.Default for the box)
+model.updateDiagramObjectStyle("view-id", "object-id", { figure: DiagramObjectFigure.Alternate });
 
 // Delete a view, and the references to it in other views
 model.deleteView("view-id");

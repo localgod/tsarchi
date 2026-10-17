@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { Archimate } from '../src/Archimate.mjs';
+import { DiagramObjectFigure } from '../src/constants/archi-codes.mjs';
 import type { Element } from '../src/interfaces/Element.mjs';
 import type { ViewChild } from '../src/interfaces/ViewChild.mjs';
 import { readFile } from 'fs/promises';
@@ -193,6 +194,35 @@ describe('ViewManager', () => {
       expect(updatedObj.fillColor).toBe('#ffff00');
       expect(updatedObj.bounds).toEqual(newBounds);
       expect(updatedObj.textAlignment).toBe(2);
+    });
+
+    it('should switch a diagram object to the alternate figure and back', () => {
+      const view = archimate.createView('Test View');
+      const obj = archimate.addDiagramObject(view.id, 'app-1', { x: 100, y: 100, width: 120, height: 55 })!;
+      const figureOf = () => archimate.getView(view.id)!.children[0].figure;
+
+      expect(archimate.updateDiagramObjectStyle(view.id, obj.id, { figure: DiagramObjectFigure.Alternate })).toBe(true);
+      expect(figureOf()).toBe(1);
+      expect(archimate.toXml()).toMatch(new RegExp(`<child xsi:type="archimate:DiagramObject" id="${obj.id}"[^>]* type="1"`));
+
+      expect(archimate.updateDiagramObjectStyle(view.id, obj.id, { figure: DiagramObjectFigure.Default })).toBe(true);
+      expect(figureOf()).toBeUndefined();
+      expect(archimate.toXml()).not.toMatch(/<child [^>]* type="/);
+    });
+
+    it('should refuse a figure for other diagram children or an unknown figure', () => {
+      const view = archimate.createView('Test View');
+      const obj = archimate.addDiagramObject(view.id, 'app-1', { x: 100, y: 100, width: 120, height: 55 })!;
+      const group = archimate.addGroup(view.id, 'Group', { x: 0, y: 200, width: 400, height: 200 })!;
+
+      expect(() => archimate.updateDiagramObjectStyle(view.id, group.id, { fillColor: '#ff0000', figure: 1 })).toThrowError(
+        `Diagram object ${group.id} is a Group; only an ArchiMate diagram object has an alternate figure`
+      );
+      expect(archimate.getView(view.id)!.children[1].fillColor).toBeUndefined();
+      expect(() => archimate.updateDiagramObjectStyle(view.id, obj.id, { figure: 2 })).toThrowError(
+        'Unknown figure 2; expected one of 0, 1.'
+      );
+      expect(archimate.updateDiagramObjectStyle(view.id, 'missing', { figure: 1 })).toBe(false);
     });
   });
 

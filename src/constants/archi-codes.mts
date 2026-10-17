@@ -26,6 +26,9 @@ export const AccessType = Object.freeze({ Write: 0, Read: 1, Unspecified: 2, Rea
 /** `textAlignment` of a diagram object, group or note (`ITextAlignment`). Center is Archi's default. */
 export const TextAlignment = Object.freeze({ Left: 1, Center: 2, Right: 4 } as const);
 
+/** `figure` of an ArchiMate diagram object (`type` in the file, `IDiagramModelArchimateObject`): the box or Archi's alternate figure. Default is Archi's default and is not written. */
+export const DiagramObjectFigure = Object.freeze({ Default: 0, Alternate: 1 } as const);
+
 /** `textPosition` of a diagram object, group or note (`ITextPosition`). */
 export const TextPosition = Object.freeze({ Top: 0, Center: 1, Bottom: 2 } as const);
 

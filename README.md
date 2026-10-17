@@ -376,6 +376,7 @@ const obj1 = model.addDiagramObject(view.id, "app-component-1-id", bounds1, {
 
 const obj2 = model.addDiagramObject(view.id, "app-component-2-id", bounds2, {
   fillColor: "#ffd93d",
+  figure: DiagramObjectFigure.Alternate, // Archi's alternate figure instead of the box
 });
 
 // Create connections between elements

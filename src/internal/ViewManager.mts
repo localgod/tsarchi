@@ -91,9 +91,11 @@ export class ViewManager {
       lineColor?: string;
       fontColor?: string;
       textAlignment?: number;
+      figure?: number;
     }
   ): ViewDiagramObject | null {
     assertOptionalCode('textAlignment', options?.textAlignment, TextAlignment);
+    assertOptionalCode('figure', options?.figure, DiagramObjectFigure);
     const viewElement = this.findView(viewId);
     if (!viewElement) return null;
 
@@ -140,9 +142,11 @@ export class ViewManager {
       lineColor?: string;
       fontColor?: string;
       textAlignment?: number;
+      figure?: number;
     }
   ): ViewDiagramObject | null {
     assertOptionalCode('textAlignment', options?.textAlignment, TextAlignment);
+    assertOptionalCode('figure', options?.figure, DiagramObjectFigure);
     const viewElement = this.findView(viewId);
     if (!viewElement) return null;
 
@@ -290,7 +294,16 @@ export class ViewManager {
     if (!this.findElementById(elementId)) {
       throw new Error(`Element with ID ${elementId} not found in model`);
     }
-    return { id: this.generateUniqueId(), type: 'DiagramObject', archimateElement: elementId, bounds: { ...bounds }, ...options };
+    const diagramObject: Child = {
+      id: this.generateUniqueId(),
+      type: 'DiagramObject',
+      archimateElement: elementId,
+      bounds: { ...bounds },
+      ...options,
+    };
+    // Archi leaves the default figure out of the file
+    if (diagramObject.figure === DiagramObjectFigure.Default) delete diagramObject.figure;
+    return diagramObject;
   }
 
   private elementToView(element: Element): View {

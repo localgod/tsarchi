@@ -15,6 +15,10 @@ This project adheres to [Keep a CHANGELOG](http://keepachangelog.com/)
 - `addDiagramObject` and `addDiagramObjectToGroup` take `figure` as an option, so an object can be added as Archi's alternate figure. As with `updateDiagramObjectStyle`, the default figure writes no `type` attribute and a value other than 0 or 1 throws ([#519](https://github.com/localgod/tsarchi/issues/519)).
 - `findReachableElements(elementId, hops, options?)` finds the elements within `hops` relationships of an element (`Infinity` for everything connected), breadth-first: the start element first, then the others by distance. `direction` (`TraversalDirection.Outgoing`, `Incoming` or `Both`, the default) and `relationshipTypes` limit which relationships are followed; relationships that end on another relationship are not. It throws on an unknown start, a start that is a relationship or view, an invalid `hops`, or an unknown direction or relationship type ([#512](https://github.com/localgod/tsarchi/issues/512)).
 
+### Changed
+
+- `updateElement` and `upsertElement` throw on an `accessType`, `viewpoint` or `connectionRouterType` that Archi does not know, as `upsertRelationship` and `createView` do since 4.2.0, instead of writing it. Fields left out or set to `undefined` are not checked, so a loaded view with a viewpoint Archi no longer offers can still be renamed ([#507](https://github.com/localgod/tsarchi/issues/507)).
+
 ## [4.2.0] - 2026-10-11
 
 ### Added

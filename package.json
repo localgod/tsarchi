@@ -28,7 +28,7 @@
   "scripts": {
     "prebuild": "node scripts/generate-index.js",
     "generate:relationships": "node scripts/generate-relationships-matrix.js",
-    "build": "tsc --project tsconfig.json && node scripts/build-bundle.js",
+    "build": "tsc --project tsconfig.json && vp pack",
     "example": "node ./dist/examples/sample01.mjs --input sample.archimate --output out.archimate",
     "pretest": "npm run build",
     "test": "vp test",

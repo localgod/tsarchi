@@ -102,6 +102,10 @@ describe('package integration', () => {
     // Nothing left to resolve: no import statements, and fast-xml-parser's license notice is kept
     expect(code).not.toMatch(/^\s*import\s/m);
     expect(code).toContain('Copyright (c) 2017 Amit Kumar Gupta');
+    // The bundle inlines fast-xml-parser's own dependencies too, so its header names each of them
+    const fastXmlParser = JSON.parse(await readFile(new URL('../node_modules/fast-xml-parser/package.json', import.meta.url), 'utf8'));
+    const header = code.slice(0, code.indexOf('*/'));
+    for (const dependency of Object.keys(fastXmlParser.dependencies)) expect(header).toContain(` ${dependency} `);
 
     const bundle = await import(bundleUrl.href);
     const index = await import(new URL('../dist/src/index.mjs', import.meta.url).href);

@@ -31,14 +31,14 @@
     "build": "tsc --project tsconfig.json && node scripts/build-bundle.js",
     "example": "node ./dist/examples/sample01.mjs --input sample.archimate --output out.archimate",
     "pretest": "npm run build",
-    "test": "vitest",
+    "test": "vp test",
     "compare": "node ./dist/tests/roundtrip-compare.mjs",
     "roundtrip:diff": "npm run build --silent && node ./dist/tests/roundtrip-diff.mjs",
     "dev": "tsc --watch",
-    "lint": "oxlint --ignore-path .gitignore .",
-    "lintfix": "oxlint --fix --ignore-path .gitignore .",
-    "format": "oxfmt --check src tests scripts examples README.md LICENSE.md CHANGELOG.md CONTRIBUTING.md",
-    "formatfix": "oxfmt src tests scripts examples README.md LICENSE.md CHANGELOG.md CONTRIBUTING.md",
+    "lint": "vp lint --ignore-path .gitignore .",
+    "lintfix": "vp lint --fix --ignore-path .gitignore .",
+    "format": "vp fmt --check src tests scripts examples vite.config.ts README.md LICENSE.md CHANGELOG.md CONTRIBUTING.md",
+    "formatfix": "vp fmt src tests scripts examples vite.config.ts README.md LICENSE.md CHANGELOG.md CONTRIBUTING.md",
     "prepublishOnly": "npm run build && npm test"
   },
   "repository": {
@@ -61,14 +61,15 @@
     "@types/json-schema": "^7.0.15",
     "@types/node": "^26.0.0",
     "chalk": "^6.0.0",
-    "oxfmt": "^0.72.0",
-    "oxlint": "^1.50.0",
     "quickjs-emscripten-core": "^0.32.0",
     "typescript": "^7.0.2",
-    "vite": "^8.3.2",
-    "vitest": "^5.0.0"
+    "vite": "npm:@voidzero-dev/vite-plus-core@1.3.0",
+    "vite-plus": "1.3.0"
   },
   "dependencies": {
     "fast-xml-parser": "^5.2.3"
+  },
+  "overrides": {
+    "vite": "npm:@voidzero-dev/vite-plus-core@1.3.0"
   }
 }

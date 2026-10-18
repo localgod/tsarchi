@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vite-plus/test';
 import { Archimate } from '../src/Archimate.mjs';
 import { DiagramObjectFigure } from '../src/constants/archi-codes.mjs';
 import type { Element } from '../src/interfaces/Element.mjs';

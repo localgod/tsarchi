@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vite-plus/test';
 import { readdir, readFile } from 'fs/promises';
 import { newQuickJSWASMModuleFromVariant, type QuickJSWASMModule } from 'quickjs-emscripten-core';
 import releaseSyncVariant from '@jitl/quickjs-wasmfile-release-sync';

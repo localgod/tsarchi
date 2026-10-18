@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'vite-plus/test';
 import { BoundsMapper } from '../src/internal/BoundMapper.mjs';
 import type { Bounds as SchemaBounds } from '../src/interfaces/schema/Bounds.mjs';
 

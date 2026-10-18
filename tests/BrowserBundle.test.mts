@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'vite-plus/test';
 import { builtinModules } from 'module';
 import { fileURLToPath } from 'url';
 import { build, type Plugin } from 'vite';

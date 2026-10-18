@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { Archimate } from '../src/Archimate.mjs';
 import type { Child } from '../src/interfaces/Child.mjs';
 import type { Element } from '../src/interfaces/Element.mjs';

@@ -11,3 +11,4 @@ dist
 
 *.d.mts
 *.d.mts.map
+.vitest/

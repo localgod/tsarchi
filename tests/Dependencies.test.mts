@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'vite-plus/test';
 import { readdir, readFile } from 'fs/promises';
 import { builtinModules } from 'module';
 import { join } from 'path';

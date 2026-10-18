@@ -16,7 +16,7 @@ case "$(realpath "$file")" in
   *) exit 0 ;;
 esac
 
-if ! output=$(npx --no-install oxlint --deny-warnings --ignore-path .gitignore "$file" 2>&1); then
+if ! output=$(npx --no-install vp lint --deny-warnings --ignore-path .gitignore "$file" 2>&1); then
   echo "oxlint found problems in $file:" >&2
   echo "$output" >&2
   exit 2

@@ -1,4 +1,4 @@
-import { describe, it, beforeEach, expect, vi } from 'vitest';
+import { describe, it, beforeEach, expect, vi } from 'vite-plus/test';
 import { Archimate } from '../src/Archimate.mjs';
 import {
   archimateBusinessElementTypes,

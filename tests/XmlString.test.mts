@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, afterEach } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vite-plus/test';
 import { readFile } from 'fs/promises';
 import { Archimate } from '../src/Archimate.mjs';
 import { ArchimateParseError } from '../src/interfaces/ArchimateParseError.mjs';

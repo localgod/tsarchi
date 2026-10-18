@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'vite-plus/test';
 import { readFileSync, readdirSync } from 'fs';
 import { XMLParser, XMLValidator } from 'fast-xml-parser';
 import { Archimate } from '../src/Archimate.mjs';

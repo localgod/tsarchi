@@ -8,13 +8,13 @@ file=$(jq -r '.tool_input.file_path // .tool_response.filePath // empty')
 
 cd "${CLAUDE_PROJECT_DIR:-$(dirname "$0")/../..}"
 case "$(realpath "$file")" in
-  "$PWD"/README.md|"$PWD"/LICENSE.md|"$PWD"/CHANGELOG.md|"$PWD"/CONTRIBUTING.md) ;;
+  "$PWD"/vite.config.ts|"$PWD"/README.md|"$PWD"/LICENSE.md|"$PWD"/CHANGELOG.md|"$PWD"/CONTRIBUTING.md) ;;
   "$PWD"/src/*|"$PWD"/tests/*|"$PWD"/scripts/*|"$PWD"/examples/*) ;;
   *) exit 0 ;;
 esac
 
-# Generated files are skipped through ignorePatterns in .oxfmtrc.json.
-if ! output=$(npx --no-install oxfmt --no-error-on-unmatched-pattern "$file" 2>&1); then
+# Generated files are skipped through fmt.ignorePatterns in vite.config.ts.
+if ! output=$(npx --no-install vp fmt --no-error-on-unmatched-pattern "$file" 2>&1); then
   echo "oxfmt could not format $file:" >&2
   echo "$output" >&2
   exit 2

@@ -138,7 +138,7 @@ try {
 
 ### QuickJS
 
-QuickJS and other engines without a module resolver for `node_modules` cannot import `fast-xml-parser`, which `tsarchi` depends on. For them, the package ships `dist/bundle/tsarchi.mjs` (exported as `tsarchi/bundle`): the same API as `tsarchi`, with fast-xml-parser included, as one ES module of about 400 KB that imports nothing. Import it by its path, and load and save files with QuickJS's `std` module, as `TsArchi` needs Node's `fs`:
+QuickJS and other engines without a module resolver for `node_modules` cannot import `fast-xml-parser`, which `tsarchi` depends on. For them, the package ships `dist/bundle/tsarchi.mjs` (exported as `tsarchi/bundle`): the same API as `tsarchi`, with fast-xml-parser and its dependencies included, as one ES module of about 400 KB that imports nothing. Import it by its path, and load and save files with QuickJS's `std` module, as `TsArchi` needs Node's `fs`:
 
 ```javascript
 import * as std from "std"; // "qjs:std" in quickjs-ng

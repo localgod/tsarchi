@@ -43,7 +43,7 @@ const style = (cell: DrawioCell | undefined) =>
     (cell?.['@_style'] ?? '')
       .split(';')
       .filter(Boolean)
-      .map(entry => entry.split('=') as [string, string?])
+      .map(entry => entry.split('=') as [string, string | undefined])
   );
 const points = (cell: DrawioCell | undefined) => {
   const list = cell?.mxGeometry?.Array?.mxPoint ?? [];

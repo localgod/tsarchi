@@ -190,6 +190,15 @@ describe('Archimate.fromXml / toXml', () => {
     expect(reloaded.listElements().map(element => element.id)).toEqual(['app-1']);
   });
 
+  it('writes a relationship added without a name without a name attribute, as Archi does', () => {
+    const archimate = new Archimate();
+    archimate.upsertElement({ id: 'app-1', name: 'App 1', type: 'ApplicationComponent' });
+    archimate.upsertElement({ id: 'app-2', name: 'App 2', type: 'ApplicationComponent' });
+    archimate.upsertRelationship({ id: 'flow', type: 'FlowRelationship', source: 'app-1', target: 'app-2' });
+
+    expect(archimate.toXml()).toContain('<element xsi:type="archimate:FlowRelationship" id="flow" source="app-1" target="app-2"/>');
+  });
+
   it('writes a view built with the API, with grouped objects and connections, so that it loads again', () => {
     const archimate = new Archimate();
     const actor = archimate.upsertElement({ id: 'actor', name: 'Actor', type: 'BusinessActor' });

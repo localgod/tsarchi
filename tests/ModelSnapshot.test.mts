@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { readdir, readFile } from 'fs/promises';
 import { join } from 'path';
 import { Archimate } from '../src/Archimate.mjs';

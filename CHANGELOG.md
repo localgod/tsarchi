@@ -8,6 +8,10 @@ This project adheres to [Keep a CHANGELOG](http://keepachangelog.com/)
 
 ## [Unreleased]
 
+### Changed
+
+- Development tooling runs through [Vite+](https://viteplus.dev): the `vite-plus` dev dependency replaces `oxlint`, `oxfmt` and `vitest`, and `vite.config.ts` replaces `.oxlintrc.json` and `.oxfmtrc.json`. The published package is unchanged ([#525](https://github.com/localgod/tsarchi/issues/525)).
+
 ## [4.3.0] - 2026-10-17
 
 ### Added

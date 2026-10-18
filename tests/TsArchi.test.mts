@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, type Mock } from 'vitest';
+import { describe, it, expect, vi, type Mock } from 'vite-plus/test';
 import { TsArchi } from '../src/node/TsArchi.mjs';
 import { readFile, writeFile } from 'fs/promises';
 

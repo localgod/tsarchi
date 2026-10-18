@@ -1,0 +1,12 @@
+{
+  // Type checking only (vp lint / vp check): the tests run in Node, so they may use newer library APIs than src/.
+  // The build still uses the root tsconfig.json, which excludes *.test.mts.
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "lib": ["ES2023"],
+    "rootDir": "..",
+    "noEmit": true
+  },
+  "include": ["**/*.mts", "../src/**/*.mts"],
+  "exclude": []
+}

@@ -50,9 +50,9 @@ function modelBuiltInCode(): Archimate {
   archimate.moveElementToFolder(actor.id, folder.id);
 
   const view = archimate.createView('Overview', { documentation: 'Main view' });
-  const group = archimate.addGroup(view.id, 'Business', { x: 10, y: 10, width: 400, height: 200 });
-  const actorObject = archimate.addDiagramObject(view.id, actor.id, { x: 20, y: 40, width: 120, height: 55 }, { fillColor: '#ffffff' });
-  const roleObject = archimate.addDiagramObject(view.id, role.id, { x: 200, y: 40, width: 120, height: 55 });
+  const group = archimate.addGroup(view.id, 'Business', { x: 10, y: 10, width: 400, height: 200 })!;
+  const actorObject = archimate.addDiagramObject(view.id, actor.id, { x: 20, y: 40, width: 120, height: 55 }, { fillColor: '#ffffff' })!;
+  const roleObject = archimate.addDiagramObject(view.id, role.id, { x: 200, y: 40, width: 120, height: 55 })!;
   archimate.addConnection(view.id, actorObject.id, roleObject.id, assignment.id, { lineWidth: 2 });
   archimate.updateDiagramObjectStyle(view.id, roleObject.id, { lineColor: '#000000', textAlignment: 2 });
   expect(group.id).toBeTruthy();

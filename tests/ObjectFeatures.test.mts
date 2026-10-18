@@ -4,6 +4,7 @@ import { XMLParser } from 'fast-xml-parser';
 import { Archimate } from '../src/Archimate.mjs';
 import type { Schema } from '../src/interfaces/schema/Schema.mjs';
 import { archimateFromSchema, archimateToSchema } from '../src/internal/SchemaAccess.mjs';
+import { toArray } from '../src/internal/Arrays.mjs';
 
 const fixture = 'tests/fixtures/roundtrip/features-and-unrecognized.archimate';
 
@@ -14,7 +15,7 @@ async function parseFixture(): Promise<Archimate> {
 }
 
 function businessFolder(archimate: Archimate) {
-  return archimateToSchema(archimate)['archimate:model'].folder.find(folder => folder['@_type'] === 'business')!;
+  return toArray(archimateToSchema(archimate)['archimate:model'].folder).find(folder => folder['@_type'] === 'business')!;
 }
 
 describe('features on folders, elements and relationships', () => {

@@ -236,5 +236,5 @@ export function allowedRelationshipTypes(sourceType: string, targetType: string)
   const concept = (type: string) => (elementTypeToFolderKey.get(type as ArchimateModelType) === 'relations' ? 'Relationship' : type);
   const targets = relationshipsMatrix[concept(sourceType)];
   if (!targets || !relationshipsMatrix[concept(targetType)]) return null;
-  return [...(targets[concept(targetType)] || '')].map(key => relationshipMatrixKeys[key] as ArchimateRelationshipType);
+  return (targets[concept(targetType)] || '').split('').map(key => relationshipMatrixKeys[key] as ArchimateRelationshipType);
 }

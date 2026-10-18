@@ -10,7 +10,12 @@ This project adheres to [Keep a CHANGELOG](http://keepachangelog.com/)
 
 ### Changed
 
+- `npm run lint` and `vp check` type-check the code, tests included, and run oxlint's type-aware rules ([#526](https://github.com/localgod/tsarchi/issues/526)).
 - Development tooling runs through [Vite+](https://viteplus.dev): the `vite-plus` dev dependency replaces `oxlint`, `oxfmt` and `vitest`, and `vite.config.ts` replaces `.oxlintrc.json` and `.oxfmtrc.json`. The published package is unchanged ([#525](https://github.com/localgod/tsarchi/issues/525)).
+
+### Fixed
+
+- `RelationshipInput` no longer requires `name`, since relationships in Archi are often unnamed. `upsertRelationship()` stores a missing name as `''`, as loading does, and it is not written on save ([#526](https://github.com/localgod/tsarchi/issues/526)).
 
 ## [4.3.0] - 2026-10-17
 

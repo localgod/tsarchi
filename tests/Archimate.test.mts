@@ -10,6 +10,7 @@ import {
   folderType,
   isArchimateModelType,
   type ArchimateElementType,
+  type ArchimateModelType,
   type ArchimateRelationshipType,
 } from '../src/constants/archimate-mappings.mjs';
 import { relationshipMatrixKeys, relationshipsMatrix } from '../src/internal/relationships-matrix.mjs';
@@ -453,7 +454,7 @@ describe('Archimate', () => {
     it('should reject updates to unknown element types', () => {
       expect(() =>
         archimate.updateElement('app-a', {
-          type: 'NotARealType',
+          type: 'NotARealType' as ArchimateModelType,
         })
       ).toThrowError('Unknown element type "NotARealType".');
     });
@@ -538,6 +539,13 @@ describe('Archimate', () => {
       expect(second.id).not.toBe(first.id);
       expect(archimate.findRelationshipsBetween('rel-app-a', 'rel-app-b').map(rel => rel.id)).toEqual([first.id, second.id]);
       expect(archimate.getRelationship(first.id)?.documentation).toBeUndefined();
+    });
+
+    it('should add a relationship without a name with an empty name, as when loading', () => {
+      const relationship = archimate.upsertRelationship({ type: 'FlowRelationship', source: 'rel-app-a', target: 'rel-app-b' });
+
+      expect(relationship.name).toBe('');
+      expect(archimate.getRelationship(relationship.id)?.name).toBe('');
     });
 
     it('should update the relationship with the given id', () => {

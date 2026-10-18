@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll } from 'vite-plus/test';
 import { readdir, readFile } from 'fs/promises';
-import { newQuickJSWASMModuleFromVariant, type QuickJSWASMModule } from 'quickjs-emscripten-core';
+import { newQuickJSWASMModuleFromVariant, type QuickJSSyncVariant, type QuickJSWASMModule } from 'quickjs-emscripten-core';
 import releaseSyncVariant from '@jitl/quickjs-wasmfile-release-sync';
 import { Archimate } from '../src/Archimate.mjs';
 
@@ -40,7 +40,9 @@ describe('QuickJS bundle', () => {
   let tsarchi: string;
 
   beforeAll(async () => {
-    quickJs = await newQuickJSWASMModuleFromVariant(releaseSyncVariant);
+    // The package types its ES module entry with CommonJS declarations, so TypeScript sees the default import as the
+    // module object rather than the variant it is at run time.
+    quickJs = await newQuickJSWASMModuleFromVariant(releaseSyncVariant as unknown as QuickJSSyncVariant);
     // The self-contained bundle `npm run build` writes and the package exports as `tsarchi/bundle`
     tsarchi = await readFile(new URL('../dist/bundle/tsarchi.mjs', import.meta.url), 'utf8');
   }, 60_000);

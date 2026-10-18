@@ -7,6 +7,8 @@ import type { SourceConnection as SchemaSourceConnection } from '../src/interfac
 import { SourceConnectionMapper } from '../src/internal/SourceConnectionMapper.mjs';
 import type { Child } from '../src/interfaces/Child.mjs';
 import { archimateFromSchema, archimateToSchema } from '../src/internal/SchemaAccess.mjs';
+import { toArray } from '../src/internal/Arrays.mjs';
+import type { ArchimateModelType } from '../src/constants/archimate-mappings.mjs';
 
 const fixturesDir = 'tests/fixtures/archi';
 
@@ -136,8 +138,8 @@ describe('Archi-produced models', () => {
 
   it('should keep the xsi:type prefix a type was loaded with', async () => {
     const archimate = await parseFixture('test.archimate');
-    const diagrams = archimateToSchema(archimate)['archimate:model'].folder.find(folder => folder['@_type'] === 'diagrams');
-    const canvas = diagrams?.element.find(element => element['@_id'] === '25d4e8d4-f410-4a1a-bc28-f184d66ea408');
+    const diagrams = toArray(archimateToSchema(archimate)['archimate:model'].folder).find(folder => folder['@_type'] === 'diagrams');
+    const canvas = toArray(diagrams?.element).find(element => element['@_id'] === '25d4e8d4-f410-4a1a-bc28-f184d66ea408');
     const childTypes = (Array.isArray(canvas?.child) ? canvas.child : [canvas?.child]).map(child => child?.['@_xsi:type']);
 
     expect(canvas?.['@_xsi:type']).toBe('canvas:CanvasModel');
@@ -225,7 +227,7 @@ describe('Archi-produced models', () => {
     const relationshipId = 'id-e983ee9f5cbe4d51812734c3e0eae3e9';
 
     archimate.updateElement(elementId, { name: 'Renamed' });
-    archimate.updateElement(elementId, { type: 'Bogus1', documentation: 'Doc' });
+    archimate.updateElement(elementId, { type: 'Bogus1' as ArchimateModelType, documentation: 'Doc' });
     archimate.updateElement(elementId, { properties: new Map([['k', 'v']]) });
     archimate.updateElement(relationshipId, { name: 'Link' });
 
@@ -242,10 +244,10 @@ describe('Archi-produced models', () => {
   it('should still reject changing an element to a type it does not know', async () => {
     const archimate = await parseFixture('compatibility_test3.archimate');
 
-    expect(() => archimate.updateElement('id-3fded24054d44e3f90889975746e5238', { type: 'Bogus9' })).toThrow(
+    expect(() => archimate.updateElement('id-3fded24054d44e3f90889975746e5238', { type: 'Bogus9' as ArchimateModelType })).toThrow(
       'Unknown element type "Bogus9".'
     );
-    expect(() => archimate.updateElement('id-3fded24054d44e3f90889975746e5238', { type: 'Bogus2' })).toThrow(
+    expect(() => archimate.updateElement('id-3fded24054d44e3f90889975746e5238', { type: 'Bogus2' as ArchimateModelType })).toThrow(
       'Unknown element type "Bogus2".'
     );
   });

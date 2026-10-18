@@ -109,7 +109,7 @@ function findLineNumber(element: string, xmlLines: string[], value: string | nul
 }
 
 // Main test function to compare input and output XML
-(async () => {
+void (async () => {
   try {
     const inputXMLData = parseAndNormalizeXML(inputFilePath);
     const outputXMLData = parseAndNormalizeXML(outputFilePath);

@@ -414,7 +414,8 @@ export class Archimate {
 
     const newRelationship: Relationship = {
       id: relationship.id || this.generateUniqueId(),
-      name: relationship.name,
+      // As when loading: Archi's default name is "", which is not written on save.
+      name: relationship.name ?? '',
       type: relationship.type,
       source: relationship.source,
       target: relationship.target,

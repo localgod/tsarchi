@@ -8,6 +8,6 @@ export interface Relationship extends Element {
 }
 
 /**
- * A relationship to insert or update.
+ * A relationship to insert or update. `name` may be left out: relationships in Archi are often unnamed.
  */
-export type RelationshipInput = Partial<Relationship> & Pick<Relationship, 'name' | 'type' | 'source' | 'target'>;
+export type RelationshipInput = Partial<Relationship> & Pick<Relationship, 'type' | 'source' | 'target'>;

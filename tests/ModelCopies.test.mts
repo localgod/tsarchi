@@ -58,15 +58,15 @@ describe('objects passed to the model are copied', () => {
     const archimate = new Archimate();
     const { id } = archimate.upsertElement({ name: 'CRM', type: 'ApplicationComponent' });
     const features = new Map([['iconColor', '#ff0000']]);
-    const profiles = ['profile-1'];
+    const properties = new Map([['owner', 'sales']]);
 
     archimate.upsertElement({ id, name: 'CRM', type: 'ApplicationComponent', features });
-    archimate.updateElement(id, { profiles });
+    archimate.updateElement(id, { properties });
     features.set('iconColor', '#00ff00');
-    profiles.push('profile-2');
+    properties.set('owner', 'finance');
 
     expect(archimate.getElement(id)?.features?.get('iconColor')).toBe('#ff0000');
-    expect(archimate.getElement(id)?.profiles).toEqual(['profile-1']);
+    expect(archimate.getElement(id)?.properties?.get('owner')).toBe('sales');
   });
 
   it('should not change the model when the input to upsertRelationship is changed afterwards', () => {

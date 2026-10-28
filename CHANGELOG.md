@@ -8,6 +8,10 @@ This project adheres to [Keep a CHANGELOG](http://keepachangelog.com/)
 
 ## [Unreleased]
 
+### Added
+
+- `removeDiagramObject(viewId, diagramObjectId)` takes a diagram child of any kind (diagram object, group, note, view reference, sketch or canvas object) off a view, with the children nested in it and every connection to or from any of them. `removeConnection(viewId, connectionId)` takes a connection off a view, with the connections attached to it. Both leave the elements and relationships in the model, and return the ids of everything removed, empty when the view or id is not found or the id is of the other kind ([#532](https://github.com/localgod/tsarchi/issues/532)).
+
 ### Changed
 
 - `tsarchi/bundle` is built with `vp pack` (tsdown) from the `pack` block in `vite.config.ts`, which replaces `scripts/build-bundle.js`. The bundle's code and API are unchanged ([#527](https://github.com/localgod/tsarchi/issues/527)).

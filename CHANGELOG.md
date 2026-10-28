@@ -10,6 +10,7 @@ This project adheres to [Keep a CHANGELOG](http://keepachangelog.com/)
 
 ### Added
 
+- `duplicateView(viewId, options?)` copies a view, as Archi's Duplicate does: every diagram object, group, note, view reference and connection at any depth, with bounds, bendpoints, styles, features, properties, documentation, the view's own attributes and unrecognized content. The copy and every object in it get new ids; connections, `targetConnections`, ids in unrecognized content and a view reference to the view itself point into the copy. It refers to the same elements, relationships and other views, goes at the end of the original's folder, and is named `options.name` or `"<name> (copy)"`. Returns the copy, or `null` when there is no view with that id ([#533](https://github.com/localgod/tsarchi/issues/533)).
 - `removeFromView(viewId, ids)` takes several diagram children and connections off a view at once, such as an editor's selection. It removes the same as calling `removeDiagramObject` or `removeConnection` for each id, but in one pass over the view: removing 500 of 2,000 diagram objects takes about 3 ms instead of 255 ms. Ids not found are skipped, and it returns the ids of everything removed ([#534](https://github.com/localgod/tsarchi/issues/534)).
 - `removeDiagramObject(viewId, diagramObjectId)` takes a diagram child of any kind (diagram object, group, note, view reference, sketch or canvas object) off a view, with the children nested in it and every connection to or from any of them. `removeConnection(viewId, connectionId)` takes a connection off a view, with the connections attached to it. Both leave the elements and relationships in the model, and return the ids of everything removed, empty when the view or id is not found or the id is of the other kind ([#532](https://github.com/localgod/tsarchi/issues/532)).
 
@@ -21,6 +22,7 @@ This project adheres to [Keep a CHANGELOG](http://keepachangelog.com/)
 
 ### Fixed
 
+- `hasId` and `generateUniqueId` missed the ids of view connections nested in another connection, where Archi stores a connection that starts on a connection, so `hasId` returned `false` for them ([#533](https://github.com/localgod/tsarchi/issues/533)).
 - The `tsarchi/bundle` header carried only fast-xml-parser's license, although the bundle also includes its dependencies (strnum, anynum, fast-xml-builder, path-expression-matcher, is-unsafe, @nodable/entities and xml-naming). It now lists the license notice of every package the bundle includes ([#527](https://github.com/localgod/tsarchi/issues/527)).
 - `RelationshipInput` no longer requires `name`, since relationships in Archi are often unnamed. `upsertRelationship()` stores a missing name as `''`, as loading does, and it is not written on save ([#526](https://github.com/localgod/tsarchi/issues/526)).
 

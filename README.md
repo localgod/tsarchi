@@ -476,6 +476,10 @@ model.removeConnection("view-id", "connection-id");
 // It removes the same as the two methods above for each id, in one pass over the view.
 model.removeFromView("view-id", ["object-id", "connection-id"]);
 
+// Duplicate a view, as Archi's Duplicate does: everything drawn on it, with new ids, referring to the same
+// elements and relationships. The copy goes at the end of the original's folder, named "<name> (copy)" unless given a name.
+const copy = model.duplicateView("view-id", { name: "Variant" });
+
 // Delete a view, and the references to it in other views
 model.deleteView("view-id");
 ```

@@ -275,6 +275,24 @@ export class ViewManager {
   }
 
   /**
+   * Removes several diagram children and connections from a view at once, removing the same as `removeDiagramObject`
+   * and `removeConnection` for each id, in one pass over the view instead of one per id. Ids not found are skipped.
+   * Returns the ids of everything removed, empty when the view or none of the ids is found.
+   */
+  removeFromView(viewId: string, ids: Iterable<string>): string[] {
+    const viewElement = this.findView(viewId);
+    if (!viewElement) return [];
+
+    const idSet = new Set(ids);
+    const removedIds = [
+      ...removeViewChildren(viewElement, child => idSet.has(child.id)),
+      ...removeViewConnections(viewElement, connection => idSet.has(connection.id)),
+    ];
+    if (removedIds.length > 0) this.index.clear();
+    return removedIds;
+  }
+
+  /**
    * Removes a view from the model and from the nested folder that lists it.
    */
   deleteView(viewId: string): boolean {

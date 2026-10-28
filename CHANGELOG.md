@@ -10,6 +10,7 @@ This project adheres to [Keep a CHANGELOG](http://keepachangelog.com/)
 
 ### Added
 
+- `removeFromView(viewId, ids)` takes several diagram children and connections off a view at once, such as an editor's selection. It removes the same as calling `removeDiagramObject` or `removeConnection` for each id, but in one pass over the view: removing 500 of 2,000 diagram objects takes about 3 ms instead of 255 ms. Ids not found are skipped, and it returns the ids of everything removed ([#534](https://github.com/localgod/tsarchi/issues/534)).
 - `removeDiagramObject(viewId, diagramObjectId)` takes a diagram child of any kind (diagram object, group, note, view reference, sketch or canvas object) off a view, with the children nested in it and every connection to or from any of them. `removeConnection(viewId, connectionId)` takes a connection off a view, with the connections attached to it. Both leave the elements and relationships in the model, and return the ids of everything removed, empty when the view or id is not found or the id is of the other kind ([#532](https://github.com/localgod/tsarchi/issues/532)).
 
 ### Changed

@@ -14,6 +14,8 @@ import { assertOptionalCode } from './Codes.mjs';
 import { ConnectionTextPosition, DiagramObjectFigure, TextAlignment, Viewpoint } from '../constants/archi-codes.mjs';
 import { splitIds, toViewChild, toViewConnection } from './ViewChildMapper.mjs';
 import { allSourceConnections, removeViewChildren, removeViewConnections } from './ViewRemoval.mjs';
+import { copyView } from './ViewCopy.mjs';
+import type { Folder } from '../interfaces/Folder.mjs';
 
 /**
  * Creates, reads and edits views. Views are stored in the shape they have in the file (`Child`, with nested `child`,
@@ -293,6 +295,30 @@ export class ViewManager {
   }
 
   /**
+   * Copies a view with everything drawn on it, as Archi's Duplicate does. The copy and every object in it get new ids,
+   * and it refers to the same elements and relationships. It is added at the end of the original's folder, named
+   * `options.name` or "<name> (copy)". Returns the copy, or null when there is no view with that id.
+   */
+  duplicateView(viewId: string, options?: { name?: string }): View | null {
+    const original = this.findView(viewId);
+    if (!original) return null;
+
+    const copy = copyView(original, () => {
+      const id = this.generateUniqueId();
+      // Reserve each id, so the ones generated for the rest of the copy differ from it.
+      this.index.addId(id);
+      return id;
+    });
+    copy.name = options?.name ?? `${original.name} (copy)`;
+
+    this.model.diagrams.elements!.push(copy);
+    const folder = findNestedFolder(this.model.diagrams.folders || [], viewId);
+    if (folder) folder.elementIds = [...folder.elementIds!, copy.id];
+    this.index.clear();
+    return this.elementToView(copy);
+  }
+
+  /**
    * Removes a view from the model and from the nested folder that lists it.
    */
   deleteView(viewId: string): boolean {
@@ -386,4 +412,16 @@ export class ViewManager {
   private findElementById(elementId: string): Element | null {
     return this.index.element(elementId)?.element ?? null;
   }
+}
+
+/**
+ * The nested folder, at any depth, that lists the element.
+ */
+function findNestedFolder(folders: Folder[], elementId: string): Folder | undefined {
+  for (const folder of folders) {
+    if (folder.elementIds?.includes(elementId)) return folder;
+    const found = findNestedFolder(folder.folders || [], elementId);
+    if (found) return found;
+  }
+  return undefined;
 }

@@ -8,6 +8,8 @@ This project adheres to [Keep a CHANGELOG](http://keepachangelog.com/)
 
 ## [Unreleased]
 
+## [4.4.0] - 2026-10-28
+
 ### Added
 
 - `duplicateView(viewId, options?)` copies a view, as Archi's Duplicate does: every diagram object, group, note, view reference and connection at any depth, with bounds, bendpoints, styles, features, properties, documentation, the view's own attributes and unrecognized content. The copy and every object in it get new ids; connections, `targetConnections`, ids in unrecognized content and a view reference to the view itself point into the copy. It refers to the same elements, relationships and other views, goes at the end of the original's folder, and is named `options.name` or `"<name> (copy)"`. Returns the copy, or `null` when there is no view with that id ([#533](https://github.com/localgod/tsarchi/issues/533)).
@@ -258,7 +260,8 @@ Unpublished from npm. Its changes were released in 1.0.2.
 - A `sync` command-line script that loads a model from `-i` and saves it to `-o`.
 - The package contains the TypeScript sources only, without compiled JavaScript.
 
-[Unreleased]: https://github.com/localgod/tsarchi/compare/4.3.0...HEAD
+[Unreleased]: https://github.com/localgod/tsarchi/compare/4.4.0...HEAD
+[4.4.0]: https://github.com/localgod/tsarchi/compare/4.3.0...4.4.0
 [4.3.0]: https://github.com/localgod/tsarchi/compare/4.2.0...4.3.0
 [4.2.0]: https://github.com/localgod/tsarchi/compare/4.1.0...4.2.0
 [4.1.0]: https://github.com/localgod/tsarchi/compare/4.0.0...4.1.0

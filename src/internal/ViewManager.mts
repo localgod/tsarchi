@@ -13,6 +13,7 @@ import { ModelIndex } from './ModelIndex.mjs';
 import { assertOptionalCode } from './Codes.mjs';
 import { ConnectionTextPosition, DiagramObjectFigure, TextAlignment, Viewpoint } from '../constants/archi-codes.mjs';
 import { splitIds, toViewChild, toViewConnection } from './ViewChildMapper.mjs';
+import { allSourceConnections, removeViewChildren, removeViewConnections } from './ViewRemoval.mjs';
 
 /**
  * Creates, reads and edits views. Views are stored in the shape they have in the file (`Child`, with nested `child`,
@@ -247,6 +248,33 @@ export class ViewManager {
   }
 
   /**
+   * Removes a diagram child of any kind (diagram object, group, note, view reference, …) from a view, with the children
+   * nested in it and every connection to or from any of them. Returns the ids of everything removed, empty when the view
+   * or the child is not found.
+   */
+  removeDiagramObject(viewId: string, diagramObjectId: string): string[] {
+    const viewElement = this.findView(viewId);
+    if (!viewElement || !this.findChild(toArray(viewElement.child), diagramObjectId)) return [];
+
+    const removedIds = removeViewChildren(viewElement, child => child.id === diagramObjectId);
+    this.index.clear();
+    return [...removedIds];
+  }
+
+  /**
+   * Removes a connection from a view, with the connections attached to it. Returns the ids of the removed connections,
+   * empty when the view or the connection is not found.
+   */
+  removeConnection(viewId: string, connectionId: string): string[] {
+    const viewElement = this.findView(viewId);
+    if (!viewElement || !this.hasConnection(toArray(viewElement.child), connectionId)) return [];
+
+    const removedIds = removeViewConnections(viewElement, connection => connection.id === connectionId);
+    this.index.clear();
+    return [...removedIds];
+  }
+
+  /**
    * Removes a view from the model and from the nested folder that lists it.
    */
   deleteView(viewId: string): boolean {
@@ -287,6 +315,16 @@ export class ViewManager {
       if (found) return found;
     }
     return null;
+  }
+
+  /**
+   * Whether a connection starts on a child at any depth, or on a connection starting there.
+   */
+  private hasConnection(children: Child[] | undefined, connectionId: string): boolean {
+    return (children ?? []).some(
+      child =>
+        allSourceConnections(child).some(connection => connection.id === connectionId) || this.hasConnection(child.child, connectionId)
+    );
   }
 
   private newDiagramObject(elementId: string, bounds: Bounds, options: Partial<Child> | undefined): Child {

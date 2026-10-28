@@ -464,6 +464,14 @@ model.updateDiagramObjectStyle("view-id", "object-id", {
 // Draw an ArchiMate diagram object as Archi's alternate figure (DiagramObjectFigure.Default for the box)
 model.updateDiagramObjectStyle("view-id", "object-id", { figure: DiagramObjectFigure.Alternate });
 
+// Take a diagram object (or a group, note or view reference) off a view, with what is nested in it and every
+// connection to or from any of them. The elements and relationships they show stay in the model.
+// Returns the ids of everything removed, empty if the view or object is not found.
+const removedIds = model.removeDiagramObject("view-id", "object-id");
+
+// Take a connection off a view, with the connections attached to it. The relationship stays in the model.
+model.removeConnection("view-id", "connection-id");
+
 // Delete a view, and the references to it in other views
 model.deleteView("view-id");
 ```

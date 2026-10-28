@@ -27,6 +27,7 @@ import { randomArchiId } from './internal/Ids.mjs';
 import { readSnapshot, writeSnapshot } from './internal/Snapshot.mjs';
 import type { ModelSnapshot } from './interfaces/ModelSnapshot.mjs';
 import { splitIds } from './internal/ViewChildMapper.mjs';
+import { allSourceConnections, removeViewChildren, removeViewConnections } from './internal/ViewRemoval.mjs';
 import {
   folderType,
   elementTypeToFolderKey,
@@ -979,6 +980,25 @@ export class Archimate {
   }
 
   /**
+   * Removes a diagram child of any kind (diagram object, group, note, view reference, …) from a view, with the children
+   * nested in it and every connection to or from any of them. The elements and relationships they show stay in the model.
+   * Returns the ids of everything removed, the child first; empty when the view or the child is not found, including
+   * when the id is a connection's.
+   */
+  public removeDiagramObject(viewId: string, diagramObjectId: string): string[] {
+    return this.viewManager.removeDiagramObject(viewId, diagramObjectId);
+  }
+
+  /**
+   * Removes a connection from a view, with the connections attached to it (a connection can end on another connection).
+   * The relationships they show stay in the model. Returns the ids of the removed connections, the connection first;
+   * empty when the view or the connection is not found, including when the id is a diagram child's.
+   */
+  public removeConnection(viewId: string, connectionId: string): string[] {
+    return this.viewManager.removeConnection(viewId, connectionId);
+  }
+
+  /**
    * Removes a view from the model, together with the diagram model references to it in other views
    * and the connections attached to those references, as Archi does.
    */
@@ -1317,55 +1337,7 @@ export class Archimate {
    */
   private removeViewChildren(shouldRemove: (child: Child) => boolean): void {
     for (const viewElement of this.model.diagrams.elements || []) {
-      if (!viewElement.child) continue;
-
-      const children = toArray(viewElement.child);
-      const removedIds = new Set<string>();
-      const keptChildren = this.removeMatchingChildren(children, shouldRemove, removedIds);
-      if (removedIds.size === 0) continue;
-
-      viewElement.child = keptChildren;
-      // Connections from other objects to a removed child go with it, as do connections attached to those.
-      while (this.removeViewConnectionsFromChildren(keptChildren, new Set(), removedIds));
-      this.removeTargetConnectionReferences(keptChildren, removedIds);
-    }
-  }
-
-  /**
-   * Removes matching children at any depth, collecting the ids of the removed children, their contents and their connections.
-   */
-  private removeMatchingChildren(children: Child[], shouldRemove: (child: Child) => boolean, removedIds: Set<string>): Child[] {
-    const keptChildren: Child[] = [];
-
-    for (const child of children) {
-      if (shouldRemove(child)) {
-        this.collectSubtreeIds(child, removedIds);
-        continue;
-      }
-
-      const nested = child.child ?? [];
-      if (nested.length > 0) {
-        const keptNested = this.removeMatchingChildren(nested, shouldRemove, removedIds);
-        if (keptNested.length === 0) {
-          delete child.child;
-        } else if (keptNested.length !== nested.length) {
-          child.child = keptNested;
-        }
-      }
-
-      keptChildren.push(child);
-    }
-
-    return keptChildren;
-  }
-
-  private collectSubtreeIds(child: Child, ids: Set<string>): void {
-    ids.add(child.id);
-    for (const connection of this.getAllSourceConnections(child)) {
-      ids.add(connection.id);
-    }
-    for (const nested of child.child ?? []) {
-      this.collectSubtreeIds(nested, ids);
+      removeViewChildren(viewElement, shouldRemove);
     }
   }
 
@@ -1376,101 +1348,10 @@ export class Archimate {
    */
   private removeViewConnectionsForRelationships(relationshipIds: Set<string>): void {
     for (const viewElement of this.model.diagrams.elements || []) {
-      if (!viewElement.child) continue;
-
-      const children = toArray(viewElement.child);
-      const removedConnectionIds = new Set<string>();
-      // A connection can be attached to a removed connection that was visited earlier or later.
-      while (this.removeViewConnectionsFromChildren(children, relationshipIds, removedConnectionIds));
-      if (removedConnectionIds.size > 0) {
-        this.removeTargetConnectionReferences(children, removedConnectionIds);
-      }
-    }
-  }
-
-  /**
-   * Returns true when a connection was removed.
-   */
-  private removeViewConnectionsFromChildren(children: Child[], relationshipIds: Set<string>, removedConnectionIds: Set<string>): boolean {
-    let removedAny = false;
-
-    for (const child of children) {
-      if (this.removeOwnedViewConnections(child, relationshipIds, removedConnectionIds)) removedAny = true;
-      if (this.removeViewConnectionsFromChildren(child.child ?? [], relationshipIds, removedConnectionIds)) {
-        removedAny = true;
-      }
-    }
-
-    return removedAny;
-  }
-
-  /**
-   * Filters the connections starting on a child or connection, keeping the single-object or array shape of
-   * `sourceConnection`.
-   */
-  private removeOwnedViewConnections(
-    owner: { sourceConnection?: SourceConnection | SourceConnection[] },
-    relationshipIds: Set<string>,
-    removedConnectionIds: Set<string>
-  ): boolean {
-    const sourceConnection = owner.sourceConnection;
-    if (!sourceConnection) return false;
-
-    const connections = toArray(sourceConnection);
-    let removedAny = false;
-    for (const connection of connections) {
-      if (this.removeOwnedViewConnections(connection, relationshipIds, removedConnectionIds)) removedAny = true;
-    }
-
-    const kept = this.removeViewConnections(connections, relationshipIds, removedConnectionIds);
-    if (kept.length === connections.length) return removedAny;
-
-    if (kept.length === 0) {
-      delete owner.sourceConnection;
-    } else {
-      owner.sourceConnection = Array.isArray(sourceConnection) ? kept : kept[0];
-    }
-    return true;
-  }
-
-  private removeViewConnections(
-    connections: SourceConnection[],
-    relationshipIds: Set<string>,
-    removedConnectionIds: Set<string>
-  ): SourceConnection[] {
-    return connections.filter(connection => {
-      const shouldRemove =
-        (connection.archimateRelationship !== undefined && relationshipIds.has(connection.archimateRelationship)) ||
-        removedConnectionIds.has(connection.source) ||
-        removedConnectionIds.has(connection.target);
-      if (shouldRemove) {
-        // Connections nested in a removed connection go with it.
-        for (const removed of this.flattenConnections([connection])) {
-          removedConnectionIds.add(removed.id);
-        }
-      }
-      return !shouldRemove;
-    });
-  }
-
-  private removeTargetConnectionReferences(children: Child[], connectionIds: Set<string>): void {
-    for (const child of children) {
-      this.removeTargetConnectionReference(child, connectionIds);
-      for (const connection of this.getAllSourceConnections(child)) {
-        this.removeTargetConnectionReference(connection, connectionIds);
-      }
-      this.removeTargetConnectionReferences(child.child ?? [], connectionIds);
-    }
-  }
-
-  private removeTargetConnectionReference(owner: { targetConnections?: string }, connectionIds: Set<string>): void {
-    const ids = splitIds(owner.targetConnections);
-    const kept = ids.filter(id => !connectionIds.has(id));
-    if (kept.length === ids.length) return;
-    if (kept.length === 0) {
-      delete owner.targetConnections;
-    } else {
-      owner.targetConnections = kept.join(' ');
+      removeViewConnections(
+        viewElement,
+        connection => connection.archimateRelationship !== undefined && relationshipIds.has(connection.archimateRelationship)
+      );
     }
   }
 
@@ -1747,7 +1628,7 @@ export class Archimate {
         this.recordId(child.id, childPath, seenIds, issues);
       }
 
-      for (const connection of this.getAllSourceConnections(child)) {
+      for (const connection of allSourceConnections(child)) {
         if (connection.id) {
           connectionIds.add(connection.id);
           this.recordId(connection.id, `${childPath}.sourceConnections`, seenIds, issues);
@@ -1781,7 +1662,7 @@ export class Archimate {
         });
       }
 
-      for (const connection of this.getAllSourceConnections(child)) {
+      for (const connection of allSourceConnections(child)) {
         this.validateViewConnection(connection, childPath, relationshipIds, endpointIds, issues);
         this.validateTargetConnections(connection, 'View connection', childPath, connectionIds, issues);
       }
@@ -1844,23 +1725,5 @@ export class Archimate {
         id: connection.id,
       });
     }
-  }
-
-  /**
-   * The child's connections, including connections nested in them (connection-to-connection).
-   */
-  private getAllSourceConnections(child: Child): SourceConnection[] {
-    return this.flattenConnections(toArray(child.sourceConnection));
-  }
-
-  /**
-   * The connections and every connection nested in them.
-   */
-  private flattenConnections(connections: SourceConnection[]): SourceConnection[] {
-    return connections.flatMap(connection => {
-      const nested = connection.sourceConnection;
-      if (!nested) return [connection];
-      return [connection, ...this.flattenConnections(toArray(nested))];
-    });
   }
 }

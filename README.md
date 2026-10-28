@@ -472,6 +472,10 @@ const removedIds = model.removeDiagramObject("view-id", "object-id");
 // Take a connection off a view, with the connections attached to it. The relationship stays in the model.
 model.removeConnection("view-id", "connection-id");
 
+// Take several diagram objects and connections off a view at once, such as an editor's selection.
+// It removes the same as the two methods above for each id, in one pass over the view.
+model.removeFromView("view-id", ["object-id", "connection-id"]);
+
 // Delete a view, and the references to it in other views
 model.deleteView("view-id");
 ```

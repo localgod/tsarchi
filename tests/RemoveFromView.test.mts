@@ -201,3 +201,67 @@ describe('removeConnection', () => {
     expect(archimate.toXml()).toBe(before);
   });
 });
+
+describe('removeFromView', () => {
+  it('should remove diagram children and connections together, as the single-id methods do one by one', async () => {
+    const batch = await load(nestedDiagramObjects);
+    const oneByOne = await load(nestedDiagramObjects);
+
+    const removed = batch.removeFromView('id-nested-view', ['id-group', 'id-note-to-connection', 'id-nested-portal-object']);
+
+    expect(new Set(removed)).toEqual(
+      new Set([
+        'id-group',
+        'id-group-api-object',
+        'id-group-portal-object',
+        'id-nested-portal-object',
+        'id-server-to-portal',
+        'id-note-to-connection',
+      ])
+    );
+    oneByOne.removeDiagramObject('id-nested-view', 'id-group');
+    oneByOne.removeConnection('id-nested-view', 'id-note-to-connection');
+    oneByOne.removeDiagramObject('id-nested-view', 'id-nested-portal-object');
+    expect(batch.toXml()).toBe(oneByOne.toXml());
+    expect(batch.validateModel()).toEqual([]);
+    expect(batch.listRelationships()).toHaveLength(2);
+  });
+
+  it('should skip ids removed along with another id in the list, and ids not found', async () => {
+    const archimate = await load(connectionToConnection);
+
+    const removed = archimate.removeFromView('id-c2c-view', [
+      'id-cashier-object',
+      'id-contract-connection',
+      'id-assignment-connection',
+      'id-missing',
+      'id-cashier-object',
+    ]);
+
+    expect(new Set(removed)).toEqual(
+      new Set(['id-cashier-object', 'id-assignment-connection', 'id-assignment-association-connection', 'id-contract-connection'])
+    );
+    expect(removed).toHaveLength(4);
+    expect(archimate.validateModel()).toEqual([]);
+    expect(archimate.hasId('id-contract-connection')).toBe(false);
+  });
+
+  it('should take any iterable of ids', async () => {
+    const archimate = await load(connectionToConnection);
+
+    expect(archimate.removeFromView('id-c2c-view', new Set(['id-assignment-association-connection']))).toEqual([
+      'id-assignment-association-connection',
+    ]);
+  });
+
+  it('should return an empty array and leave the model unchanged for an unknown view, no ids or only unknown ids', async () => {
+    const archimate = await load(connectionToConnection);
+    const before = archimate.toXml();
+
+    expect(archimate.removeFromView('id-missing', ['id-clerk-object'])).toEqual([]);
+    expect(archimate.removeFromView('id-clerk', ['id-clerk-object'])).toEqual([]);
+    expect(archimate.removeFromView('id-c2c-view', [])).toEqual([]);
+    expect(archimate.removeFromView('id-c2c-view', ['id-missing', 'id-clerk'])).toEqual([]);
+    expect(archimate.toXml()).toBe(before);
+  });
+});

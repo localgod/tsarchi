@@ -999,6 +999,17 @@ export class Archimate {
   }
 
   /**
+   * Removes several diagram children and connections from a view at once, for example a selection in an editor. It
+   * removes the same as calling `removeDiagramObject` or `removeConnection` for each id, but in one pass over the view
+   * instead of one per id. Ids not found, including those removed along with another id in the list, are skipped. The
+   * elements and relationships stay in the model. Returns the ids of everything removed, empty when the view or none of
+   * the ids is found.
+   */
+  public removeFromView(viewId: string, ids: Iterable<string>): string[] {
+    return this.viewManager.removeFromView(viewId, ids);
+  }
+
+  /**
    * Removes a view from the model, together with the diagram model references to it in other views
    * and the connections attached to those references, as Archi does.
    */

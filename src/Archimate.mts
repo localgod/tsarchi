@@ -1010,6 +1010,18 @@ export class Archimate {
   }
 
   /**
+   * Copies a view with every diagram object, group, note, view reference and connection on it, at any depth, with
+   * their bounds, bendpoints, styles, features, properties, documentation and unrecognized content, as Archi's
+   * Duplicate does. The copy and every object in it get new ids; connections, and a view reference to the view itself,
+   * point into the copy. Elements, relationships and other views are referred to, not copied. The copy is added at the
+   * end of the original's folder, named `options.name` or "<name> (copy)". Returns the copy, or null when there is no
+   * view with that id.
+   */
+  public duplicateView(viewId: string, options?: { name?: string }): View | null {
+    return this.viewManager.duplicateView(viewId, options);
+  }
+
+  /**
    * Removes a view from the model, together with the diagram model references to it in other views
    * and the connections attached to those references, as Archi does.
    */

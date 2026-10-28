@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vite-plus/test';
+import { readFile } from 'fs/promises';
 import { Archimate } from '../src/Archimate.mjs';
 import type { Child } from '../src/interfaces/Child.mjs';
 import type { Model } from '../src/interfaces/Model.mjs';
@@ -108,6 +109,7 @@ describe('the lookups behind hasId, getElement and findRelationshipsForElement',
     ],
     ['addConnection', (archimate, viewId, [a, b]) => archimate.addConnection(viewId, b, a)],
     ['deleteView', (archimate, viewId) => archimate.deleteView(viewId)],
+    ['duplicateView', (archimate, viewId) => archimate.duplicateView(viewId)],
     ['createFolder', archimate => archimate.createFolder(archimate.getFolder('application').id, { name: 'Sub' })],
     [
       'deleteFolder',
@@ -183,5 +185,13 @@ describe('building a model', () => {
 
     expect(walk).toHaveBeenCalledTimes(1);
     walk.mockRestore();
+  });
+});
+
+describe('hasId on a loaded model', () => {
+  it('should find a connection nested in a connection', async () => {
+    const archimate = Archimate.fromXml(await readFile('tests/fixtures/roundtrip/connection-to-connection.archimate', 'utf8'));
+
+    expect(archimate.hasId('id-assignment-association-connection')).toBe(true);
   });
 });

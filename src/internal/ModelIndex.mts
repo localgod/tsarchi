@@ -5,6 +5,7 @@ import type { FolderKey, Model } from '../interfaces/Model.mjs';
 import type { Profile } from '../interfaces/Profile.mjs';
 import type { Relationship } from '../interfaces/Relationship.mjs';
 import { toArray } from './Arrays.mjs';
+import { allSourceConnections } from './ViewRemoval.mjs';
 
 /**
  * An element, relationship or view and the top-level folder that stores it.
@@ -120,7 +121,7 @@ function* folderIds(folders: Folder[]): Generator<string> {
 function* viewChildIds(children: Child[]): Generator<string> {
   for (const child of children) {
     yield child.id;
-    for (const connection of toArray(child.sourceConnection)) yield connection.id;
+    for (const connection of allSourceConnections(child)) yield connection.id;
     yield* viewChildIds(toArray(child.child));
   }
 }

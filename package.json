@@ -37,8 +37,8 @@
     "dev": "tsc --watch",
     "lint": "vp lint --ignore-path .gitignore .",
     "lintfix": "vp lint --fix --ignore-path .gitignore .",
-    "format": "vp fmt --check src tests scripts examples vite.config.ts README.md LICENSE.md CHANGELOG.md CONTRIBUTING.md",
-    "formatfix": "vp fmt src tests scripts examples vite.config.ts README.md LICENSE.md CHANGELOG.md CONTRIBUTING.md",
+    "format": "vp fmt --check src tests scripts examples vite.config.ts README.md CHANGELOG.md CONTRIBUTING.md",
+    "formatfix": "vp fmt src tests scripts examples vite.config.ts README.md CHANGELOG.md CONTRIBUTING.md",
     "prepublishOnly": "npm run build && npm test"
   },
   "repository": {

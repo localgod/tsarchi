@@ -8,6 +8,8 @@ This project adheres to [Keep a CHANGELOG](http://keepachangelog.com/)
 
 ## [Unreleased]
 
+## [4.5.0] - 2026-11-02
+
 ### Added
 
 - `moveDiagramObject(viewId, diagramObjectId, parentId, bounds, options?)` moves a diagram child of any kind to another parent in the same view: a group, an ArchiMate diagram object, a sketch sticky or a canvas block, or the view itself when `parentId` is null. It keeps its id, nested children, style and connections, goes at `options.index` among the parent's other children (default: the end, as Archi's drag does), and takes `bounds` relative to the new parent. It returns the old parent and index, so a second call undoes the move exactly, or null when the view, child or parent is not found or the parent can't contain it ([#539](https://github.com/localgod/tsarchi/issues/539)).
@@ -272,7 +274,8 @@ Unpublished from npm. Its changes were released in 1.0.2.
 - A `sync` command-line script that loads a model from `-i` and saves it to `-o`.
 - The package contains the TypeScript sources only, without compiled JavaScript.
 
-[Unreleased]: https://github.com/localgod/tsarchi/compare/4.4.0...HEAD
+[Unreleased]: https://github.com/localgod/tsarchi/compare/4.5.0...HEAD
+[4.5.0]: https://github.com/localgod/tsarchi/compare/4.4.0...4.5.0
 [4.4.0]: https://github.com/localgod/tsarchi/compare/4.3.0...4.4.0
 [4.3.0]: https://github.com/localgod/tsarchi/compare/4.2.0...4.3.0
 [4.2.0]: https://github.com/localgod/tsarchi/compare/4.1.0...4.2.0

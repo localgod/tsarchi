@@ -18,6 +18,12 @@ import { copyView } from './ViewCopy.mjs';
 import type { Folder } from '../interfaces/Folder.mjs';
 
 /**
+ * Diagram children that can contain others: the classes with `DiagramModelContainer` in Archi's `archimate.ecore`
+ * (`DiagramModelArchimateObject`, `DiagramModelGroup`, `SketchModelSticky`) and `canvas.ecore` (`CanvasModelBlock`).
+ */
+const containerTypes = new Set(['DiagramObject', 'Group', 'SketchModelSticky', 'CanvasModelBlock']);
+
+/**
  * Creates, reads and edits views. Views are stored in the shape they have in the file (`Child`, with nested `child`,
  * `sourceConnection` and space-separated `targetConnections`), whether they were loaded or built here. The methods
  * return copies in the `View` shape, so change a view through these methods rather than through what they return.
@@ -295,6 +301,48 @@ export class ViewManager {
   }
 
   /**
+   * Moves a diagram child of any kind to another parent in the same view: a container, or the view itself when
+   * `parentId` is null. It goes at `options.index` among the parent's other children (default: the end), with `bounds`
+   * relative to the new parent, and keeps its id, children, style and connections. Returns where it was, so a second
+   * call puts it back exactly; null when the view, child or parent is not found, or the parent cannot contain it.
+   * Throws a RangeError for an index outside 0 to the number of the parent's other children.
+   */
+  moveDiagramObject(
+    viewId: string,
+    diagramObjectId: string,
+    parentId: string | null,
+    bounds: Bounds,
+    options?: { index?: number }
+  ): { parentId: string | null; index: number } | null {
+    const viewElement = this.findView(viewId);
+    if (!viewElement) return null;
+    const from = this.locateChild(viewElement, null, diagramObjectId);
+    if (!from) return null;
+    const moved = toArray(from.owner.child)[from.index];
+
+    let newOwner: Element | Child = viewElement;
+    if (parentId !== null) {
+      const parent = this.findChild(toArray(viewElement.child), parentId);
+      // The parent must be a container, and not the moved child or anything nested in it.
+      if (!parent || !containerTypes.has(parent.type) || parent === moved || this.findChild(moved.child, parentId)) return null;
+      newOwner = parent;
+    }
+
+    const otherChildren = toArray(newOwner.child).length - (newOwner === from.owner ? 1 : 0);
+    const index = options?.index ?? otherChildren;
+    if (!Number.isInteger(index) || index < 0 || index > otherChildren) {
+      throw new RangeError(`index must be an integer from 0 to ${otherChildren}, got ${index}`);
+    }
+
+    from.owner.child = toArray(from.owner.child).filter((_, i) => i !== from.index);
+    const siblings = toArray(newOwner.child);
+    siblings.splice(index, 0, moved);
+    newOwner.child = siblings;
+    moved.bounds = { ...bounds };
+    return { parentId: from.ownerId, index: from.index };
+  }
+
+  /**
    * Copies a view with everything drawn on it, as Archi's Duplicate does. The copy and every object in it get new ids,
    * and it refers to the same elements and relationships. It is added at the end of the original's folder, named
    * `options.name` or "<name> (copy)". Returns the copy, or null when there is no view with that id.
@@ -356,6 +404,25 @@ export class ViewManager {
     for (const child of children ?? []) {
       if (child.id === childId) return child;
       const found = this.findChild(child.child, childId);
+      if (found) return found;
+    }
+    return null;
+  }
+
+  /**
+   * Finds a diagram child at any depth below `owner` (a view or a diagram child): the object holding it in its `child`
+   * list, that object's id (null for the view) and the child's index in that list.
+   */
+  private locateChild(
+    owner: Element | Child,
+    ownerId: string | null,
+    childId: string
+  ): { owner: Element | Child; ownerId: string | null; index: number } | null {
+    const children = toArray(owner.child);
+    const index = children.findIndex(child => child.id === childId);
+    if (index >= 0) return { owner, ownerId, index };
+    for (const child of children) {
+      const found = this.locateChild(child, child.id, childId);
       if (found) return found;
     }
     return null;

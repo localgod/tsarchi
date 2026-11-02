@@ -476,6 +476,13 @@ model.removeConnection("view-id", "connection-id");
 // It removes the same as the two methods above for each id, in one pass over the view.
 model.removeFromView("view-id", ["object-id", "connection-id"]);
 
+// Move a diagram object (or a group, note, …) to another parent in the same view: into a group, an element's
+// diagram object, a sketch sticky or a canvas block, or onto the view with null. Bounds are relative to the new parent.
+// It goes last among the parent's children (on top) unless given an index, and keeps its id, nested objects and connections.
+// Returns where it was, so calling it again with that and the old bounds undoes the move; null if the move is refused.
+const from = model.moveDiagramObject("view-id", "object-id", "group-id", { x: 24, y: 36, width: 120, height: 55 });
+// Undo, with the bounds it had before: model.moveDiagramObject("view-id", "object-id", from.parentId, oldBounds, { index: from.index });
+
 // Duplicate a view, as Archi's Duplicate does: everything drawn on it, with new ids, referring to the same
 // elements and relationships. The copy goes at the end of the original's folder, named "<name> (copy)" unless given a name.
 const copy = model.duplicateView("view-id", { name: "Variant" });

@@ -1010,6 +1010,30 @@ export class Archimate {
   }
 
   /**
+   * Moves a diagram child of any kind (diagram object, group, note, view reference, …) to another parent in the same
+   * view: a container, or the view itself when `parentId` is null. The containers are the children Archi lets hold others:
+   * ArchiMate diagram objects, groups, sketch stickies and canvas blocks. The child goes at `options.index` among the
+   * parent's other children, which is also their z-order (default: the end, on top, as Archi's drag does), with `bounds`
+   * relative to the new parent. It keeps its id, nested children, style and connections; bendpoints are relative to a
+   * connection's ends, so they need no change. Archi can also create a relationship when an element is dropped into
+   * another; that is left to callers.
+   *
+   * Returns where the child was, its parent's id (null for the view) and its index, so calling it again with those and
+   * the old bounds puts it back exactly. Returns null when the view, the child or the parent is not found, or when the
+   * parent cannot contain children or is the child itself or nested in it. Throws a RangeError when `options.index` is
+   * not an integer from 0 to the number of the parent's other children.
+   */
+  public moveDiagramObject(
+    viewId: string,
+    diagramObjectId: string,
+    parentId: string | null,
+    bounds: Bounds,
+    options?: { index?: number }
+  ): { parentId: string | null; index: number } | null {
+    return this.viewManager.moveDiagramObject(viewId, diagramObjectId, parentId, bounds, options);
+  }
+
+  /**
    * Copies a view with every diagram object, group, note, view reference and connection on it, at any depth, with
    * their bounds, bendpoints, styles, features, properties, documentation and unrecognized content, as Archi's
    * Duplicate does. The copy and every object in it get new ids; connections, and a view reference to the view itself,

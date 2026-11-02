@@ -8,6 +8,10 @@ This project adheres to [Keep a CHANGELOG](http://keepachangelog.com/)
 
 ## [Unreleased]
 
+### Fixed
+
+- The licence is MIT, as `package.json` and the README have always said. `LICENSE.md`, which held BSD-3-Clause text under a Markdown heading, is replaced by a plain `LICENSE` file with the standard MIT text, so npm, GitHub and the licence file agree ([#542](https://github.com/localgod/tsarchi/issues/542)).
+
 ## [4.4.0] - 2026-10-28
 
 ### Added

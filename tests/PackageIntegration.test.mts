@@ -86,7 +86,7 @@ describe('package integration', () => {
     expect(paths).toContain('dist/src/index.mjs');
     expect(paths).toContain('dist/src/node/index.mjs');
     expect(paths.filter(path => !path.startsWith('dist/src/')).sort()).toEqual([
-      'LICENSE.md',
+      'LICENSE',
       'README.md',
       'dist/bundle/tsarchi.mjs',
       'package.json',

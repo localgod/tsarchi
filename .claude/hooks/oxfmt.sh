@@ -8,7 +8,7 @@ file=$(jq -r '.tool_input.file_path // .tool_response.filePath // empty')
 
 cd "${CLAUDE_PROJECT_DIR:-$(dirname "$0")/../..}"
 case "$(realpath "$file")" in
-  "$PWD"/vite.config.ts|"$PWD"/README.md|"$PWD"/LICENSE.md|"$PWD"/CHANGELOG.md|"$PWD"/CONTRIBUTING.md) ;;
+  "$PWD"/vite.config.ts|"$PWD"/README.md|"$PWD"/CHANGELOG.md|"$PWD"/CONTRIBUTING.md) ;;
   "$PWD"/src/*|"$PWD"/tests/*|"$PWD"/scripts/*|"$PWD"/examples/*) ;;
   *) exit 0 ;;
 esac

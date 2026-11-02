@@ -28,6 +28,7 @@
   "scripts": {
     "prebuild": "node scripts/generate-index.js",
     "generate:relationships": "node scripts/generate-relationships-matrix.js",
+    "upgrade:vite-plus": "node scripts/upgrade-vite-plus.js",
     "build": "tsc --project tsconfig.json && vp pack",
     "example": "node ./dist/examples/sample01.mjs --input sample.archimate --output out.archimate",
     "pretest": "npm run build",
@@ -70,6 +71,6 @@
     "fast-xml-parser": "^5.2.3"
   },
   "overrides": {
-    "vite": "npm:@voidzero-dev/vite-plus-core@1.4.0"
+    "vite": "$vite"
   }
 }

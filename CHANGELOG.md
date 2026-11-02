@@ -8,6 +8,10 @@ This project adheres to [Keep a CHANGELOG](http://keepachangelog.com/)
 
 ## [Unreleased]
 
+### Changed
+
+- `npm run upgrade:vite-plus [-- <version>]` upgrades `vite-plus` and the `vite` alias to `@voidzero-dev/vite-plus-core` together, which must match or the build fails. Dependabot no longer opens `vite-plus` PRs, since it can't update the alias, and the `vite` override follows the alias with `$vite`. The published package is unchanged ([#543](https://github.com/localgod/tsarchi/pull/543)).
+
 ### Fixed
 
 - The licence is MIT, as `package.json` and the README have always said. `LICENSE.md`, which held BSD-3-Clause text under a Markdown heading, is replaced by a plain `LICENSE` file with the standard MIT text, so npm, GitHub and the licence file agree ([#542](https://github.com/localgod/tsarchi/issues/542)).

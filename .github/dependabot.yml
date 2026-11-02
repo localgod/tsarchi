@@ -6,6 +6,11 @@ updates:
       interval: weekly
       time: '00:00'
     open-pull-requests-limit: 10
+    ignore:
+      # vite-plus must match the `vite` alias to @voidzero-dev/vite-plus-core, which
+      # Dependabot can't update. Upgrade both with `npm run upgrade:vite-plus`.
+      - dependency-name: vite-plus
+      - dependency-name: '@voidzero-dev/vite-plus-core'
     reviewers:
       - localgod
     assignees:

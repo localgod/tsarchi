@@ -1,7 +1,7 @@
 import { readdir, readFile, stat } from 'fs/promises';
 import { join } from 'path';
 import chalk from 'chalk';
-import { TsArchi } from '../src/node/TsArchi.mjs';
+import { loadModel } from '../src/node/ModelFiles.mjs';
 import { buildArchimateXml } from '../src/internal/Xml.mjs';
 import { compareObjects, normalizeXml } from './roundtrip-utils.mjs';
 import { archimateToSchema } from '../src/internal/SchemaAccess.mjs';
@@ -71,8 +71,7 @@ function groupKey(message: string): string {
 }
 
 async function diffFile(file: string): Promise<FileReport> {
-  const tsArchi = new TsArchi();
-  const archimate = await tsArchi.loadModel(file);
+  const archimate = await loadModel(file);
 
   const validation: Record<string, number> = {};
   for (const issue of archimate.validateModel()) {

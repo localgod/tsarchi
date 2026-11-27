@@ -1,5 +1,5 @@
 import { TextAlignment, Viewpoint } from '../src/constants/archi-codes.mjs';
-import { TsArchi } from '../src/node/TsArchi.mjs';
+import { loadModel, saveModel } from '../src/node/ModelFiles.mjs';
 
 // Simple argument parser
 function parseArgs() {
@@ -33,8 +33,7 @@ async function main() {
   console.log(`Input: ${options.input}`);
   console.log(`Output: ${options.output}`);
 
-  const tsa = new TsArchi();
-  const model = await tsa.loadModel(options.input);
+  const model = await loadModel(options.input);
 
   // Add sample elements. The model assigns ids and returns copies that carry them.
   const webApp = model.upsertElement({
@@ -160,7 +159,7 @@ async function main() {
   });
 
   // Save the enhanced model
-  await tsa.saveModel(options.output);
+  await saveModel(model, options.output);
   console.log('\nView management demo complete!');
 }
 

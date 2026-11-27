@@ -55,7 +55,7 @@ npm run example
 
 `sample01` loads the model, adds an Application Component unless one with the same name exists, and saves the model to the output file.
 
-New examples go in `examples/`, are named `sampleXX.mts`, import `TsArchi` from `../src/node/TsArchi.mjs`, and parse their arguments without extra dependencies.
+New examples go in `examples/`, are named `sampleXX.mts`, import `loadModel` and `saveModel` from `../src/node/ModelFiles.mjs`, and parse their arguments without extra dependencies.
 
 ## Submitting Changes
 

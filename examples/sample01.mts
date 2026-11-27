@@ -1,4 +1,4 @@
-import { TsArchi } from '../src/node/TsArchi.mjs';
+import { loadModel, saveModel } from '../src/node/ModelFiles.mjs';
 
 // Simple argument parser
 function parseArgs() {
@@ -32,10 +32,7 @@ async function main() {
   console.log(`Input: ${options.input}`);
   console.log(`Output: ${options.output}`);
 
-  const tsa = new TsArchi();
-  await tsa.loadModel(options.input);
-
-  const model = tsa.getModel();
+  const model = await loadModel(options.input);
   if (!model.findElementInFolderByName('application', 'New Application Component')) {
     // Without an id, upsertElement adds the element with a new one.
     model.upsertElement({
@@ -50,7 +47,7 @@ async function main() {
     console.log('Application component already exists, skipping creation.');
   }
 
-  await tsa.saveModel(options.output);
+  await saveModel(model, options.output);
   console.log('Processing complete!');
 }
 

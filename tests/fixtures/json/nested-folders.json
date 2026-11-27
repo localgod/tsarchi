@@ -1,0 +1,188 @@
+{
+  "formatVersion": 1,
+  "model": {
+    "id": "id-nested-model",
+    "name": "nested folders",
+    "version": "5.0.0"
+  },
+  "folders": [
+    {
+      "id": "id-nested-strategy",
+      "type": "strategy",
+      "name": "Strategy"
+    },
+    {
+      "id": "id-nested-business",
+      "type": "business",
+      "name": "Business",
+      "members": [
+        "id-customer"
+      ]
+    },
+    {
+      "id": "id-nested-application",
+      "type": "application",
+      "name": "Application",
+      "documentation": "All applications.",
+      "members": [
+        "id-crm"
+      ],
+      "folders": [
+        {
+          "id": "id-folder-portals",
+          "name": "Portals",
+          "documentation": "Customer-facing systems.",
+          "properties": [
+            {
+              "key": "owner",
+              "value": "digital"
+            }
+          ],
+          "members": [
+            "id-portal",
+            "id-portal-service"
+          ],
+          "folders": [
+            {
+              "id": "id-folder-legacy",
+              "name": "Legacy",
+              "members": [
+                "id-old-portal"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "id-folder-empty",
+          "name": "Empty"
+        }
+      ]
+    },
+    {
+      "id": "id-nested-technology",
+      "type": "technology",
+      "name": "Technology & Physical"
+    },
+    {
+      "id": "id-nested-motivation",
+      "type": "motivation",
+      "name": "Motivation"
+    },
+    {
+      "id": "id-nested-implementation",
+      "type": "implementation_migration",
+      "name": "Implementation & Migration"
+    },
+    {
+      "id": "id-nested-other",
+      "type": "other",
+      "name": "Other"
+    },
+    {
+      "id": "id-nested-relations",
+      "type": "relations",
+      "name": "Relations",
+      "folders": [
+        {
+          "id": "id-folder-serving",
+          "name": "Serving",
+          "members": [
+            "id-serving"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "id-nested-views",
+      "type": "diagrams",
+      "name": "Views",
+      "folders": [
+        {
+          "id": "id-folder-overviews",
+          "name": "Overviews",
+          "members": [
+            "id-portal-view"
+          ]
+        }
+      ]
+    }
+  ],
+  "elements": [
+    {
+      "id": "id-crm",
+      "type": "ApplicationComponent",
+      "name": "CRM"
+    },
+    {
+      "id": "id-customer",
+      "type": "BusinessActor",
+      "name": "Customer"
+    },
+    {
+      "id": "id-old-portal",
+      "type": "ApplicationComponent",
+      "name": "Old Portal"
+    },
+    {
+      "id": "id-portal",
+      "type": "ApplicationComponent",
+      "name": "Portal"
+    },
+    {
+      "id": "id-portal-service",
+      "type": "ApplicationService",
+      "name": "Portal Service"
+    }
+  ],
+  "relationships": [
+    {
+      "id": "id-serving",
+      "type": "ServingRelationship",
+      "name": "serves",
+      "source": "id-portal",
+      "target": "id-customer"
+    }
+  ],
+  "views": [
+    {
+      "id": "id-portal-view",
+      "type": "ArchimateDiagramModel",
+      "name": "Portal View",
+      "children": [
+        {
+          "id": "id-portal-object",
+          "type": "DiagramObject",
+          "archimateElement": "id-portal",
+          "bounds": {
+            "x": 12,
+            "y": 12,
+            "width": 120,
+            "height": 55
+          }
+        }
+      ]
+    }
+  ],
+  "extensions": {
+    "xmlDeclaration": [
+      {
+        "name": "version",
+        "value": "1.0"
+      },
+      {
+        "name": "encoding",
+        "value": "UTF-8"
+      }
+    ],
+    "namespaces": [
+      {
+        "prefix": "xsi",
+        "uri": "http://www.w3.org/2001/XMLSchema-instance"
+      },
+      {
+        "prefix": "archimate",
+        "uri": "http://www.archimatetool.com/archimate"
+      }
+    ]
+  }
+}

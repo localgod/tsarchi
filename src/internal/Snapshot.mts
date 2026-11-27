@@ -35,6 +35,7 @@ import {
 import type { AttributeSpec } from './DiagramAttributeMapper.mjs';
 import { splitIds } from './Ids.mjs';
 import type { Property } from '../interfaces/Property.mjs';
+import { StructureError, fail, isPlainObject, readArray, readObject } from './StructureReader.mjs';
 
 // A snapshot holds the model as fromXml(toXml()) would load it: the writer applies the normalisation the Serializer
 // does (values written as strings, empty collections and falsy text left out, elements placed in their folders), and
@@ -278,12 +279,6 @@ function writeConnection(connection: SourceConnection): ConnectionSnapshot {
 
 // Reading
 
-class SnapshotError extends Error {}
-
-function fail(path: string, message: string): never {
-  throw new SnapshotError(`${path}: ${message}`);
-}
-
 /**
  * Copies JSON data: plain objects, arrays, strings, finite numbers, booleans and null. Keys are copied as own
  * properties, so a `__proto__` key never changes a prototype. Object keys holding undefined are left out, as JSON does.
@@ -307,25 +302,6 @@ function copyOpaque(value: unknown, path: string, invalid: (message: string) => 
     return Object.fromEntries(entries);
   }
   return invalid(`${path} is not JSON data`);
-}
-
-function isPlainObject(value: unknown): value is Record<string, unknown> {
-  if (typeof value !== 'object' || value === null) return false;
-  const prototype = Object.getPrototypeOf(value);
-  return prototype === Object.prototype || prototype === null;
-}
-
-function readObject(value: unknown, path: string, keys: ReadonlySet<string>): Record<string, unknown> {
-  if (!isPlainObject(value)) fail(path, 'expected an object');
-  for (const key of Object.keys(value)) {
-    if (!keys.has(key)) fail(path, `unexpected key '${key}'`);
-  }
-  return value;
-}
-
-function readArray(value: unknown, path: string): unknown[] {
-  if (!Array.isArray(value)) fail(path, 'expected an array');
-  return value;
 }
 
 function readString(value: unknown, path: string): string {
@@ -467,7 +443,7 @@ export function readSnapshot(value: unknown): SnapshotState {
   try {
     return readModel(value);
   } catch (error) {
-    const reason = error instanceof SnapshotError ? error.message : `snapshot: ${error instanceof Error ? error.message : String(error)}`;
+    const reason = error instanceof StructureError ? error.message : `snapshot: ${error instanceof Error ? error.message : String(error)}`;
     throw new ArchimateParseError('invalid-structure', `Not a valid model snapshot at ${reason}`, { cause: error });
   }
 }

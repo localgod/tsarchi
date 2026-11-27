@@ -1,0 +1,304 @@
+{
+  "formatVersion": 1,
+  "model": {
+    "id": "id-nested-model",
+    "name": "nested diagram objects",
+    "version": "5.0.0"
+  },
+  "folders": [
+    {
+      "id": "id-nested-strategy",
+      "type": "strategy",
+      "name": "Strategy"
+    },
+    {
+      "id": "id-nested-business",
+      "type": "business",
+      "name": "Business"
+    },
+    {
+      "id": "id-nested-application",
+      "type": "application",
+      "name": "Application",
+      "members": [
+        "id-portal",
+        "id-api",
+        "id-db"
+      ]
+    },
+    {
+      "id": "id-nested-technology",
+      "type": "technology",
+      "name": "Technology & Physical",
+      "members": [
+        "id-server"
+      ]
+    },
+    {
+      "id": "id-nested-motivation",
+      "type": "motivation",
+      "name": "Motivation"
+    },
+    {
+      "id": "id-nested-implementation",
+      "type": "implementation_migration",
+      "name": "Implementation & Migration"
+    },
+    {
+      "id": "id-nested-other",
+      "type": "other",
+      "name": "Other"
+    },
+    {
+      "id": "id-nested-relations",
+      "type": "relations",
+      "name": "Relations",
+      "members": [
+        "id-rel-api-db",
+        "id-rel-server-portal"
+      ]
+    },
+    {
+      "id": "id-nested-views",
+      "type": "diagrams",
+      "name": "Views",
+      "members": [
+        "id-nested-view"
+      ]
+    }
+  ],
+  "elements": [
+    {
+      "id": "id-api",
+      "type": "ApplicationInterface",
+      "name": "API"
+    },
+    {
+      "id": "id-db",
+      "type": "DataObject",
+      "name": "Database"
+    },
+    {
+      "id": "id-portal",
+      "type": "ApplicationComponent",
+      "name": "Portal"
+    },
+    {
+      "id": "id-server",
+      "type": "Node",
+      "name": "Server"
+    }
+  ],
+  "relationships": [
+    {
+      "id": "id-rel-api-db",
+      "type": "AccessRelationship",
+      "source": "id-api",
+      "target": "id-db"
+    },
+    {
+      "id": "id-rel-server-portal",
+      "type": "RealizationRelationship",
+      "source": "id-server",
+      "target": "id-portal"
+    }
+  ],
+  "views": [
+    {
+      "id": "id-nested-view",
+      "type": "ArchimateDiagramModel",
+      "name": "Nested",
+      "children": [
+        {
+          "id": "id-portal-object",
+          "type": "DiagramObject",
+          "archimateElement": "id-portal",
+          "bounds": {
+            "x": 12,
+            "y": 12,
+            "width": 400,
+            "height": 200
+          },
+          "children": [
+            {
+              "id": "id-api-object",
+              "type": "DiagramObject",
+              "archimateElement": "id-api",
+              "bounds": {
+                "x": 24,
+                "y": 36,
+                "width": 240,
+                "height": 120
+              },
+              "targetConnections": [
+                "id-note-to-api"
+              ],
+              "children": [
+                {
+                  "id": "id-deep-portal-object",
+                  "type": "DiagramObject",
+                  "archimateElement": "id-portal",
+                  "bounds": {
+                    "x": 12,
+                    "y": 36,
+                    "width": 120,
+                    "height": 55
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "id-server-object",
+          "type": "DiagramObject",
+          "archimateElement": "id-server",
+          "bounds": {
+            "x": 480,
+            "y": 12,
+            "width": 240,
+            "height": 120
+          },
+          "children": [
+            {
+              "id": "id-nested-portal-object",
+              "type": "DiagramObject",
+              "archimateElement": "id-portal",
+              "bounds": {
+                "x": 24,
+                "y": 36,
+                "width": 120,
+                "height": 55
+              },
+              "targetConnections": [
+                "id-server-to-portal"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "id-group",
+          "type": "Group",
+          "name": "Group",
+          "bounds": {
+            "x": 12,
+            "y": 240,
+            "width": 400,
+            "height": 200
+          },
+          "children": [
+            {
+              "id": "id-group-api-object",
+              "type": "DiagramObject",
+              "archimateElement": "id-api",
+              "bounds": {
+                "x": 24,
+                "y": 36,
+                "width": 240,
+                "height": 120
+              },
+              "children": [
+                {
+                  "id": "id-group-portal-object",
+                  "type": "DiagramObject",
+                  "archimateElement": "id-portal",
+                  "bounds": {
+                    "x": 12,
+                    "y": 36,
+                    "width": 120,
+                    "height": 55
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "id-db-object",
+          "type": "DiagramObject",
+          "archimateElement": "id-db",
+          "bounds": {
+            "x": 480,
+            "y": 240,
+            "width": 120,
+            "height": 55
+          },
+          "targetConnections": [
+            "id-api-to-db",
+            "id-note-to-db"
+          ]
+        },
+        {
+          "id": "id-note",
+          "type": "Note",
+          "bounds": {
+            "x": 480,
+            "y": 360,
+            "width": 185,
+            "height": 80
+          },
+          "content": "Explains the portal"
+        }
+      ],
+      "connections": [
+        {
+          "id": "id-api-to-db",
+          "type": "Connection",
+          "source": "id-api-object",
+          "target": "id-db-object",
+          "archimateRelationship": "id-rel-api-db",
+          "targetConnections": [
+            "id-note-to-connection"
+          ]
+        },
+        {
+          "id": "id-server-to-portal",
+          "type": "Connection",
+          "source": "id-server-object",
+          "target": "id-nested-portal-object",
+          "archimateRelationship": "id-rel-server-portal"
+        },
+        {
+          "id": "id-note-to-api",
+          "type": "Connection",
+          "source": "id-note",
+          "target": "id-api-object"
+        },
+        {
+          "id": "id-note-to-connection",
+          "type": "Connection",
+          "source": "id-note",
+          "target": "id-api-to-db"
+        },
+        {
+          "id": "id-note-to-db",
+          "type": "Connection",
+          "source": "id-note",
+          "target": "id-db-object"
+        }
+      ]
+    }
+  ],
+  "extensions": {
+    "xmlDeclaration": [
+      {
+        "name": "version",
+        "value": "1.0"
+      },
+      {
+        "name": "encoding",
+        "value": "UTF-8"
+      }
+    ],
+    "namespaces": [
+      {
+        "prefix": "xsi",
+        "uri": "http://www.w3.org/2001/XMLSchema-instance"
+      },
+      {
+        "prefix": "archimate",
+        "uri": "http://www.archimatetool.com/archimate"
+      }
+    ]
+  }
+}

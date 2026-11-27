@@ -1,0 +1,234 @@
+{
+  "formatVersion": 1,
+  "model": {
+    "id": "id-d81fe19001de4c3cb53c05c2b757d35d",
+    "name": "test",
+    "version": "5.0.0"
+  },
+  "folders": [
+    {
+      "id": "id-6ff2870ffa60462c814ca4c6958b5dd9",
+      "type": "strategy",
+      "name": "Strategy"
+    },
+    {
+      "id": "id-6f1f70515852465bb832001f53de114f",
+      "type": "business",
+      "name": "Business"
+    },
+    {
+      "id": "id-a28fc855729b49e7920f7be0ae5cfa7e",
+      "type": "application",
+      "name": "Application",
+      "members": [
+        "id-b633db9ad059422abb4ec8cc99cef9ad",
+        "id-bc84362262ef45efa6868848c9984adb",
+        "id-298268cb251a41589761dfbef81bcdb5",
+        "id-3a0b42b9e8eb432e9005219c495829c2"
+      ]
+    },
+    {
+      "id": "id-41bff0575d5a4cd7aceb0026b2fe3caa",
+      "type": "technology",
+      "name": "Technology & Physical"
+    },
+    {
+      "id": "id-642daf8c21954700a0caa9fa9c7f1525",
+      "type": "motivation",
+      "name": "Motivation"
+    },
+    {
+      "id": "id-fe709c7e535540c39bfe9fb0bf70de14",
+      "type": "implementation_migration",
+      "name": "Implementation & Migration"
+    },
+    {
+      "id": "id-4f564f48faef4777bb463333a26a5b84",
+      "type": "other",
+      "name": "Other"
+    },
+    {
+      "id": "id-d48a87e999fe4aca817be8cfc20a8c5b",
+      "type": "relations",
+      "name": "Relations",
+      "members": [
+        "id-0e469816d3d34f27bc7f5e2894bab585"
+      ]
+    },
+    {
+      "id": "id-962cff19c6a949f0a860e46c79b5151a",
+      "type": "diagrams",
+      "name": "Views",
+      "members": [
+        "id-503a5c87f13547acb7ac190c995367a1"
+      ]
+    }
+  ],
+  "elements": [
+    {
+      "id": "id-298268cb251a41589761dfbef81bcdb5",
+      "type": "ApplicationComponent",
+      "name": "Application Component 3"
+    },
+    {
+      "id": "id-3a0b42b9e8eb432e9005219c495829c2",
+      "type": "ApplicationComponent",
+      "name": "Application Component 4"
+    },
+    {
+      "id": "id-b633db9ad059422abb4ec8cc99cef9ad",
+      "type": "ApplicationComponent",
+      "name": "Application Component",
+      "documentation": "This is nice",
+      "properties": [
+        {
+          "key": "test",
+          "value": "false"
+        },
+        {
+          "key": "test2",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "id": "id-bc84362262ef45efa6868848c9984adb",
+      "type": "ApplicationComponent",
+      "name": "Application Component 2",
+      "properties": [
+        {
+          "key": "test",
+          "value": "true"
+        }
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "id": "id-0e469816d3d34f27bc7f5e2894bab585",
+      "type": "FlowRelationship",
+      "name": "flow",
+      "documentation": "This is a funny flow",
+      "source": "id-bc84362262ef45efa6868848c9984adb",
+      "target": "id-b633db9ad059422abb4ec8cc99cef9ad"
+    }
+  ],
+  "views": [
+    {
+      "id": "id-503a5c87f13547acb7ac190c995367a1",
+      "type": "ArchimateDiagramModel",
+      "name": "Default View",
+      "children": [
+        {
+          "id": "id-3c6fcfdf2a3a44369d8aea62ff7c43b6",
+          "type": "Group",
+          "name": "Group",
+          "bounds": {
+            "x": 192,
+            "y": 360,
+            "width": 445,
+            "height": 193
+          },
+          "textAlignment": "left",
+          "fillColor": "#0000ff",
+          "documentation": "This is a funny group",
+          "children": [
+            {
+              "id": "id-64653984cb684ae99dddc732f8d3fe39",
+              "type": "DiagramObject",
+              "archimateElement": "id-b633db9ad059422abb4ec8cc99cef9ad",
+              "bounds": {
+                "x": 67,
+                "y": 84,
+                "width": 120,
+                "height": 55
+              },
+              "fillColor": "#00ff40",
+              "targetConnections": [
+                "id-9a180fa86d8d4550aca34f4755e2348e"
+              ]
+            },
+            {
+              "id": "id-df75793945b4482a9c9afa10baa9e80e",
+              "type": "DiagramObject",
+              "archimateElement": "id-bc84362262ef45efa6868848c9984adb",
+              "bounds": {
+                "x": 264,
+                "y": 84,
+                "width": 120,
+                "height": 55
+              }
+            }
+          ]
+        },
+        {
+          "id": "id-deffbe3ab45d408383d2ca57c95ca998",
+          "type": "Group",
+          "name": "Group 2",
+          "bounds": {
+            "x": 684,
+            "y": 264,
+            "width": 433,
+            "height": 241
+          },
+          "textAlignment": "left",
+          "children": [
+            {
+              "id": "id-9195fdb4a5284e158536dce5e03365db",
+              "type": "DiagramObject",
+              "archimateElement": "id-298268cb251a41589761dfbef81bcdb5",
+              "bounds": {
+                "x": 73,
+                "y": 98,
+                "width": 120,
+                "height": 55
+              }
+            },
+            {
+              "id": "id-a833cd1dccf3498ebe000f1a3e89360d",
+              "type": "DiagramObject",
+              "archimateElement": "id-3a0b42b9e8eb432e9005219c495829c2",
+              "bounds": {
+                "x": 269,
+                "y": 121,
+                "width": 120,
+                "height": 55
+              }
+            }
+          ]
+        }
+      ],
+      "connections": [
+        {
+          "id": "id-9a180fa86d8d4550aca34f4755e2348e",
+          "type": "Connection",
+          "source": "id-df75793945b4482a9c9afa10baa9e80e",
+          "target": "id-64653984cb684ae99dddc732f8d3fe39",
+          "archimateRelationship": "id-0e469816d3d34f27bc7f5e2894bab585"
+        }
+      ]
+    }
+  ],
+  "extensions": {
+    "xmlDeclaration": [
+      {
+        "name": "version",
+        "value": "1.0"
+      },
+      {
+        "name": "encoding",
+        "value": "UTF-8"
+      }
+    ],
+    "namespaces": [
+      {
+        "prefix": "xsi",
+        "uri": "http://www.w3.org/2001/XMLSchema-instance"
+      },
+      {
+        "prefix": "archimate",
+        "uri": "http://www.archimatetool.com/archimate"
+      }
+    ]
+  }
+}

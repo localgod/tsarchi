@@ -1,0 +1,212 @@
+{
+  "formatVersion": 1,
+  "model": {
+    "id": "id-feat-model",
+    "name": "diagram features",
+    "version": "5.0.0"
+  },
+  "folders": [
+    {
+      "id": "id-feat-strategy",
+      "type": "strategy",
+      "name": "Strategy"
+    },
+    {
+      "id": "id-feat-business",
+      "type": "business",
+      "name": "Business",
+      "members": [
+        "id-customer",
+        "id-insurant"
+      ]
+    },
+    {
+      "id": "id-feat-application",
+      "type": "application",
+      "name": "Application"
+    },
+    {
+      "id": "id-feat-technology",
+      "type": "technology",
+      "name": "Technology & Physical"
+    },
+    {
+      "id": "id-feat-motivation",
+      "type": "motivation",
+      "name": "Motivation"
+    },
+    {
+      "id": "id-feat-implementation",
+      "type": "implementation_migration",
+      "name": "Implementation & Migration"
+    },
+    {
+      "id": "id-feat-other",
+      "type": "other",
+      "name": "Other"
+    },
+    {
+      "id": "id-feat-relations",
+      "type": "relations",
+      "name": "Relations",
+      "members": [
+        "id-rel-assignment",
+        "id-rel-association"
+      ]
+    },
+    {
+      "id": "id-feat-views",
+      "type": "diagrams",
+      "name": "Views",
+      "members": [
+        "id-view-styled"
+      ]
+    }
+  ],
+  "elements": [
+    {
+      "id": "id-customer",
+      "type": "BusinessActor",
+      "name": "Customer"
+    },
+    {
+      "id": "id-insurant",
+      "type": "BusinessRole",
+      "name": "Insurant"
+    }
+  ],
+  "relationships": [
+    {
+      "id": "id-rel-assignment",
+      "type": "AssignmentRelationship",
+      "source": "id-customer",
+      "target": "id-insurant"
+    },
+    {
+      "id": "id-rel-association",
+      "type": "AssociationRelationship",
+      "source": "id-insurant",
+      "target": "id-customer"
+    }
+  ],
+  "views": [
+    {
+      "id": "id-view-styled",
+      "type": "ArchimateDiagramModel",
+      "name": "Styled",
+      "children": [
+        {
+          "id": "id-dmo-customer",
+          "type": "DiagramObject",
+          "archimateElement": "id-customer",
+          "bounds": {
+            "x": 24,
+            "y": 24,
+            "width": 120,
+            "height": 55
+          },
+          "fillColor": "#ffffb5",
+          "targetConnections": [
+            "id-conn-association"
+          ],
+          "features": [
+            {
+              "key": "iconColor",
+              "value": "#ff0000"
+            },
+            {
+              "key": "custom",
+              "value": "kept"
+            },
+            {
+              "key": "lineAlpha",
+              "value": "128"
+            },
+            {
+              "key": "gradient",
+              "value": "2"
+            },
+            {
+              "key": "iconVisible",
+              "value": "2"
+            },
+            {
+              "key": "deriveElementLineColor",
+              "value": "false"
+            },
+            {
+              "key": "lineStyle",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "id": "id-dmo-insurant",
+          "type": "DiagramObject",
+          "archimateElement": "id-insurant",
+          "bounds": {
+            "x": 204,
+            "y": 24,
+            "width": 120,
+            "height": 55
+          },
+          "targetConnections": [
+            "id-conn-assignment"
+          ]
+        }
+      ],
+      "connections": [
+        {
+          "id": "id-conn-assignment",
+          "type": "Connection",
+          "source": "id-dmo-customer",
+          "target": "id-dmo-insurant",
+          "archimateRelationship": "id-rel-assignment",
+          "features": [
+            {
+              "key": "textRelativePosition",
+              "value": "4"
+            },
+            {
+              "key": "custom",
+              "value": "kept"
+            },
+            {
+              "key": "nameVisible",
+              "value": "false"
+            }
+          ]
+        },
+        {
+          "id": "id-conn-association",
+          "type": "Connection",
+          "source": "id-dmo-insurant",
+          "target": "id-dmo-customer",
+          "archimateRelationship": "id-rel-association"
+        }
+      ]
+    }
+  ],
+  "extensions": {
+    "xmlDeclaration": [
+      {
+        "name": "version",
+        "value": "1.0"
+      },
+      {
+        "name": "encoding",
+        "value": "UTF-8"
+      }
+    ],
+    "namespaces": [
+      {
+        "prefix": "xsi",
+        "uri": "http://www.w3.org/2001/XMLSchema-instance"
+      },
+      {
+        "prefix": "archimate",
+        "uri": "http://www.archimatetool.com/archimate"
+      }
+    ]
+  }
+}

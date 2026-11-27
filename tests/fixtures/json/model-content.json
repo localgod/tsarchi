@@ -1,0 +1,158 @@
+{
+  "formatVersion": 1,
+  "model": {
+    "id": "id-content-model",
+    "name": "model content",
+    "version": "5.0.0",
+    "purpose": "Model-level content from archimate.ecore.",
+    "properties": [
+      {
+        "key": "Owner",
+        "value": "Enterprise Architecture"
+      },
+      {
+        "key": "Status",
+        "value": "Draft"
+      }
+    ],
+    "metadata": [
+      {
+        "key": "schema",
+        "value": "Dublin Core"
+      },
+      {
+        "key": "creator",
+        "value": "tsarchi"
+      }
+    ],
+    "extensions": "<extensions><feature name=\"modelFeature\" value=\"kept\"/></extensions>"
+  },
+  "profiles": [
+    {
+      "id": "id-profile-premium",
+      "name": "Premium",
+      "conceptType": "BusinessActor",
+      "imagePath": "images/premium.png",
+      "features": [
+        {
+          "key": "profileFeature",
+          "value": "kept"
+        }
+      ]
+    },
+    {
+      "id": "id-profile-contract",
+      "name": "Contract",
+      "conceptType": "AssignmentRelationship"
+    },
+    {
+      "id": "id-profile-draft",
+      "name": "Draft",
+      "conceptType": "BusinessRole",
+      "specialization": false
+    }
+  ],
+  "folders": [
+    {
+      "id": "id-content-strategy",
+      "type": "strategy",
+      "name": "Strategy"
+    },
+    {
+      "id": "id-content-business",
+      "type": "business",
+      "name": "Business",
+      "members": [
+        "id-customer",
+        "id-insurant"
+      ]
+    },
+    {
+      "id": "id-content-application",
+      "type": "application",
+      "name": "Application"
+    },
+    {
+      "id": "id-content-technology",
+      "type": "technology",
+      "name": "Technology & Physical"
+    },
+    {
+      "id": "id-content-motivation",
+      "type": "motivation",
+      "name": "Motivation"
+    },
+    {
+      "id": "id-content-implementation",
+      "type": "implementation_migration",
+      "name": "Implementation & Migration"
+    },
+    {
+      "id": "id-content-other",
+      "type": "other",
+      "name": "Other"
+    },
+    {
+      "id": "id-content-relations",
+      "type": "relations",
+      "name": "Relations",
+      "members": [
+        "id-rel-assignment"
+      ]
+    },
+    {
+      "id": "id-content-views",
+      "type": "diagrams",
+      "name": "Views"
+    }
+  ],
+  "elements": [
+    {
+      "id": "id-customer",
+      "type": "BusinessActor",
+      "name": "Customer",
+      "profiles": [
+        "id-profile-premium"
+      ]
+    },
+    {
+      "id": "id-insurant",
+      "type": "BusinessRole",
+      "name": "Insurant"
+    }
+  ],
+  "relationships": [
+    {
+      "id": "id-rel-assignment",
+      "type": "AssignmentRelationship",
+      "profiles": [
+        "id-profile-contract"
+      ],
+      "source": "id-customer",
+      "target": "id-insurant"
+    }
+  ],
+  "views": [],
+  "extensions": {
+    "xmlDeclaration": [
+      {
+        "name": "version",
+        "value": "1.0"
+      },
+      {
+        "name": "encoding",
+        "value": "UTF-8"
+      }
+    ],
+    "namespaces": [
+      {
+        "prefix": "xsi",
+        "uri": "http://www.w3.org/2001/XMLSchema-instance"
+      },
+      {
+        "prefix": "archimate",
+        "uri": "http://www.archimatetool.com/archimate"
+      }
+    ]
+  }
+}

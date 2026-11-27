@@ -1,0 +1,80 @@
+{
+  "formatVersion": 1,
+  "model": {
+    "id": "id-minimal-model",
+    "name": "minimal",
+    "version": "5.0.0"
+  },
+  "folders": [
+    {
+      "id": "id-minimal-strategy",
+      "type": "strategy",
+      "name": "Strategy"
+    },
+    {
+      "id": "id-minimal-business",
+      "type": "business",
+      "name": "Business"
+    },
+    {
+      "id": "id-minimal-application",
+      "type": "application",
+      "name": "Application"
+    },
+    {
+      "id": "id-minimal-technology",
+      "type": "technology",
+      "name": "Technology & Physical"
+    },
+    {
+      "id": "id-minimal-motivation",
+      "type": "motivation",
+      "name": "Motivation"
+    },
+    {
+      "id": "id-minimal-implementation",
+      "type": "implementation_migration",
+      "name": "Implementation & Migration"
+    },
+    {
+      "id": "id-minimal-other",
+      "type": "other",
+      "name": "Other"
+    },
+    {
+      "id": "id-minimal-relations",
+      "type": "relations",
+      "name": "Relations"
+    },
+    {
+      "id": "id-minimal-views",
+      "type": "diagrams",
+      "name": "Views"
+    }
+  ],
+  "elements": [],
+  "relationships": [],
+  "views": [],
+  "extensions": {
+    "xmlDeclaration": [
+      {
+        "name": "version",
+        "value": "1.0"
+      },
+      {
+        "name": "encoding",
+        "value": "UTF-8"
+      }
+    ],
+    "namespaces": [
+      {
+        "prefix": "xsi",
+        "uri": "http://www.w3.org/2001/XMLSchema-instance"
+      },
+      {
+        "prefix": "archimate",
+        "uri": "http://www.archimatetool.com/archimate"
+      }
+    ]
+  }
+}

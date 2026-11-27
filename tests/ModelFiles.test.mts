@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, type Mock } from 'vite-plus/test';
-import { loadModel, saveModel } from '../src/node/ModelFiles.mjs';
+import { loadModel, loadModelJson, saveModel, saveModelJson } from '../src/node/ModelFiles.mjs';
 import { Archimate } from '../src/Archimate.mjs';
 import { readFile, writeFile } from 'fs/promises';
 
@@ -104,5 +104,24 @@ describe('loadModel and saveModel', () => {
       name: 'ArchimateValidationError',
     });
     expect(writeFile).not.toHaveBeenCalled();
+  });
+
+  it('should save and load a model as JSON', async () => {
+    vi.clearAllMocks();
+    (readFile as Mock).mockResolvedValue(validArchimateXml);
+    const model = await loadModel('dummy/path/to/model.archimate');
+
+    await saveModelJson(model, 'dummy/path/to/model.json');
+    const [, json] = (writeFile as Mock).mock.calls[0];
+    expect(json).toBe(model.toJson());
+
+    (readFile as Mock).mockResolvedValue(json);
+    expect((await loadModelJson('dummy/path/to/model.json')).toXml()).toBe(model.toXml());
+  });
+
+  it('should throw an ArchimateParseError from loadModelJson for text that is not JSON', async () => {
+    (readFile as Mock).mockResolvedValue('<archimate:model/>');
+
+    await expect(loadModelJson('dummy/path/to/model.json')).rejects.toMatchObject({ name: 'ArchimateParseError', kind: 'not-json' });
   });
 });

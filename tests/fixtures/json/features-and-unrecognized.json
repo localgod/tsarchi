@@ -1,0 +1,213 @@
+{
+  "formatVersion": 1,
+  "model": {
+    "id": "id-fu-model",
+    "name": "features and unrecognized",
+    "version": "5.0.0"
+  },
+  "folders": [
+    {
+      "id": "id-fu-strategy",
+      "type": "strategy",
+      "name": "Strategy"
+    },
+    {
+      "id": "id-fu-business",
+      "type": "business",
+      "name": "Business",
+      "documentation": "Top-level folder with features.",
+      "features": [
+        {
+          "key": "folderFeature",
+          "value": "top"
+        }
+      ],
+      "members": [
+        "id-insurant"
+      ],
+      "folders": [
+        {
+          "id": "id-fu-actors",
+          "name": "Actors",
+          "features": [
+            {
+              "key": "folderFeature",
+              "value": "nested"
+            },
+            {
+              "key": "secondFeature",
+              "value": "2"
+            }
+          ],
+          "members": [
+            "id-customer"
+          ],
+          "extensions": "<extensions futureFolderAttribute=\"nested\"/>"
+        }
+      ],
+      "extensions": "<extensions futureFolderAttribute=\"top\"><futureFolderChild>kept</futureFolderChild></extensions>"
+    },
+    {
+      "id": "id-fu-application",
+      "type": "application",
+      "name": "Application"
+    },
+    {
+      "id": "id-fu-technology",
+      "type": "technology",
+      "name": "Technology & Physical"
+    },
+    {
+      "id": "id-fu-motivation",
+      "type": "motivation",
+      "name": "Motivation"
+    },
+    {
+      "id": "id-fu-implementation",
+      "type": "implementation_migration",
+      "name": "Implementation & Migration"
+    },
+    {
+      "id": "id-fu-other",
+      "type": "other",
+      "name": "Other"
+    },
+    {
+      "id": "id-fu-relations",
+      "type": "relations",
+      "name": "Relations",
+      "members": [
+        "id-assignment"
+      ]
+    },
+    {
+      "id": "id-fu-views",
+      "type": "diagrams",
+      "name": "Views",
+      "members": [
+        "id-view"
+      ]
+    }
+  ],
+  "elements": [
+    {
+      "id": "id-customer",
+      "type": "BusinessActor",
+      "name": "Customer",
+      "documentation": "An actor with features.",
+      "properties": [
+        {
+          "key": "owner",
+          "value": "sales"
+        }
+      ],
+      "features": [
+        {
+          "key": "elementFeature",
+          "value": "actor"
+        }
+      ],
+      "extensions": "<extensions futureElementAttribute=\"actor\"><futureElement key=\"value\"/></extensions>"
+    },
+    {
+      "id": "id-insurant",
+      "type": "BusinessRole",
+      "name": "Insurant",
+      "features": [
+        {
+          "key": "elementFeature",
+          "value": "role"
+        }
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "id": "id-assignment",
+      "type": "AssignmentRelationship",
+      "source": "id-customer",
+      "target": "id-insurant",
+      "features": [
+        {
+          "key": "relationshipFeature",
+          "value": "assignment"
+        }
+      ],
+      "extensions": "<extensions futureRelationshipAttribute=\"yes\"><futureRelationshipChild/></extensions>"
+    }
+  ],
+  "views": [
+    {
+      "id": "id-view",
+      "type": "ArchimateDiagramModel",
+      "name": "Default View",
+      "features": [
+        {
+          "key": "viewFeature",
+          "value": "view"
+        }
+      ],
+      "children": [
+        {
+          "id": "id-customer-object",
+          "type": "DiagramObject",
+          "archimateElement": "id-customer",
+          "bounds": {
+            "x": 12,
+            "y": 12,
+            "width": 120,
+            "height": 55
+          },
+          "extensions": "<extensions futureChildAttribute=\"child\"><futureChildElement key=\"value\"/></extensions>"
+        },
+        {
+          "id": "id-insurant-object",
+          "type": "DiagramObject",
+          "archimateElement": "id-insurant",
+          "bounds": {
+            "x": 240,
+            "y": 12,
+            "width": 120,
+            "height": 55
+          },
+          "targetConnections": [
+            "id-assignment-connection"
+          ]
+        }
+      ],
+      "connections": [
+        {
+          "id": "id-assignment-connection",
+          "type": "Connection",
+          "source": "id-customer-object",
+          "target": "id-insurant-object",
+          "archimateRelationship": "id-assignment",
+          "extensions": "<extensions futureConnectionAttribute=\"connection\"><futureConnectionChild key=\"value\"/></extensions>"
+        }
+      ],
+      "extensions": "<extensions futureViewAttribute=\"view\"/>"
+    }
+  ],
+  "extensions": {
+    "xmlDeclaration": [
+      {
+        "name": "version",
+        "value": "1.0"
+      },
+      {
+        "name": "encoding",
+        "value": "UTF-8"
+      }
+    ],
+    "namespaces": [
+      {
+        "prefix": "xsi",
+        "uri": "http://www.w3.org/2001/XMLSchema-instance"
+      },
+      {
+        "prefix": "archimate",
+        "uri": "http://www.archimatetool.com/archimate"
+      }
+    ]
+  }
+}

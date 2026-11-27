@@ -1,0 +1,263 @@
+{
+  "formatVersion": 1,
+  "model": {
+    "id": "id-dup-model",
+    "name": "duplicate property keys",
+    "version": "5.0.0",
+    "properties": [
+      {
+        "key": "Owner",
+        "value": "Enterprise Architecture"
+      },
+      {
+        "key": "Status",
+        "value": "Draft"
+      },
+      {
+        "key": "Owner",
+        "value": "Security"
+      }
+    ],
+    "metadata": [
+      {
+        "key": "creator",
+        "value": "Archi"
+      },
+      {
+        "key": "subject",
+        "value": "sales"
+      },
+      {
+        "key": "creator",
+        "value": "tsarchi"
+      }
+    ]
+  },
+  "folders": [
+    {
+      "id": "id-dup-strategy",
+      "type": "strategy",
+      "name": "Strategy"
+    },
+    {
+      "id": "id-dup-business",
+      "type": "business",
+      "name": "Business",
+      "properties": [
+        {
+          "key": "reviewed",
+          "value": "2026-01"
+        },
+        {
+          "key": "reviewed",
+          "value": "2026-06"
+        }
+      ],
+      "members": [
+        "id-dup-buyer"
+      ],
+      "folders": [
+        {
+          "id": "id-dup-customers",
+          "name": "Customers",
+          "properties": [
+            {
+              "key": "owner",
+              "value": "sales"
+            },
+            {
+              "key": "owner",
+              "value": "marketing"
+            }
+          ],
+          "members": [
+            "id-dup-customer"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "id-dup-application",
+      "type": "application",
+      "name": "Application"
+    },
+    {
+      "id": "id-dup-technology",
+      "type": "technology",
+      "name": "Technology & Physical"
+    },
+    {
+      "id": "id-dup-motivation",
+      "type": "motivation",
+      "name": "Motivation"
+    },
+    {
+      "id": "id-dup-implementation",
+      "type": "implementation_migration",
+      "name": "Implementation & Migration"
+    },
+    {
+      "id": "id-dup-other",
+      "type": "other",
+      "name": "Other"
+    },
+    {
+      "id": "id-dup-relations",
+      "type": "relations",
+      "name": "Relations",
+      "members": [
+        "id-dup-assignment"
+      ]
+    },
+    {
+      "id": "id-dup-views",
+      "type": "diagrams",
+      "name": "Views",
+      "members": [
+        "id-dup-view"
+      ]
+    }
+  ],
+  "elements": [
+    {
+      "id": "id-dup-buyer",
+      "type": "BusinessRole",
+      "name": "Buyer"
+    },
+    {
+      "id": "id-dup-customer",
+      "type": "BusinessActor",
+      "name": "Customer",
+      "properties": [
+        {
+          "key": "tag",
+          "value": "one"
+        },
+        {
+          "key": "owner",
+          "value": "sales"
+        },
+        {
+          "key": "tag",
+          "value": "two"
+        },
+        {
+          "key": "tag"
+        }
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "id": "id-dup-assignment",
+      "type": "AssignmentRelationship",
+      "source": "id-dup-customer",
+      "target": "id-dup-buyer",
+      "properties": [
+        {
+          "key": "source",
+          "value": "interview"
+        },
+        {
+          "key": "source",
+          "value": "survey"
+        }
+      ]
+    }
+  ],
+  "views": [
+    {
+      "id": "id-dup-view",
+      "type": "ArchimateDiagramModel",
+      "name": "Customers",
+      "properties": [
+        {
+          "key": "audience",
+          "value": "board"
+        },
+        {
+          "key": "audience",
+          "value": "team"
+        }
+      ],
+      "children": [
+        {
+          "id": "id-dup-customer-object",
+          "type": "DiagramObject",
+          "archimateElement": "id-dup-customer",
+          "bounds": {
+            "x": 40,
+            "y": 40,
+            "width": 120,
+            "height": 55
+          },
+          "properties": [
+            {
+              "key": "layer",
+              "value": "front"
+            },
+            {
+              "key": "layer",
+              "value": "back"
+            }
+          ]
+        },
+        {
+          "id": "id-dup-buyer-object",
+          "type": "DiagramObject",
+          "archimateElement": "id-dup-buyer",
+          "bounds": {
+            "x": 280,
+            "y": 40,
+            "width": 120,
+            "height": 55
+          },
+          "targetConnections": [
+            "id-dup-assignment-connection"
+          ]
+        }
+      ],
+      "connections": [
+        {
+          "id": "id-dup-assignment-connection",
+          "type": "Connection",
+          "source": "id-dup-customer-object",
+          "target": "id-dup-buyer-object",
+          "archimateRelationship": "id-dup-assignment",
+          "properties": [
+            {
+              "key": "note",
+              "value": "a"
+            },
+            {
+              "key": "note",
+              "value": "b"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "extensions": {
+    "xmlDeclaration": [
+      {
+        "name": "version",
+        "value": "1.0"
+      },
+      {
+        "name": "encoding",
+        "value": "UTF-8"
+      }
+    ],
+    "namespaces": [
+      {
+        "prefix": "xsi",
+        "uri": "http://www.w3.org/2001/XMLSchema-instance"
+      },
+      {
+        "prefix": "archimate",
+        "uri": "http://www.archimatetool.com/archimate"
+      }
+    ]
+  }
+}

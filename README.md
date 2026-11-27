@@ -13,6 +13,7 @@
     - [Browser Use](#browser-use)
     - [QuickJS](#quickjs)
     - [Snapshots](#snapshots)
+    - [JSON Format](#json-format)
     - [Exporting a View to draw.io](#exporting-a-view-to-drawio)
     - [Nested Folders](#nested-folders)
     - [Relationship Management](#relationship-management)
@@ -34,6 +35,7 @@
 - **Clear errors**: Text that is not well-formed XML or not an Archi model throws an `ArchimateParseError`.
 - **Every ArchiMate 3 type**: All element, relationship and view types Archi writes, as TypeScript types and named constants.
 - **Snapshots**: The model as plain JSON-safe data, for undo, copies and workers.
+- **Stable JSON format**: A lossless, versioned JSON form of the model with a published JSON Schema, for storing models in git or reading them outside TypeScript.
 - **draw.io export**: Write a view as a draw.io file, with plain rectangles or draw.io's ArchiMate 3 shapes.
 - **Runs anywhere**: Node.js, browsers and QuickJS.
 
@@ -162,6 +164,28 @@ const copy = Archimate.fromSnapshot(JSON.parse(JSON.stringify(before)));
 - A snapshot is new data, and `restore()` keeps no reference to it: one snapshot can be restored any number of times.
 - `restore()` checks the snapshot's structure, not the model: on anything that is not a snapshot it throws an `ArchimateParseError` (`invalid-structure`) and leaves the model unchanged. Use `validateModel()` for the model itself.
 - The `ModelSnapshot` format is unstable: it may change in any release, listed under **Changed** in the changelog. Use snapshots within one process and one tsarchi version, and save models as `.archimate` XML.
+
+### JSON Format
+
+`toJson()` returns the model as text in tsarchi's stable JSON format, and `Archimate.fromJson()` reads it back. Unlike a snapshot, the format has a version contract (`formatVersion`, now 1) and a published JSON Schema, so it can be stored, for example in git, and read by tools outside TypeScript:
+
+```typescript
+import { Archimate } from "tsarchi";
+import { loadModelJson, saveModelJson } from "tsarchi/node";
+
+const json = model.toJson();
+const same = Archimate.fromJson(json); // same.toXml() === model.toXml()
+
+await saveModelJson(model, "model.json");
+const loaded = await loadModelJson("model.json");
+```
+
+- **Lossless**: a model loaded from an `.archimate` file and written as JSON gives the same `.archimate` text when read back, every order in the file included, and content tsarchi does not map is kept in `extensions` as XML, whose namespace prefixes are those listed in the document's `extensions.namespaces`.
+- **Made for diffs**: elements, relationships and views are flat lists sorted by id (in Unicode code point order), and each folder lists its members in file order. Every record starts with its `id`, fields are in a fixed order, and the text has two-space indentation, one value per line and a final line break. The same model always gives the same text.
+- **Readable values**: Archi's numeric codes are names (`"accessType": "read"`, `"borderType": "dogEar"`); a code without a name stays a number. Properties, features and metadata are lists of `{ key, value }`, and ids are arrays.
+- **Strict**: `toJson()` throws for a model whose elements, relationships, views, folders, profiles, diagram children or connections lack an id or share one, as the format refers to them by id, and for the two things it could not give back: a concept with fields of another kind for its folder (a relationship in the Business folder), and a view connection held by another object than its `source`. `fromJson()` throws an `ArchimateParseError`: `not-json` for text that is not JSON, `invalid-structure` for an unknown `formatVersion`, an unknown field or an inconsistent document. Neither validates the model; use `validateModel()`.
+
+The schema is `modelJsonSchema` in code, `tsarchi/schema/model-v1.json` in the package, and [`schema/model-v1.json`](schema/model-v1.json) at its `$id`; `ModelJson` types the document.
 
 ### Exporting a View to draw.io
 

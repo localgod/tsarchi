@@ -18,18 +18,20 @@
       "import": "./dist/bundle/tsarchi.mjs",
       "types": "./dist/src/index.d.mts"
     },
+    "./schema/model-v1.json": "./schema/model-v1.json",
     "./package.json": "./package.json"
   },
   "sideEffects": false,
   "files": [
     "dist/src",
-    "dist/bundle"
+    "dist/bundle",
+    "schema"
   ],
   "scripts": {
     "prebuild": "node scripts/generate-index.js",
     "generate:relationships": "node scripts/generate-relationships-matrix.js",
     "upgrade:vite-plus": "node scripts/upgrade-vite-plus.js",
-    "build": "tsc --project tsconfig.json && vp pack",
+    "build": "tsc --project tsconfig.json && vp pack && node scripts/write-json-schema.js",
     "example": "node ./dist/examples/sample01.mjs --input sample.archimate --output out.archimate",
     "pretest": "npm run build",
     "test": "vp test",
@@ -61,6 +63,7 @@
     "@jitl/quickjs-wasmfile-release-sync": "^0.32.0",
     "@types/json-schema": "^7.0.15",
     "@types/node": "^26.0.0",
+    "ajv": "^8.17.1",
     "chalk": "^6.0.0",
     "quickjs-emscripten-core": "^0.32.0",
     "typescript": "^7.0.2",

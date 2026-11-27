@@ -10,11 +10,13 @@ import type { Profile } from '../interfaces/Profile.mjs';
 import type { Profile as SchemaProfile } from '../interfaces/schema/Profile.mjs';
 import type { Folder } from '../interfaces/Folder.mjs';
 import type { Child } from '../interfaces/Child.mjs';
-import { BoundsMapper } from './BoundMapper.mjs';
-import { SourceConnectionMapper } from './SourceConnectionMapper.mjs';
+import { boundsToSchema } from './BoundMapper.mjs';
+import { toSchemaSourceConnections } from './SourceConnectionMapper.mjs';
 import { folderType, toXsiType } from '../constants/archimate-mappings.mjs';
 import {
-  DiagramAttributeMapper,
+  featuresToSchema,
+  writeAttributes,
+  writeFeatures,
   childAttributes,
   childFeatures,
   childTextElements,
@@ -80,7 +82,7 @@ export class Serializer {
     if (profile.conceptType !== undefined) {
       schemaProfile['@_conceptType'] = profile.conceptType;
     }
-    const feature = DiagramAttributeMapper.featuresToSchema(profile.features);
+    const feature = featuresToSchema(profile.features);
     if (feature) {
       schemaProfile.feature = feature;
     }
@@ -152,7 +154,7 @@ export class Serializer {
   }
 
   private addFolderDetails(folder: SchemaFolder, { documentation, properties, features }: ModelFolder | Folder): void {
-    const feature = DiagramAttributeMapper.featuresToSchema(features);
+    const feature = featuresToSchema(features);
     if (feature) {
       folder.feature = feature;
     }
@@ -179,9 +181,9 @@ export class Serializer {
       element['@_profiles'] = el.profiles.join(' ');
     }
 
-    Object.assign(element, DiagramAttributeMapper.writeAttributes(el, viewAttributes));
+    Object.assign(element, writeAttributes(el, viewAttributes));
 
-    const feature = DiagramAttributeMapper.featuresToSchema(el.features);
+    const feature = featuresToSchema(el.features);
     if (feature) {
       element.feature = feature;
     }
@@ -199,7 +201,7 @@ export class Serializer {
       element['@_target'] = el.target;
     }
 
-    Object.assign(element, DiagramAttributeMapper.writeAttributes(el, conceptAttributes));
+    Object.assign(element, writeAttributes(el, conceptAttributes));
 
     if (el.child) {
       element.child = this.saveChildren(el.child);
@@ -222,12 +224,12 @@ export class Serializer {
     const schemaChild: SchemaChild = {
       '@_xsi:type': toXsiType(child.type),
       '@_id': child.id,
-      ...DiagramAttributeMapper.writeAttributes(child, childAttributes),
-      bounds: BoundsMapper.boundsToSchemaBounds(child.bounds),
+      ...writeAttributes(child, childAttributes),
+      bounds: boundsToSchema(child.bounds),
     };
 
     if (child.sourceConnection) {
-      schemaChild.sourceConnection = SourceConnectionMapper.toSchemaSourceConnections(child.sourceConnection);
+      schemaChild.sourceConnection = toSchemaSourceConnections(child.sourceConnection);
     }
 
     if (child.child) {
@@ -245,7 +247,7 @@ export class Serializer {
       schemaChild.property = property;
     }
 
-    const feature = DiagramAttributeMapper.featuresToSchema(DiagramAttributeMapper.writeFeatures(child, child.features, childFeatures));
+    const feature = featuresToSchema(writeFeatures(child, child.features, childFeatures));
     if (feature) {
       schemaChild.feature = feature;
     }

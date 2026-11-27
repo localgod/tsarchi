@@ -106,123 +106,121 @@ function readValue(raw: unknown, kind: AttributeKind): AttributeValue {
   return kind === 'number' ? Number(raw) : kind === 'boolean' ? String(raw) === 'true' : String(raw);
 }
 
-export class DiagramAttributeMapper {
-  /**
-   * Reads the given attributes from a parsed XML node into model properties, skipping absent ones.
-   */
-  public static readAttributes(node: object, specs: readonly AttributeSpec[]): Record<string, AttributeValue> {
-    const source = node as Record<string, unknown>;
-    const result: Record<string, AttributeValue> = {};
-    for (const [property, attribute, kind] of specs) {
-      const raw = source[`@_${attribute}`];
-      if (raw === undefined || raw === null) continue;
-      const value = readValue(raw, kind);
-      // An empty id list is left out, as EMF does not write one.
-      if (Array.isArray(value) && value.length === 0) continue;
-      result[property] = value;
+/**
+ * Reads the given attributes from a parsed XML node into model properties, skipping absent ones.
+ */
+export function readAttributes(node: object, specs: readonly AttributeSpec[]): Record<string, AttributeValue> {
+  const source = node as Record<string, unknown>;
+  const result: Record<string, AttributeValue> = {};
+  for (const [property, attribute, kind] of specs) {
+    const raw = source[`@_${attribute}`];
+    if (raw === undefined || raw === null) continue;
+    const value = readValue(raw, kind);
+    // An empty id list is left out, as EMF does not write one.
+    if (Array.isArray(value) && value.length === 0) continue;
+    result[property] = value;
+  }
+  return result;
+}
+
+/**
+ * Writes the given model properties as XML attributes, skipping unset ones.
+ */
+export function writeAttributes(model: object, specs: readonly AttributeSpec[]): Record<string, string> {
+  const source = model as Record<string, unknown>;
+  const result: Record<string, string> = {};
+  for (const [property, attribute] of specs) {
+    const value = source[property];
+    if (value === undefined || value === null) continue;
+    if (Array.isArray(value)) {
+      if (value.length > 0) result[`@_${attribute}`] = value.join(' ');
+    } else {
+      result[`@_${attribute}`] = String(value);
     }
-    return result;
   }
+  return result;
+}
 
-  /**
-   * Writes the given model properties as XML attributes, skipping unset ones.
-   */
-  public static writeAttributes(model: object, specs: readonly AttributeSpec[]): Record<string, string> {
-    const source = model as Record<string, unknown>;
-    const result: Record<string, string> = {};
-    for (const [property, attribute] of specs) {
-      const value = source[property];
-      if (value === undefined || value === null) continue;
-      if (Array.isArray(value)) {
-        if (value.length > 0) result[`@_${attribute}`] = value.join(' ');
-      } else {
-        result[`@_${attribute}`] = String(value);
-      }
+export function schemaToFeatures(feature: SchemaFeature | SchemaFeature[] | undefined): Map<string, string> | undefined {
+  if (!feature) return undefined;
+  return new Map(toArray(feature).map(f => [f['@_name'], String(f['@_value'])]));
+}
+
+export function featuresToSchema(features: Map<string, string> | undefined): SchemaFeature[] | undefined {
+  if (!features || features.size === 0) return undefined;
+  return Array.from(features, ([name, value]) => ({ '@_name': name, '@_value': value }));
+}
+
+/**
+ * Reads the given features into model properties, skipping absent ones.
+ */
+export function readFeatures(features: Map<string, string> | undefined, specs: readonly AttributeSpec[]): Record<string, AttributeValue> {
+  const result: Record<string, AttributeValue> = {};
+  for (const [property, name, kind] of specs) {
+    const raw = features?.get(name);
+    if (raw !== undefined) result[property] = readValue(raw, kind);
+  }
+  return result;
+}
+
+/**
+ * Merges the given model properties into a copy of the features. A set property replaces the feature in place,
+ * or is appended when new; an unset property removes it.
+ */
+export function writeFeatures(
+  model: object,
+  features: Map<string, string> | undefined,
+  specs: readonly AttributeSpec[]
+): Map<string, string> {
+  const source = model as Record<string, unknown>;
+  const result = new Map(features);
+  for (const [property, name] of specs) {
+    const value = source[property];
+    if (value === undefined || value === null) {
+      result.delete(name);
+    } else {
+      result.set(name, String(value));
     }
-    return result;
   }
+  return result;
+}
 
-  public static schemaToFeatures(feature: SchemaFeature | SchemaFeature[] | undefined): Map<string, string> | undefined {
-    if (!feature) return undefined;
-    return new Map(toArray(feature).map(f => [f['@_name'], String(f['@_value'])]));
-  }
+/**
+ * Returns the attributes and child elements of a parsed XML node that are not in `mapped`, or undefined when
+ * there are none. Namespace declarations made on the node are included, so prefixes used in it stay bound on save.
+ */
+export function readUnrecognized(node: object, mapped: ReadonlySet<string>): Record<string, unknown> | undefined {
+  const entries = Object.entries(node).filter(([key]) => !mapped.has(key));
+  return entries.length > 0 ? Object.fromEntries(entries) : undefined;
+}
 
-  public static featuresToSchema(features: Map<string, string> | undefined): SchemaFeature[] | undefined {
-    if (!features || features.size === 0) return undefined;
-    return Array.from(features, ([name, value]) => ({ '@_name': name, '@_value': value }));
-  }
+/**
+ * fast-xml-parser reads `<bendpoint/>` (every coordinate at Archi's default of 0) as ''.
+ */
+export function schemaToBendpoints(bendpoint: SchemaBendpoint | '' | (SchemaBendpoint | '')[] | undefined): ViewBendpoint[] | undefined {
+  if (bendpoint === undefined) return undefined;
+  return (Array.isArray(bendpoint) ? bendpoint : [bendpoint]).map(b => {
+    const attributes = b === '' ? {} : b;
+    return {
+      startX: Number(attributes['@_startX']) || 0,
+      startY: Number(attributes['@_startY']) || 0,
+      endX: Number(attributes['@_endX']) || 0,
+      endY: Number(attributes['@_endY']) || 0,
+    };
+  });
+}
 
-  /**
-   * Reads the given features into model properties, skipping absent ones.
-   */
-  public static readFeatures(features: Map<string, string> | undefined, specs: readonly AttributeSpec[]): Record<string, AttributeValue> {
-    const result: Record<string, AttributeValue> = {};
-    for (const [property, name, kind] of specs) {
-      const raw = features?.get(name);
-      if (raw !== undefined) result[property] = readValue(raw, kind);
-    }
-    return result;
-  }
-
-  /**
-   * Merges the given model properties into a copy of the features. A set property replaces the feature in place,
-   * or is appended when new; an unset property removes it.
-   */
-  public static writeFeatures(
-    model: object,
-    features: Map<string, string> | undefined,
-    specs: readonly AttributeSpec[]
-  ): Map<string, string> {
-    const source = model as Record<string, unknown>;
-    const result = new Map(features);
-    for (const [property, name] of specs) {
-      const value = source[property];
-      if (value === undefined || value === null) {
-        result.delete(name);
-      } else {
-        result.set(name, String(value));
-      }
-    }
-    return result;
-  }
-
-  /**
-   * Returns the attributes and child elements of a parsed XML node that are not in `mapped`, or undefined when
-   * there are none. Namespace declarations made on the node are included, so prefixes used in it stay bound on save.
-   */
-  public static readUnrecognized(node: object, mapped: ReadonlySet<string>): Record<string, unknown> | undefined {
-    const entries = Object.entries(node).filter(([key]) => !mapped.has(key));
-    return entries.length > 0 ? Object.fromEntries(entries) : undefined;
-  }
-
-  /**
-   * fast-xml-parser reads `<bendpoint/>` (every coordinate at Archi's default of 0) as ''.
-   */
-  public static schemaToBendpoints(bendpoint: SchemaBendpoint | '' | (SchemaBendpoint | '')[] | undefined): ViewBendpoint[] | undefined {
-    if (bendpoint === undefined) return undefined;
-    return (Array.isArray(bendpoint) ? bendpoint : [bendpoint]).map(b => {
-      const attributes = b === '' ? {} : b;
-      return {
-        startX: Number(attributes['@_startX']) || 0,
-        startY: Number(attributes['@_startY']) || 0,
-        endX: Number(attributes['@_endX']) || 0,
-        endY: Number(attributes['@_endY']) || 0,
-      };
-    });
-  }
-
-  /**
-   * Archi leaves out zero coordinates, so they are omitted here as well.
-   */
-  public static bendpointsToSchema(bendpoints: ViewBendpoint[] | undefined): SchemaBendpoint[] | undefined {
-    if (!bendpoints || bendpoints.length === 0) return undefined;
-    return bendpoints.map(b => {
-      const schemaBendpoint: SchemaBendpoint = {};
-      if (b.startX) schemaBendpoint['@_startX'] = String(b.startX);
-      if (b.startY) schemaBendpoint['@_startY'] = String(b.startY);
-      if (b.endX) schemaBendpoint['@_endX'] = String(b.endX);
-      if (b.endY) schemaBendpoint['@_endY'] = String(b.endY);
-      return schemaBendpoint;
-    });
-  }
+/**
+ * Archi leaves out zero coordinates, so they are omitted here as well.
+ */
+export function bendpointsToSchema(bendpoints: ViewBendpoint[] | undefined): SchemaBendpoint[] | undefined {
+  if (!bendpoints || bendpoints.length === 0) return undefined;
+  return bendpoints.map(b => {
+    const schemaBendpoint: SchemaBendpoint = {};
+    if (b.startX) schemaBendpoint['@_startX'] = String(b.startX);
+    if (b.startY) schemaBendpoint['@_startY'] = String(b.startY);
+    if (b.endX) schemaBendpoint['@_endX'] = String(b.endX);
+    if (b.endY) schemaBendpoint['@_endY'] = String(b.endY);
+    return schemaBendpoint;
+  });
 }

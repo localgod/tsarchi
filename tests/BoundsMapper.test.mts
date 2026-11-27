@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vite-plus/test';
-import { BoundsMapper } from '../src/internal/BoundMapper.mjs';
+import { boundsToSchema, schemaToBounds } from '../src/internal/BoundMapper.mjs';
 import type { Bounds as SchemaBounds } from '../src/interfaces/schema/Bounds.mjs';
 
 describe('BoundsMapper', () => {
@@ -11,7 +11,7 @@ describe('BoundsMapper', () => {
       '@_height': '50',
     };
 
-    const result = BoundsMapper.schemaBoundsToBounds(schemaBounds);
+    const result = schemaToBounds(schemaBounds);
 
     expect(result).toEqual({
       x: 10,
@@ -22,7 +22,7 @@ describe('BoundsMapper', () => {
   });
 
   it('should handle undefined bounds gracefully', () => {
-    const result = BoundsMapper.schemaBoundsToBounds(undefined);
+    const result = schemaToBounds(undefined);
 
     expect(result).toEqual({
       x: 0,
@@ -40,7 +40,7 @@ describe('BoundsMapper', () => {
       '@_height': 'NaN',
     };
 
-    const result = BoundsMapper.schemaBoundsToBounds(schemaBounds);
+    const result = schemaToBounds(schemaBounds);
 
     expect(result).toEqual({
       x: 0,
@@ -58,7 +58,7 @@ describe('BoundsMapper', () => {
       height: 75,
     };
 
-    const result = BoundsMapper.boundsToSchemaBounds(bounds);
+    const result = boundsToSchema(bounds);
 
     expect(result).toEqual({
       '@_x': '15',
@@ -69,14 +69,14 @@ describe('BoundsMapper', () => {
   });
 
   it('should read missing attributes as the Archi defaults', () => {
-    expect(BoundsMapper.schemaBoundsToBounds({ '@_width': '193', '@_height': '85' })).toEqual({ x: 0, y: 0, width: 193, height: 85 });
-    expect(BoundsMapper.schemaBoundsToBounds({ '@_x': '240', '@_y': '12' })).toEqual({ x: 240, y: 12, width: -1, height: -1 });
-    expect(BoundsMapper.schemaBoundsToBounds('')).toEqual({ x: 0, y: 0, width: -1, height: -1 });
+    expect(schemaToBounds({ '@_width': '193', '@_height': '85' })).toEqual({ x: 0, y: 0, width: 193, height: 85 });
+    expect(schemaToBounds({ '@_x': '240', '@_y': '12' })).toEqual({ x: 240, y: 12, width: -1, height: -1 });
+    expect(schemaToBounds('')).toEqual({ x: 0, y: 0, width: -1, height: -1 });
   });
 
   it('should omit attributes equal to the Archi defaults', () => {
-    expect(BoundsMapper.boundsToSchemaBounds({ x: 0, y: 0, width: 193, height: 85 })).toEqual({ '@_width': '193', '@_height': '85' });
-    expect(BoundsMapper.boundsToSchemaBounds({ x: 240, y: 12, width: -1, height: -1 })).toEqual({ '@_x': '240', '@_y': '12' });
-    expect(BoundsMapper.boundsToSchemaBounds({ x: 0, y: 0, width: -1, height: -1 })).toEqual({});
+    expect(boundsToSchema({ x: 0, y: 0, width: 193, height: 85 })).toEqual({ '@_width': '193', '@_height': '85' });
+    expect(boundsToSchema({ x: 240, y: 12, width: -1, height: -1 })).toEqual({ '@_x': '240', '@_y': '12' });
+    expect(boundsToSchema({ x: 0, y: 0, width: -1, height: -1 })).toEqual({});
   });
 });

@@ -10,10 +10,13 @@ import type { Child } from '../interfaces/Child.mjs';
 import type { Folder } from '../interfaces/Folder.mjs';
 import type { ArchimateModelType } from '../constants/archimate-mappings.mjs';
 import { typeFromXsiType } from '../constants/archimate-mappings.mjs';
-import { BoundsMapper } from './BoundMapper.mjs';
-import { SourceConnectionMapper } from './SourceConnectionMapper.mjs';
+import { schemaToBounds } from './BoundMapper.mjs';
+import { schemaToSourceConnections } from './SourceConnectionMapper.mjs';
 import {
-  DiagramAttributeMapper,
+  readAttributes,
+  readFeatures,
+  readUnrecognized,
+  schemaToFeatures,
   childAttributes,
   childFeatures,
   childTextElements,
@@ -137,7 +140,7 @@ export class Parser {
       conceptType: schemaProfile['@_conceptType'],
       imagePath: schemaProfile['@_imagePath'],
       specialization: specialization !== undefined ? String(specialization) === 'true' : undefined,
-      features: DiagramAttributeMapper.schemaToFeatures(schemaProfile.feature),
+      features: schemaToFeatures(schemaProfile.feature),
     } as Profile);
   }
 
@@ -173,8 +176,8 @@ export class Parser {
       name: folder['@_name'] || '',
       documentation: text(folder.documentation),
       properties: schemaToOptionalProperties(folder.property),
-      features: DiagramAttributeMapper.schemaToFeatures(folder.feature),
-      unrecognized: DiagramAttributeMapper.readUnrecognized(folder, mappedKeys),
+      features: schemaToFeatures(folder.feature),
+      unrecognized: readUnrecognized(folder, mappedKeys),
     };
   }
 
@@ -226,14 +229,10 @@ export class Parser {
 
     const profiles = splitIds(schemaElement['@_profiles']);
     if (profiles.length > 0) element.profiles = profiles;
-    Object.assign(
-      element,
-      DiagramAttributeMapper.readAttributes(schemaElement, viewAttributes),
-      DiagramAttributeMapper.readAttributes(schemaElement, conceptAttributes)
-    );
-    const features = DiagramAttributeMapper.schemaToFeatures(schemaElement.feature);
+    Object.assign(element, readAttributes(schemaElement, viewAttributes), readAttributes(schemaElement, conceptAttributes));
+    const features = schemaToFeatures(schemaElement.feature);
     if (features) element.features = features;
-    const unrecognized = DiagramAttributeMapper.readUnrecognized(schemaElement, Parser.mappedElementKeys);
+    const unrecognized = readUnrecognized(schemaElement, Parser.mappedElementKeys);
     if (unrecognized) element.unrecognized = unrecognized;
 
     return element;
@@ -249,18 +248,18 @@ export class Parser {
 
   private convertChildElementToChild(schemaChild: SchemaChild): Child {
     const { sourceConnection, bounds } = schemaChild;
-    const features = DiagramAttributeMapper.schemaToFeatures(schemaChild.feature);
+    const features = schemaToFeatures(schemaChild.feature);
 
     const child: Child = {
       id: schemaChild['@_id'],
       type: this.extractElementType(schemaChild['@_xsi:type']),
-      ...DiagramAttributeMapper.readAttributes(schemaChild, childAttributes),
-      ...DiagramAttributeMapper.readFeatures(features, childFeatures),
-      bounds: BoundsMapper.schemaBoundsToBounds(bounds),
-      sourceConnection: sourceConnection ? SourceConnectionMapper.schemaToSourceConnections(sourceConnection) : undefined,
+      ...readAttributes(schemaChild, childAttributes),
+      ...readFeatures(features, childFeatures),
+      bounds: schemaToBounds(bounds),
+      sourceConnection: sourceConnection ? schemaToSourceConnections(sourceConnection) : undefined,
       properties: schemaToOptionalProperties(schemaChild.property),
       features,
-      unrecognized: DiagramAttributeMapper.readUnrecognized(schemaChild, Parser.mappedChildKeys),
+      unrecognized: readUnrecognized(schemaChild, Parser.mappedChildKeys),
     };
 
     for (const key of childTextElements) {

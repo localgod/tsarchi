@@ -33,5 +33,5 @@ export interface Child {
   property?: Property | Property[];
   feature?: Feature | Feature[];
   sourceConnection?: SourceConnection | SourceConnection[];
-  child?: Child[];
+  child?: Child | Child[];
 }

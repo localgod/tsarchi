@@ -38,21 +38,20 @@ describe('package integration', () => {
           throw new Error(\`Unexpected package export path: \${exportPath}\`);
         }
 
-        const { TsArchi } = await import(exportPath);
+        const { loadModel, saveModel } = await import(exportPath);
 
-        if (typeof TsArchi !== 'function') {
-          throw new Error('TsArchi package export path is not constructible');
+        if (typeof loadModel !== 'function' || typeof saveModel !== 'function') {
+          throw new Error('loadModel and saveModel are not exported from the node entry point');
         }
 
-        const tsArchi = new TsArchi();
-        const model = await tsArchi.loadModel(${JSON.stringify(inputPath)});
+        const model = await loadModel(${JSON.stringify(inputPath)});
         const viewNames = model.listViews().map((view) => view.name);
 
         if (!viewNames.includes('Default View')) {
           throw new Error('Default View was not loaded through the package export');
         }
 
-        await tsArchi.saveModel(${JSON.stringify(outputPath)});
+        await saveModel(model, ${JSON.stringify(outputPath)});
         `,
         'utf8'
       );
@@ -118,7 +117,8 @@ describe('public API', () => {
     const index = await import('../src/index.mjs');
 
     expect(index).toHaveProperty('Archimate');
-    expect(index).not.toHaveProperty('TsArchi');
+    expect(index).not.toHaveProperty('loadModel');
+    expect(index).not.toHaveProperty('saveModel');
     expect(index).not.toHaveProperty('DiagramAttributeMapper');
     expect(index).not.toHaveProperty('childAttributes');
     expect(index).not.toHaveProperty('connectionAttributes');
@@ -128,9 +128,9 @@ describe('public API', () => {
     expect(index).not.toHaveProperty('SourceConnectionMapper');
   });
 
-  it('exports TsArchi from the node entry point', async () => {
+  it('exports loadModel and saveModel from the node entry point', async () => {
     const node = await import('../src/node/index.mjs');
 
-    expect(Object.keys(node)).toEqual(['TsArchi']);
+    expect(Object.keys(node).sort()).toEqual(['loadModel', 'saveModel']);
   });
 });

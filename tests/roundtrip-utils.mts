@@ -2,7 +2,7 @@ import { mkdir, mkdtemp, readdir, readFile, rm } from 'fs/promises';
 import { tmpdir } from 'os';
 import { basename, join } from 'path';
 import { XMLParser } from 'fast-xml-parser';
-import { TsArchi } from '../src/node/TsArchi.mjs';
+import { loadModel, saveModel } from '../src/node/ModelFiles.mjs';
 import { removeIndentation, xmlValueOptions } from '../src/internal/Xml.mjs';
 
 export interface RoundtripResult {
@@ -92,10 +92,7 @@ export async function listRoundtripFixtures(fixturesDir = 'tests/fixtures/roundt
 export async function roundtripFixture(fixturePath: string, outputDir: string): Promise<RoundtripResult> {
   await mkdir(outputDir, { recursive: true });
   const outputPath = join(outputDir, basename(fixturePath));
-  const tsArchi = new TsArchi();
-
-  await tsArchi.loadModel(fixturePath);
-  await tsArchi.saveModel(outputPath);
+  await saveModel(await loadModel(fixturePath), outputPath);
 
   const inputXml = await readFile(fixturePath, 'utf8');
   const outputXml = await readFile(outputPath, 'utf8');

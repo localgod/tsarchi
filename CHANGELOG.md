@@ -15,6 +15,7 @@ This project adheres to [Keep a CHANGELOG](http://keepachangelog.com/)
 
 ### Changed
 
+- ⚠️ Breaking: the `TsArchi` class is replaced by two functions from `tsarchi/node`: `loadModel(path)` and `saveModel(model, path)`, which saves any model rather than the one the instance last loaded ([#561](https://github.com/localgod/tsarchi/issues/561)).
 - ⚠️ Breaking: `addDiagramObjectToGroup` is removed; use `addDiagramObject` with `parentId` ([#559](https://github.com/localgod/tsarchi/issues/559)).
 - ⚠️ Breaking: `properties` on models, folders, elements, relationships, views, diagram objects and view connections is a `Property[]` of `{ key, value }`, in file order, instead of a `Map<string, string>`, so a key can appear more than once, as Archi allows. `getProperties()` returns and `setProperties()` takes a list, and `updateElement()` and `upsertElement()` replace the whole list instead of merging it by key. See "Upgrading from 4.x" in the README ([#551](https://github.com/localgod/tsarchi/issues/551)).
 - ⚠️ Breaking: `Element.profiles`, `Child.targetConnections` and `SourceConnection.targetConnections` are `string[]` instead of space-separated strings, as `ViewChild.targetConnections` already was. Files are written as before, with the ids joined by single spaces ([#557](https://github.com/localgod/tsarchi/issues/557)).

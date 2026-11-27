@@ -46,7 +46,7 @@ TSArchi requires [Node.js](https://nodejs.org/) 20 or later. Install it from npm
 npm install tsarchi
 ```
 
-The `tsarchi` entry point holds the model API and runs in Node.js and in the browser. `TsArchi`, which reads and writes files, is imported from `tsarchi/node`. `tsarchi/bundle` is the same API as one self-contained ES module, for engines such as QuickJS (see [QuickJS](#quickjs)).
+The `tsarchi` entry point holds the model API and runs in Node.js and in the browser. `loadModel` and `saveModel`, which read and write files, are imported from `tsarchi/node`. `tsarchi/bundle` is the same API as one self-contained ES module, for engines such as QuickJS (see [QuickJS](#quickjs)).
 
 ## Upgrading from 4.x
 
@@ -56,6 +56,7 @@ Version 5.0.0 keeps properties as Archi does, as an ordered list in which a key 
 - `getProperties()` and `getMetadata()` return a `Property[]`, and `setProperties()` and `setMetadata()` take one. Model metadata keeps repeated keys too.
 - `updateElement()` and `upsertElement()` replace the whole `properties` list instead of merging it by key. To change one key, pass `setProperty(element.properties, key, value)`.
 - `updateFolder()`, `updateFolderById()` and `createFolder()` take a `properties` list; an empty list removes the properties.
+- `TsArchi` is removed. `tsarchi/node` exports two functions instead: `loadModel(path)` returns the model, and `saveModel(model, path)` saves any model, not only the last one loaded.
 - `addDiagramObjectToGroup(viewId, groupId, elementId, bounds, options)` is removed. Use `addDiagramObject(viewId, elementId, bounds, { ...options, parentId: groupId })`, which also adds into an ArchiMate diagram object.
 - `Element.profiles`, `Child.targetConnections` and `SourceConnection.targetConnections` are arrays of ids instead of space-separated strings. An empty array is not written.
 - `Element.child`, `Child.sourceConnection` and `SourceConnection.sourceConnection` are always arrays, also for a single child or connection. Code that wrote a single object, for example through `updateElement(viewId, { child })`, passes a one-item array.
@@ -103,12 +104,10 @@ See the [changelog](CHANGELOG.md) for the full list.
 You can use TSArchi programmatically in your TypeScript/JavaScript projects:
 
 ```typescript
-import { TsArchi } from "tsarchi/node";
-
-const tsArchi = new TsArchi();
+import { loadModel, saveModel } from "tsarchi/node";
 
 // Load and parse an ArchiMate file
-const model = await tsArchi.loadModel("./path/to/model.archimate");
+const model = await loadModel("./path/to/model.archimate");
 
 // Add a new element; upsertElement returns a copy of the element as stored, with its id
 const element = model.upsertElement({
@@ -123,12 +122,12 @@ console.log(
 );
 
 // Save the modified model
-await tsArchi.saveModel("./path/to/output.archimate");
+await saveModel(model, "./path/to/output.archimate");
 ```
 
 ### Loading and Saving Text
 
-`Archimate.fromXml` and `toXml` load and save the text of an `.archimate` file without touching the file system, for text from a browser file input, IPC or a test. `TsArchi` uses the same XML settings, so both give the same result:
+`Archimate.fromXml` and `toXml` load and save the text of an `.archimate` file without touching the file system, for text from a browser file input, IPC or a test. `loadModel` and `saveModel` use the same XML settings, so both give the same result:
 
 ```typescript
 import { Archimate, ArchimateParseError } from "tsarchi";
@@ -146,11 +145,11 @@ try {
 }
 ```
 
-`TsArchi.load` and `loadModel` throw the same `ArchimateParseError`, and pass on file read errors.
+`loadModel` throws the same `ArchimateParseError`, and passes on file read errors.
 
 ### QuickJS
 
-QuickJS and other engines without a module resolver for `node_modules` cannot import `fast-xml-parser`, which `tsarchi` depends on. For them, the package ships `dist/bundle/tsarchi.mjs` (exported as `tsarchi/bundle`): the same API as `tsarchi`, with fast-xml-parser and its dependencies included, as one ES module of about 400 KB that imports nothing. Import it by its path, and load and save files with QuickJS's `std` module, as `TsArchi` needs Node's `fs`:
+QuickJS and other engines without a module resolver for `node_modules` cannot import `fast-xml-parser`, which `tsarchi` depends on. For them, the package ships `dist/bundle/tsarchi.mjs` (exported as `tsarchi/bundle`): the same API as `tsarchi`, with fast-xml-parser and its dependencies included, as one ES module of about 400 KB that imports nothing. Import it by its path, and load and save files with QuickJS's `std` module, as `loadModel` and `saveModel` need Node's `fs`:
 
 ```javascript
 import * as std from "std"; // "qjs:std" in quickjs-ng
@@ -196,7 +195,7 @@ const stencilled = model.toDrawio(viewId, { stencils: true }); // draw.io's Arch
 - Fill, line and font colours, opacity, line width, font and text alignment are kept; diagram objects without a fill get Archi's default for their layer.
 - Cell ids are the diagram object and connection ids. The export is one-way: tsarchi does not read draw.io files.
 
-The `tsarchi` entry point uses no Node built-ins, so it can be bundled for the browser. `TsArchi` reads and writes files with `fs/promises` and is exported from `tsarchi/node` instead. In a browser, load and save with `Archimate.fromXml` and `toXml`.
+The `tsarchi` entry point uses no Node built-ins, so it can be bundled for the browser. `loadModel` and `saveModel` read and write files with `fs/promises` and are exported from `tsarchi/node` instead. In a browser, load and save with `Archimate.fromXml` and `toXml`.
 
 ### Nested Folders
 
@@ -426,10 +425,9 @@ TSArchi provides comprehensive view management capabilities for creating and man
 
 ```typescript
 import { DiagramObjectFigure, TextAlignment, Viewpoint } from "tsarchi";
-import { TsArchi } from "tsarchi/node";
+import { loadModel } from "tsarchi/node";
 
-const tsArchi = new TsArchi();
-const model = await tsArchi.loadModel("./model.archimate");
+const model = await loadModel("./model.archimate");
 
 // Create a new view
 const view = model.createView("Application Overview", {

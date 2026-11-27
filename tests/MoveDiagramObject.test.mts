@@ -38,7 +38,12 @@ describe('moveDiagramObject', () => {
 
     expect(childIds(archimate, view, null)).toEqual(['id-portal-object', 'id-server-object', 'id-group', 'id-note']);
     expect(childIds(archimate, view, 'id-group')).toEqual(['id-group-api-object', 'id-db-object']);
-    expect(findViewChild(archimate, view, 'id-db-object')).toMatchObject({ id: 'id-db-object', archimateElement: 'id-db', bounds, targetConnections: ['id-api-to-db', 'id-note-to-db'] });
+    expect(findViewChild(archimate, view, 'id-db-object')).toMatchObject({
+      id: 'id-db-object',
+      archimateElement: 'id-db',
+      bounds,
+      targetConnections: ['id-api-to-db', 'id-note-to-db'],
+    });
     expect(archimate.validateModel()).toEqual([]);
   });
 

@@ -472,18 +472,8 @@ describe('Archimate', () => {
 
     it('should delete elements and clean relationships and view references', () => {
       const view = archimate.createView('Deletion View');
-      const sourceObject = archimate.addDiagramObject(view.id, 'app-a', {
-        x: 0,
-        y: 0,
-        width: 100,
-        height: 50,
-      });
-      const targetObject = archimate.addDiagramObject(view.id, 'app-b', {
-        x: 200,
-        y: 0,
-        width: 100,
-        height: 50,
-      });
+      const sourceObject = archimate.addDiagramObject(view.id, 'app-a', { x: 0, y: 0, width: 100, height: 50 });
+      const targetObject = archimate.addDiagramObject(view.id, 'app-b', { x: 200, y: 0, width: 100, height: 50 });
       archimate.addConnection(view.id, sourceObject!.id, targetObject!.id, 'rel-a-b');
 
       expect(archimate.deleteElement('app-a')).toBe(true);
@@ -500,18 +490,8 @@ describe('Archimate', () => {
 
     it('should delete relationships and clean matching view connections', () => {
       const view = archimate.createView('Relationship Deletion View');
-      const sourceObject = archimate.addDiagramObject(view.id, 'app-a', {
-        x: 0,
-        y: 0,
-        width: 100,
-        height: 50,
-      });
-      const targetObject = archimate.addDiagramObject(view.id, 'app-b', {
-        x: 200,
-        y: 0,
-        width: 100,
-        height: 50,
-      });
+      const sourceObject = archimate.addDiagramObject(view.id, 'app-a', { x: 0, y: 0, width: 100, height: 50 });
+      const targetObject = archimate.addDiagramObject(view.id, 'app-b', { x: 200, y: 0, width: 100, height: 50 });
       archimate.addConnection(view.id, sourceObject!.id, targetObject!.id, 'rel-a-b');
 
       expect(archimate.deleteElement('rel-a-b')).toBe(true);
@@ -993,18 +973,8 @@ describe('Archimate', () => {
         target: 'rel-app-b',
       });
       const view = archimate.createView('Formal Relationship View');
-      const sourceObject = archimate.addDiagramObject(view.id, 'rel-app-a', {
-        x: 0,
-        y: 0,
-        width: 100,
-        height: 50,
-      });
-      const targetObject = archimate.addDiagramObject(view.id, 'rel-app-b', {
-        x: 200,
-        y: 0,
-        width: 100,
-        height: 50,
-      });
+      const sourceObject = archimate.addDiagramObject(view.id, 'rel-app-a', { x: 0, y: 0, width: 100, height: 50 });
+      const targetObject = archimate.addDiagramObject(view.id, 'rel-app-b', { x: 200, y: 0, width: 100, height: 50 });
       archimate.addConnection(view.id, sourceObject!.id, targetObject!.id, relationship.id);
 
       expect(archimate.deleteRelationship(relationship.id)).toBe(true);
@@ -1032,12 +1002,7 @@ describe('Archimate', () => {
         .mockReturnValueOnce('generated-object-id');
 
       const view = archimate.createView('Generated IDs View');
-      const object = archimate.addDiagramObject(view.id, 'app-for-view', {
-        x: 0,
-        y: 0,
-        width: 100,
-        height: 50,
-      });
+      const object = archimate.addDiagramObject(view.id, 'app-for-view', { x: 0, y: 0, width: 100, height: 50 });
 
       expect(view.id).toBe('generated-view-id');
       expect(object?.id).toBe('generated-object-id');
@@ -1068,18 +1033,8 @@ describe('Archimate', () => {
       });
 
       const view = archimate.createView('Valid View');
-      const sourceObject = archimate.addDiagramObject(view.id, 'valid-app-a', {
-        x: 0,
-        y: 0,
-        width: 100,
-        height: 50,
-      });
-      const targetObject = archimate.addDiagramObject(view.id, 'valid-app-b', {
-        x: 200,
-        y: 0,
-        width: 100,
-        height: 50,
-      });
+      const sourceObject = archimate.addDiagramObject(view.id, 'valid-app-a', { x: 0, y: 0, width: 100, height: 50 });
+      const targetObject = archimate.addDiagramObject(view.id, 'valid-app-b', { x: 200, y: 0, width: 100, height: 50 });
       archimate.addConnection(view.id, sourceObject!.id, targetObject!.id, 'valid-rel-a-b');
 
       expect(archimate.validateModel()).toEqual([]);

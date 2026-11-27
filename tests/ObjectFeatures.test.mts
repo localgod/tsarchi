@@ -1,18 +1,10 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { readFile } from 'fs/promises';
-import { XMLParser } from 'fast-xml-parser';
 import { Archimate } from '../src/Archimate.mjs';
-import type { Schema } from '../src/interfaces/schema/Schema.mjs';
-import { archimateFromSchema, archimateToSchema } from '../src/internal/SchemaAccess.mjs';
+import { archimateToSchema } from '../src/internal/SchemaAccess.mjs';
 import { toArray } from '../src/internal/Arrays.mjs';
+import { parseFile } from './helpers.mjs';
 
 const fixture = 'tests/fixtures/roundtrip/features-and-unrecognized.archimate';
-
-async function parseFixture(): Promise<Archimate> {
-  const raw = new XMLParser({ ignoreAttributes: false }).parse(await readFile(fixture, 'utf8')) as Schema;
-  const archimate = archimateFromSchema(raw);
-  return archimate;
-}
 
 function businessFolder(archimate: Archimate) {
   return toArray(archimateToSchema(archimate)['archimate:model'].folder).find(folder => folder['@_type'] === 'business')!;
@@ -20,7 +12,7 @@ function businessFolder(archimate: Archimate) {
 
 describe('features on folders, elements and relationships', () => {
   it('should load features on elements, relationships and views', async () => {
-    const archimate = await parseFixture();
+    const archimate = await parseFile(fixture);
 
     expect(archimate.getElement('id-customer')?.features).toEqual(new Map([['elementFeature', 'actor']]));
     expect(archimate.getElement('id-insurant')?.features).toEqual(new Map([['elementFeature', 'role']]));
@@ -29,7 +21,7 @@ describe('features on folders, elements and relationships', () => {
   });
 
   it('should load features on nested folders in file order', async () => {
-    const archimate = await parseFixture();
+    const archimate = await parseFile(fixture);
 
     expect(archimate.getFolders('business')[0].features).toEqual(
       new Map([
@@ -40,7 +32,7 @@ describe('features on folders, elements and relationships', () => {
   });
 
   it('should write features set in code', async () => {
-    const archimate = await parseFixture();
+    const archimate = await parseFile(fixture);
 
     archimate.updateElement('id-insurant', {
       features: new Map([
@@ -57,7 +49,7 @@ describe('features on folders, elements and relationships', () => {
   });
 
   it('should keep features and unrecognised content when a view is changed through the view API', async () => {
-    const archimate = await parseFixture();
+    const archimate = await parseFile(fixture);
 
     archimate.addGroup('id-view', 'Group', { x: 400, y: 12, width: 200, height: 100 });
 
@@ -69,7 +61,7 @@ describe('features on folders, elements and relationships', () => {
 
 describe('top-level folder details', () => {
   it('should return the details of a top-level folder', async () => {
-    const archimate = await parseFixture();
+    const archimate = await parseFile(fixture);
 
     expect(archimate.getFolder('business')).toEqual({
       id: 'id-fu-business',
@@ -80,7 +72,7 @@ describe('top-level folder details', () => {
   });
 
   it('should return copies of the folder maps', async () => {
-    const archimate = await parseFixture();
+    const archimate = await parseFile(fixture);
 
     archimate.getFolder('business').features?.set('changed', 'no');
 
@@ -88,7 +80,7 @@ describe('top-level folder details', () => {
   });
 
   it('should write folder details set in code and keep unrecognised content', async () => {
-    const archimate = await parseFixture();
+    const archimate = await parseFile(fixture);
 
     const details = archimate.updateFolder('business', {
       name: 'Business Layer',
@@ -117,7 +109,7 @@ describe('top-level folder details', () => {
   });
 
   it('should remove folder details that are cleared and leave the others unchanged', async () => {
-    const archimate = await parseFixture();
+    const archimate = await parseFile(fixture);
 
     archimate.updateFolder('business', { documentation: '', features: new Map() });
 
@@ -128,7 +120,7 @@ describe('top-level folder details', () => {
   });
 
   it('should reject an empty folder name', async () => {
-    const archimate = await parseFixture();
+    const archimate = await parseFile(fixture);
 
     expect(() => archimate.updateFolder('business', { name: '' })).toThrow('A folder name cannot be empty.');
   });
@@ -136,7 +128,7 @@ describe('top-level folder details', () => {
 
 describe('unrecognised content', () => {
   it('should keep unrecognised attributes and child elements of folders and elements', async () => {
-    const archimate = await parseFixture();
+    const archimate = await parseFile(fixture);
 
     expect(archimate.getElement('id-customer')?.unrecognized).toEqual({
       '@_futureElementAttribute': 'actor',
@@ -155,7 +147,7 @@ describe('unrecognised content', () => {
   });
 
   it('should keep unrecognised content of diagram children and connections', async () => {
-    const archimate = await parseFixture();
+    const archimate = await parseFile(fixture);
 
     const child = archimate.getView('id-view')!.children[0];
     expect(child.unrecognized).toEqual({
@@ -169,7 +161,7 @@ describe('unrecognised content', () => {
   });
 
   it('should not treat mapped content as unrecognised', async () => {
-    const archimate = await parseFixture();
+    const archimate = await parseFile(fixture);
 
     expect(archimate.getElement('id-insurant')?.unrecognized).toBeUndefined();
     const insurantObject = archimate.getView('id-view')!.children[1];

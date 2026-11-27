@@ -11,6 +11,7 @@ import {
   archimateStrategyElementTypes,
   archimateTechnologyElementTypes,
 } from '../src/constants/archimate-mappings.mjs';
+import { modelXml } from './helpers.mjs';
 
 interface DrawioCell {
   '@_id': string;
@@ -52,14 +53,15 @@ const points = (cell: DrawioCell | undefined) => {
 
 const fixture = (path: string) => Archimate.fromXml(readFileSync(new URL(`./fixtures/${path}`, import.meta.url), 'utf8'));
 
-const model = (view: string, elements = '', relations = '') => `<?xml version="1.0" encoding="UTF-8"?>
-<archimate:model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:archimate="http://www.archimatetool.com/archimate" name="drawio" id="id-model" version="5.0.0">
-  <folder name="Business" id="id-business" type="business">${elements}</folder>
+const model = (view: string, elements = '', relations = '') =>
+  modelXml(
+    `  <folder name="Business" id="id-business" type="business">${elements}</folder>
   <folder name="Relations" id="id-relations" type="relations">${relations}</folder>
   <folder name="Views" id="id-views" type="diagrams">
     <element xsi:type="archimate:ArchimateDiagramModel" name="View &amp; more" id="id-view">${view}</element>
-  </folder>
-</archimate:model>`;
+  </folder>`,
+    { name: 'drawio', id: 'id-model' }
+  );
 
 describe('toDrawio', () => {
   it('writes one page named after the view, with the root and layer cells first', () => {

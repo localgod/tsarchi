@@ -5,6 +5,7 @@ import type { Element } from '../src/interfaces/Element.mjs';
 import type { Profile } from '../src/interfaces/Profile.mjs';
 import type { RelationshipInput } from '../src/interfaces/Relationship.mjs';
 import { getProperty } from '../src/Properties.mjs';
+import { modelXml } from './helpers.mjs';
 
 function modelWithTwoApps(): Archimate {
   const archimate = new Archimate();
@@ -139,15 +140,17 @@ describe('objects returned by the model are copies', () => {
   it.each(elementGetters)(
     'should not change the model when the features or unrecognized XML of the element from %s are changed',
     (_, get) => {
-      const archimate = Archimate.fromXml(`<?xml version="1.0" encoding="UTF-8"?>
-<archimate:model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:archimate="http://www.archimatetool.com/archimate" name="M" id="m" version="5.0.0">
-  <folder name="Application" id="fa" type="application">
+      const archimate = Archimate.fromXml(
+        modelXml(
+          `  <folder name="Application" id="fa" type="application">
     <element xsi:type="archimate:ApplicationComponent" name="A" id="app-a" extra="1">
       <note text="x"/>
       <feature name="iconColor" value="#ff0000"/>
     </element>
-  </folder>
-</archimate:model>`);
+  </folder>`,
+          { name: 'M', id: 'm' }
+        )
+      );
       const element = get(archimate);
       element.features!.set('iconColor', '#00ff00');
       (element.unrecognized!.note as Record<string, string>)['@_text'] = 'changed';

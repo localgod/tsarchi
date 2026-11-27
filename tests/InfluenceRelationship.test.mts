@@ -1,18 +1,9 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { readFile } from 'fs/promises';
-import { XMLParser } from 'fast-xml-parser';
 import { Archimate } from '../src/Archimate.mjs';
-import type { Schema } from '../src/interfaces/schema/Schema.mjs';
 import type { Element as SchemaElement } from '../src/interfaces/schema/Element.mjs';
 import type { Folder as SchemaFolder } from '../src/interfaces/schema/Folder.mjs';
-import { archimateFromSchema, archimateToSchema } from '../src/internal/SchemaAccess.mjs';
-
-async function parseFile(path: string): Promise<Archimate> {
-  const xml = await readFile(path, 'utf8');
-  const raw = new XMLParser({ ignoreAttributes: false }).parse(xml) as Schema;
-  const archimate = archimateFromSchema(raw);
-  return archimate;
-}
+import { archimateToSchema } from '../src/internal/SchemaAccess.mjs';
+import { parseFile } from './helpers.mjs';
 
 function schemaRelationships(archimate: Archimate): SchemaElement[] {
   const folders = archimateToSchema(archimate)['archimate:model'].folder as SchemaFolder | SchemaFolder[];

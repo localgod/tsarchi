@@ -13,23 +13,13 @@ describe('BoundsMapper', () => {
 
     const result = schemaToBounds(schemaBounds);
 
-    expect(result).toEqual({
-      x: 10,
-      y: 20,
-      width: 100,
-      height: 50,
-    });
+    expect(result).toEqual({ x: 10, y: 20, width: 100, height: 50 });
   });
 
   it('should handle undefined bounds gracefully', () => {
     const result = schemaToBounds(undefined);
 
-    expect(result).toEqual({
-      x: 0,
-      y: 0,
-      width: 0,
-      height: 0,
-    });
+    expect(result).toEqual({ x: 0, y: 0, width: 0, height: 0 });
   });
 
   it('should handle invalid numeric values in bounds', () => {
@@ -42,21 +32,11 @@ describe('BoundsMapper', () => {
 
     const result = schemaToBounds(schemaBounds);
 
-    expect(result).toEqual({
-      x: 0,
-      y: 0,
-      width: 100,
-      height: 0,
-    });
+    expect(result).toEqual({ x: 0, y: 0, width: 100, height: 0 });
   });
 
   it('should convert bounds to schema bounds', () => {
-    const bounds = {
-      x: 15,
-      y: 25,
-      width: 200,
-      height: 75,
-    };
+    const bounds = { x: 15, y: 25, width: 200, height: 75 };
 
     const result = boundsToSchema(bounds);
 

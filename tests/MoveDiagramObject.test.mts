@@ -1,28 +1,15 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { readFile } from 'fs/promises';
 import { Archimate } from '../src/Archimate.mjs';
-import type { ViewChild } from '../src/interfaces/ViewChild.mjs';
+import { findById, loadFile } from './helpers.mjs';
 
 const nestedDiagramObjects = 'tests/fixtures/roundtrip/nested-diagram-objects.archimate';
 const sketchAndCanvas = 'tests/fixtures/roundtrip/sketch-and-canvas.archimate';
 const view = 'id-nested-view';
 const bounds = { x: 24, y: 48, width: 120, height: 55 };
 
-async function load(path: string): Promise<Archimate> {
-  return Archimate.fromXml(await readFile(path, 'utf8'));
-}
-
 /** A diagram child at any depth of a view. */
-function findViewChild(archimate: Archimate, viewId: string, id: string): ViewChild {
-  const find = (children: ViewChild[]): ViewChild | undefined => {
-    for (const child of children) {
-      const found = child.id === id ? child : find(child.children);
-      if (found) return found;
-    }
-    return undefined;
-  };
-  return find(archimate.getView(viewId)!.children)!;
-}
+const findViewChild = (archimate: Archimate, viewId: string, id: string) =>
+  findById(archimate.getView(viewId)!.children, id, child => child.children)!;
 
 /** The ids of the children of the view (parentId null) or of a diagram child, in order. */
 function childIds(archimate: Archimate, viewId: string, parentId: string | null): string[] {
@@ -32,7 +19,7 @@ function childIds(archimate: Archimate, viewId: string, parentId: string | null)
 
 describe('moveDiagramObject', () => {
   it('should move an object from the view into a group, at the end, keeping its id and connections', async () => {
-    const archimate = await load(nestedDiagramObjects);
+    const archimate = await loadFile(nestedDiagramObjects);
 
     expect(archimate.moveDiagramObject(view, 'id-db-object', 'id-group', bounds)).toEqual({ parentId: null, index: 3 });
 
@@ -48,7 +35,7 @@ describe('moveDiagramObject', () => {
   });
 
   it('should move an object out of a group onto the view, with what is nested in it', async () => {
-    const archimate = await load(nestedDiagramObjects);
+    const archimate = await loadFile(nestedDiagramObjects);
 
     expect(archimate.moveDiagramObject(view, 'id-group-api-object', null, bounds)).toEqual({ parentId: 'id-group', index: 0 });
 
@@ -59,7 +46,7 @@ describe('moveDiagramObject', () => {
   });
 
   it('should move an object with connections from deep inside one element into another element', async () => {
-    const archimate = await load(nestedDiagramObjects);
+    const archimate = await loadFile(nestedDiagramObjects);
 
     expect(archimate.moveDiagramObject(view, 'id-api-object', 'id-server-object', bounds)).toEqual({
       parentId: 'id-portal-object',
@@ -80,7 +67,7 @@ describe('moveDiagramObject', () => {
   });
 
   it('should put the object at options.index among the parent’s other children', async () => {
-    const archimate = await load(nestedDiagramObjects);
+    const archimate = await loadFile(nestedDiagramObjects);
 
     archimate.moveDiagramObject(view, 'id-db-object', 'id-group', bounds, { index: 0 });
 
@@ -88,7 +75,7 @@ describe('moveDiagramObject', () => {
   });
 
   it('should reorder within the same parent, counting the index among the other children', async () => {
-    const archimate = await load(nestedDiagramObjects);
+    const archimate = await loadFile(nestedDiagramObjects);
     const noteBounds = findViewChild(archimate, view, 'id-note').bounds;
 
     expect(archimate.moveDiagramObject(view, 'id-note', null, noteBounds, { index: 0 })).toEqual({ parentId: null, index: 4 });
@@ -100,7 +87,7 @@ describe('moveDiagramObject', () => {
   });
 
   it('should put the object back exactly when called again with what it returned', async () => {
-    const archimate = await load(nestedDiagramObjects);
+    const archimate = await loadFile(nestedDiagramObjects);
     const original = archimate.toXml();
 
     for (const [id, parentId] of [
@@ -118,7 +105,7 @@ describe('moveDiagramObject', () => {
   });
 
   it('should move groups, notes and view references, and nest a group in a group', async () => {
-    const archimate = await load(nestedDiagramObjects);
+    const archimate = await loadFile(nestedDiagramObjects);
     const inner = archimate.addGroup(view, 'Inner', bounds)!;
 
     expect(archimate.moveDiagramObject(view, inner.id, 'id-group', bounds)).not.toBeNull();
@@ -130,7 +117,7 @@ describe('moveDiagramObject', () => {
   });
 
   it('should move into sketch stickies and canvas blocks', async () => {
-    const archimate = await load(sketchAndCanvas);
+    const archimate = await loadFile(sketchAndCanvas);
 
     expect(archimate.moveDiagramObject('id-sketch', 'id-sketch-actor', 'id-sticky', bounds)).toEqual({ parentId: null, index: 1 });
     expect(childIds(archimate, 'id-sketch', 'id-sticky')).toEqual(['id-sketch-actor']);
@@ -140,8 +127,8 @@ describe('moveDiagramObject', () => {
   });
 
   it('should return null and change nothing when the move is refused', async () => {
-    const archimate = await load(nestedDiagramObjects);
-    const sketch = await load(sketchAndCanvas);
+    const archimate = await loadFile(nestedDiagramObjects);
+    const sketch = await loadFile(sketchAndCanvas);
     const other = archimate.createView('Other');
     const otherGroup = archimate.addGroup(other.id, 'Elsewhere', bounds)!;
     const original = archimate.toXml();
@@ -168,7 +155,7 @@ describe('moveDiagramObject', () => {
   });
 
   it('should throw a RangeError for an index outside the parent’s other children, and change nothing', async () => {
-    const archimate = await load(nestedDiagramObjects);
+    const archimate = await loadFile(nestedDiagramObjects);
     const original = archimate.toXml();
 
     for (const index of [-1, 2, 1.5, Number.NaN]) {

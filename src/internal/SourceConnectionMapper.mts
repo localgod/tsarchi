@@ -2,6 +2,7 @@ import type { SourceConnection as SchemaSourceConnection } from '../interfaces/s
 import type { SourceConnection } from '../interfaces/SourceConnection.mjs';
 import { DiagramAttributeMapper, connectionAttributes, connectionFeatures } from './DiagramAttributeMapper.mjs';
 import { toXsiType, typeFromXsiType } from '../constants/archimate-mappings.mjs';
+import { toArray } from './Arrays.mjs';
 import { propertiesToSchema, schemaToOptionalProperties } from './PropertyMapper.mjs';
 
 /**
@@ -85,15 +86,11 @@ export class SourceConnectionMapper {
     return { '@_xsi:type': toXsiType(b.type), ...connection };
   }
 
-  public static schemaToSourceConnections(b: SchemaSourceConnection | SchemaSourceConnection[]): SourceConnection | SourceConnection[] {
-    return Array.isArray(b)
-      ? b.map(connection => SourceConnectionMapper.schemaToSourceConnection(connection))
-      : SourceConnectionMapper.schemaToSourceConnection(b);
+  public static schemaToSourceConnections(b: SchemaSourceConnection | SchemaSourceConnection[]): SourceConnection[] {
+    return toArray(b).map(connection => SourceConnectionMapper.schemaToSourceConnection(connection));
   }
 
-  public static toSchemaSourceConnections(b: SourceConnection | SourceConnection[]): SchemaSourceConnection | SchemaSourceConnection[] {
-    return Array.isArray(b)
-      ? b.map(connection => SourceConnectionMapper.toSchemaSourceConnection(connection))
-      : SourceConnectionMapper.toSchemaSourceConnection(b);
+  public static toSchemaSourceConnections(connections: SourceConnection[]): SchemaSourceConnection[] {
+    return connections.map(connection => SourceConnectionMapper.toSchemaSourceConnection(connection));
   }
 }

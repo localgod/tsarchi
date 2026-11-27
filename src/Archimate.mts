@@ -21,7 +21,6 @@ import { serializeDrawio } from './internal/DrawioSerializer.mjs';
 import { ViewManager } from './internal/ViewManager.mjs';
 import { ModelIndex, relationshipsByEndpoint } from './internal/ModelIndex.mjs';
 import { removeFromNestedFolders } from './internal/NestedFolders.mjs';
-import { toArray } from './internal/Arrays.mjs';
 import { deepCopy } from './internal/Copy.mjs';
 import { randomArchiId } from './internal/Ids.mjs';
 import { readSnapshot, writeSnapshot } from './internal/Snapshot.mjs';
@@ -856,8 +855,8 @@ export class Archimate {
 
   private usesCanvasTypes(): boolean {
     const canvasTypes: readonly string[] = canvasModelTypes;
-    const hasCanvasType = (children: Child[] | Child | undefined): boolean =>
-      toArray(children).some(child => canvasTypes.includes(child.type) || hasCanvasType(child.child));
+    const hasCanvasType = (children: Child[] | undefined): boolean =>
+      (children ?? []).some(child => canvasTypes.includes(child.type) || hasCanvasType(child.child));
     return (this.model.diagrams.elements || []).some(view => canvasTypes.includes(view.type) || hasCanvasType(view.child));
   }
 
@@ -1646,7 +1645,7 @@ export class Archimate {
       const viewPath = `folder.diagrams.elements[${viewIndex}]`;
       if (!viewElement.child) continue;
 
-      const children = toArray(viewElement.child);
+      const children = viewElement.child ?? [];
       const childIds = new Set<string>();
       const connectionIds = new Set<string>();
 

@@ -1,7 +1,6 @@
 import type { Element } from '../interfaces/Element.mjs';
 import type { Child } from '../interfaces/Child.mjs';
 import type { SourceConnection } from '../interfaces/SourceConnection.mjs';
-import { toArray } from './Arrays.mjs';
 import { deepCopy } from './Copy.mjs';
 import { splitIds } from './ViewChildMapper.mjs';
 
@@ -19,12 +18,12 @@ export function copyView(view: Element, newId: () => string): Element {
     collectUnrecognizedIds(owner.unrecognized, ids, newId);
   };
   collectUnrecognizedIds(copy.unrecognized, ids, newId);
-  forEachObject(toArray(copy.child), collect, collect);
+  forEachObject(copy.child ?? [], collect, collect);
 
   copy.id = ids.get(view.id)!;
   rewriteUnrecognized(copy.unrecognized, ids);
   forEachObject(
-    toArray(copy.child),
+    copy.child ?? [],
     child => {
       rewriteIds(child, ids);
       if (child.model === view.id) child.model = copy.id;
@@ -45,13 +44,13 @@ function forEachObject(children: Child[], onChild: (child: Child) => void, onCon
   const visitConnections = (connections: SourceConnection[]): void => {
     for (const connection of connections) {
       onConnection(connection);
-      visitConnections(toArray(connection.sourceConnection));
+      visitConnections(connection.sourceConnection ?? []);
     }
   };
   for (const child of children) {
     onChild(child);
-    visitConnections(toArray(child.sourceConnection));
-    forEachObject(toArray(child.child), onChild, onConnection);
+    visitConnections(child.sourceConnection ?? []);
+    forEachObject(child.child ?? [], onChild, onConnection);
   }
 }
 

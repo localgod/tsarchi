@@ -9,7 +9,8 @@ export interface Element {
   documentation?: string;
   source?: string;
   target?: string;
-  child?: Child | Child[];
+  /** The diagram children of a view. */
+  child?: Child[];
   /** The `<property>` entries in file order. A key may appear more than once, as Archi allows. */
   properties?: Property[];
   /** `<feature>` entries (Archi's `IFeatures`), in file order. */

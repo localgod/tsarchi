@@ -31,7 +31,7 @@ export interface Child {
   notes?: string;
   bounds: Bounds;
   child?: Child[];
-  sourceConnection?: SourceConnection | SourceConnection[];
+  sourceConnection?: SourceConnection[];
   documentation?: string;
   /** The `<property>` entries in file order. A key may appear more than once, as Archi allows. */
   properties?: Property[];

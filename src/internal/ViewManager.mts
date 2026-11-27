@@ -6,7 +6,6 @@ import type { Model } from '../interfaces/Model.mjs';
 import type { Bounds } from '../interfaces/Bounds.mjs';
 import { isArchimateViewType } from '../constants/archimate-mappings.mjs';
 import { removeFromNestedFolders } from './NestedFolders.mjs';
-import { toArray } from './Arrays.mjs';
 import { deepCopy } from './Copy.mjs';
 import { randomArchiId } from './Ids.mjs';
 import { ModelIndex } from './ModelIndex.mjs';
@@ -214,7 +213,7 @@ export class ViewManager {
       ...options,
     };
 
-    sourceObject.sourceConnection = [...toArray(sourceObject.sourceConnection), connection];
+    sourceObject.sourceConnection = [...(sourceObject.sourceConnection ?? []), connection];
     targetObject.targetConnections = [...splitIds(targetObject.targetConnections), connection.id].join(' ');
     this.index.addId(connection.id);
 
@@ -262,7 +261,7 @@ export class ViewManager {
    */
   removeDiagramObject(viewId: string, diagramObjectId: string): string[] {
     const viewElement = this.findView(viewId);
-    if (!viewElement || !this.findChild(toArray(viewElement.child), diagramObjectId)) return [];
+    if (!viewElement || !this.findChild(viewElement.child ?? [], diagramObjectId)) return [];
 
     const removedIds = removeViewChildren(viewElement, child => child.id === diagramObjectId);
     this.index.clear();
@@ -275,7 +274,7 @@ export class ViewManager {
    */
   removeConnection(viewId: string, connectionId: string): string[] {
     const viewElement = this.findView(viewId);
-    if (!viewElement || !this.hasConnection(toArray(viewElement.child), connectionId)) return [];
+    if (!viewElement || !this.hasConnection(viewElement.child ?? [], connectionId)) return [];
 
     const removedIds = removeViewConnections(viewElement, connection => connection.id === connectionId);
     this.index.clear();
@@ -318,24 +317,24 @@ export class ViewManager {
     if (!viewElement) return null;
     const from = this.locateChild(viewElement, null, diagramObjectId);
     if (!from) return null;
-    const moved = toArray(from.owner.child)[from.index];
+    const moved = (from.owner.child ?? [])[from.index];
 
     let newOwner: Element | Child = viewElement;
     if (parentId !== null) {
-      const parent = this.findChild(toArray(viewElement.child), parentId);
+      const parent = this.findChild(viewElement.child ?? [], parentId);
       // The parent must be a container, and not the moved child or anything nested in it.
       if (!parent || !containerTypes.has(parent.type) || parent === moved || this.findChild(moved.child, parentId)) return null;
       newOwner = parent;
     }
 
-    const otherChildren = toArray(newOwner.child).length - (newOwner === from.owner ? 1 : 0);
+    const otherChildren = (newOwner.child ?? []).length - (newOwner === from.owner ? 1 : 0);
     const index = options?.index ?? otherChildren;
     if (!Number.isInteger(index) || index < 0 || index > otherChildren) {
       throw new RangeError(`index must be an integer from 0 to ${otherChildren}, got ${index}`);
     }
 
-    from.owner.child = toArray(from.owner.child).filter((_, i) => i !== from.index);
-    const siblings = toArray(newOwner.child);
+    from.owner.child = (from.owner.child ?? []).filter((_, i) => i !== from.index);
+    const siblings = newOwner.child ?? [];
     siblings.splice(index, 0, moved);
     newOwner.child = siblings;
     moved.bounds = { ...bounds };
@@ -392,7 +391,7 @@ export class ViewManager {
    * The view's top-level children, stored as an array so they can be added to.
    */
   private childrenOf(viewElement: Element): Child[] {
-    const children = toArray(viewElement.child);
+    const children = viewElement.child ?? [];
     viewElement.child = children;
     return children;
   }
@@ -418,7 +417,7 @@ export class ViewManager {
     ownerId: string | null,
     childId: string
   ): { owner: Element | Child; ownerId: string | null; index: number } | null {
-    const children = toArray(owner.child);
+    const children = owner.child ?? [];
     const index = children.findIndex(child => child.id === childId);
     if (index >= 0) return { owner, ownerId, index };
     for (const child of children) {
@@ -465,7 +464,7 @@ export class ViewManager {
       name: element.name,
       type,
       documentation: element.documentation,
-      children: toArray(element.child).map(toViewChild),
+      children: (element.child ?? []).map(toViewChild),
       properties: element.properties && element.properties.map(property => ({ ...property })),
     };
     if (element.viewpoint !== undefined) view.viewpoint = element.viewpoint;

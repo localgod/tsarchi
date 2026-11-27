@@ -22,7 +22,8 @@ import type { ArchimateModelType } from '../constants/archimate-mappings.mjs';
 import { ArchimateParseError } from '../interfaces/ArchimateParseError.mjs';
 import { folderType, toXsiType, typeFromXsiType } from '../constants/archimate-mappings.mjs';
 import {
-  DiagramAttributeMapper,
+  readFeatures,
+  writeFeatures,
   childAttributes,
   childFeatures,
   childTextElements,
@@ -242,7 +243,7 @@ function writeChild(child: Child): ChildSnapshot {
     if (child[key]) snapshot[key] = String(child[key]);
   }
   setPropertyEntries(snapshot, child.properties);
-  setEntries(snapshot, 'features', DiagramAttributeMapper.writeFeatures(child, child.features, childFeatures));
+  setEntries(snapshot, 'features', writeFeatures(child, child.features, childFeatures));
   if (child.child && child.child.length > 0) snapshot.children = child.child.map(writeChild);
   const connections = child.sourceConnection ?? [];
   if (connections.length > 0) snapshot.connections = connections.map(writeConnection);
@@ -268,7 +269,7 @@ function writeConnection(connection: SourceConnection): ConnectionSnapshot {
     });
   }
   setPropertyEntries(snapshot, connection.properties);
-  setEntries(snapshot, 'features', DiagramAttributeMapper.writeFeatures(connection, connection.features, connectionFeatures));
+  setEntries(snapshot, 'features', writeFeatures(connection, connection.features, connectionFeatures));
   const connections = connection.sourceConnection ?? [];
   if (connections.length > 0) snapshot.connections = connections.map(writeConnection);
   setOpaque(snapshot, connection.unrecognized);
@@ -621,7 +622,7 @@ function readChild(value: unknown, path: string): Child {
   child.type = readString(source.type, `${path}.type`);
   readAttributes(child, source, childAttributes, path);
   const features = readOptionalEntries(source.features, `${path}.features`);
-  Object.assign(child, DiagramAttributeMapper.readFeatures(features, childFeatures));
+  Object.assign(child, readFeatures(features, childFeatures));
   const bounds = readObject(source.bounds, `${path}.bounds`, boundsKeySet);
   child.bounds = { x: 0, y: 0, width: 0, height: 0 };
   for (const key of boundsKeys) child.bounds[key] = readNumber(bounds[key], `${path}.bounds.${key}`);
@@ -678,7 +679,7 @@ function readConnection(value: unknown, path: string): SourceConnection {
   if (properties.length > 0) connection.properties = properties;
   const features = readOptionalEntries(source.features, `${path}.features`);
   if (features) {
-    Object.assign(connection, DiagramAttributeMapper.readFeatures(features, connectionFeatures));
+    Object.assign(connection, readFeatures(features, connectionFeatures));
     connection.features = features;
   }
   if (source.connections !== undefined) connection.sourceConnection = readConnections(source.connections, `${path}.connections`);

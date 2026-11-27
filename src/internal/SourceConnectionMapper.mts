@@ -1,6 +1,18 @@
 import type { SourceConnection as SchemaSourceConnection } from '../interfaces/schema/SourceConnection.mjs';
 import type { SourceConnection } from '../interfaces/SourceConnection.mjs';
-import { DiagramAttributeMapper, connectionAttributes, connectionFeatures } from './DiagramAttributeMapper.mjs';
+import {
+  bendpointsToSchema,
+  featuresToSchema,
+  readAttributes,
+  readFeatures,
+  readUnrecognized,
+  schemaToBendpoints,
+  schemaToFeatures,
+  writeAttributes,
+  writeFeatures,
+  connectionAttributes,
+  connectionFeatures,
+} from './DiagramAttributeMapper.mjs';
 import { toXsiType, typeFromXsiType } from '../constants/archimate-mappings.mjs';
 import { toArray } from './Arrays.mjs';
 import { propertiesToSchema, schemaToOptionalProperties } from './PropertyMapper.mjs';
@@ -27,70 +39,68 @@ const mappedConnectionKeys = new Set([
   'sourceConnection',
 ]);
 
-export class SourceConnectionMapper {
-  public static schemaToSourceConnection(b: SchemaSourceConnection): SourceConnection {
-    const xsiType = b['@_xsi:type'];
-    const connection: SourceConnection = {
-      id: b['@_id'],
-      archimateRelationship: b['@_archimateRelationship'],
-      source: b['@_source'],
-      target: b['@_target'],
-      type: xsiType ? typeFromXsiType(xsiType) : DEFAULT_CONNECTION_TYPE,
-      ...DiagramAttributeMapper.readAttributes(b, connectionAttributes),
-    };
-    if (!xsiType) {
-      connection.implicitType = true;
-    }
-    if (b.documentation !== undefined) {
-      connection.documentation = String(b.documentation);
-    }
-    const bendpoints = DiagramAttributeMapper.schemaToBendpoints(b.bendpoint);
-    if (bendpoints) connection.bendpoints = bendpoints;
-    const properties = schemaToOptionalProperties(b.property);
-    if (properties) connection.properties = properties;
-    const features = DiagramAttributeMapper.schemaToFeatures(b.feature);
-    if (features) {
-      Object.assign(connection, DiagramAttributeMapper.readFeatures(features, connectionFeatures));
-      connection.features = features;
-    }
-    if (b.sourceConnection) {
-      connection.sourceConnection = SourceConnectionMapper.schemaToSourceConnections(b.sourceConnection);
-    }
-    const unrecognized = DiagramAttributeMapper.readUnrecognized(b, mappedConnectionKeys);
-    if (unrecognized) connection.unrecognized = unrecognized;
+export function schemaToSourceConnection(b: SchemaSourceConnection): SourceConnection {
+  const xsiType = b['@_xsi:type'];
+  const connection: SourceConnection = {
+    id: b['@_id'],
+    archimateRelationship: b['@_archimateRelationship'],
+    source: b['@_source'],
+    target: b['@_target'],
+    type: xsiType ? typeFromXsiType(xsiType) : DEFAULT_CONNECTION_TYPE,
+    ...readAttributes(b, connectionAttributes),
+  };
+  if (!xsiType) {
+    connection.implicitType = true;
+  }
+  if (b.documentation !== undefined) {
+    connection.documentation = String(b.documentation);
+  }
+  const bendpoints = schemaToBendpoints(b.bendpoint);
+  if (bendpoints) connection.bendpoints = bendpoints;
+  const properties = schemaToOptionalProperties(b.property);
+  if (properties) connection.properties = properties;
+  const features = schemaToFeatures(b.feature);
+  if (features) {
+    Object.assign(connection, readFeatures(features, connectionFeatures));
+    connection.features = features;
+  }
+  if (b.sourceConnection) {
+    connection.sourceConnection = schemaToSourceConnections(b.sourceConnection);
+  }
+  const unrecognized = readUnrecognized(b, mappedConnectionKeys);
+  if (unrecognized) connection.unrecognized = unrecognized;
+  return connection;
+}
+
+export function toSchemaSourceConnection(b: SourceConnection): SchemaSourceConnection {
+  const connection: SchemaSourceConnection = {
+    '@_id': b.id,
+    '@_source': b.source,
+    '@_target': b.target,
+    '@_archimateRelationship': b.archimateRelationship,
+    ...writeAttributes(b, connectionAttributes),
+  };
+  if (b.documentation) connection.documentation = b.documentation;
+  const bendpoint = bendpointsToSchema(b.bendpoints);
+  if (bendpoint) connection.bendpoint = bendpoint;
+  const property = propertiesToSchema(b.properties);
+  if (property) connection.property = property;
+  const feature = featuresToSchema(writeFeatures(b, b.features, connectionFeatures));
+  if (feature) connection.feature = feature;
+  if (b.sourceConnection) {
+    connection.sourceConnection = toSchemaSourceConnections(b.sourceConnection);
+  }
+  Object.assign(connection, b.unrecognized);
+  if (b.implicitType && b.type === DEFAULT_CONNECTION_TYPE) {
     return connection;
   }
+  return { '@_xsi:type': toXsiType(b.type), ...connection };
+}
 
-  public static toSchemaSourceConnection(b: SourceConnection): SchemaSourceConnection {
-    const connection: SchemaSourceConnection = {
-      '@_id': b.id,
-      '@_source': b.source,
-      '@_target': b.target,
-      '@_archimateRelationship': b.archimateRelationship,
-      ...DiagramAttributeMapper.writeAttributes(b, connectionAttributes),
-    };
-    if (b.documentation) connection.documentation = b.documentation;
-    const bendpoint = DiagramAttributeMapper.bendpointsToSchema(b.bendpoints);
-    if (bendpoint) connection.bendpoint = bendpoint;
-    const property = propertiesToSchema(b.properties);
-    if (property) connection.property = property;
-    const feature = DiagramAttributeMapper.featuresToSchema(DiagramAttributeMapper.writeFeatures(b, b.features, connectionFeatures));
-    if (feature) connection.feature = feature;
-    if (b.sourceConnection) {
-      connection.sourceConnection = SourceConnectionMapper.toSchemaSourceConnections(b.sourceConnection);
-    }
-    Object.assign(connection, b.unrecognized);
-    if (b.implicitType && b.type === DEFAULT_CONNECTION_TYPE) {
-      return connection;
-    }
-    return { '@_xsi:type': toXsiType(b.type), ...connection };
-  }
+export function schemaToSourceConnections(b: SchemaSourceConnection | SchemaSourceConnection[]): SourceConnection[] {
+  return toArray(b).map(connection => schemaToSourceConnection(connection));
+}
 
-  public static schemaToSourceConnections(b: SchemaSourceConnection | SchemaSourceConnection[]): SourceConnection[] {
-    return toArray(b).map(connection => SourceConnectionMapper.schemaToSourceConnection(connection));
-  }
-
-  public static toSchemaSourceConnections(connections: SourceConnection[]): SchemaSourceConnection[] {
-    return connections.map(connection => SourceConnectionMapper.toSchemaSourceConnection(connection));
-  }
+export function toSchemaSourceConnections(connections: SourceConnection[]): SchemaSourceConnection[] {
+  return connections.map(connection => toSchemaSourceConnection(connection));
 }

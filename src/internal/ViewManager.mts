@@ -7,7 +7,6 @@ import type { Bounds } from '../interfaces/Bounds.mjs';
 import { isArchimateViewType } from '../constants/archimate-mappings.mjs';
 import { removeFromNestedFolders } from './NestedFolders.mjs';
 import { deepCopy } from './Copy.mjs';
-import { randomArchiId } from './Ids.mjs';
 import { ModelIndex, viewChildIds } from './ModelIndex.mjs';
 import { assertOptionalCode } from './Codes.mjs';
 import { ConnectionTextPosition, DiagramObjectFigure, TextAlignment, Viewpoint } from '../constants/archi-codes.mjs';
@@ -36,10 +35,10 @@ export class ViewManager {
   /** Lookups by id, shared with the Archimate that owns the model; the methods below keep it current. */
   private index: ModelIndex;
 
-  constructor(model: Model, generateUniqueId?: () => string, index?: ModelIndex) {
+  constructor(model: Model, generateUniqueId: () => string, index: ModelIndex) {
     this.model = model;
-    this.generateUniqueId = generateUniqueId || randomArchiId;
-    this.index = index || new ModelIndex(() => model);
+    this.generateUniqueId = generateUniqueId;
+    this.index = index;
   }
 
   /**

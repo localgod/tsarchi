@@ -7,7 +7,7 @@ import type { Element } from './interfaces/Element.mjs';
 import type { Folder, FolderDetails } from './interfaces/Folder.mjs';
 import type { Relationship, RelationshipInput } from './interfaces/Relationship.mjs';
 import type { Child } from './interfaces/Child.mjs';
-import type { View } from './interfaces/View.mjs';
+import type { View, ViewConnection, ViewDiagramObject, ViewGroup } from './interfaces/View.mjs';
 import type { SourceConnection } from './interfaces/SourceConnection.mjs';
 import type { Bounds } from './interfaces/Bounds.mjs';
 import type { DrawioOptions } from './interfaces/DrawioOptions.mjs';
@@ -67,14 +67,14 @@ type PendingIssue = Omit<ValidationIssue, 'severity'>;
 /** Relationship types the relationships matrix has rules for. */
 const matrixRelationshipTypes: ReadonlySet<string> = new Set(Object.values(relationshipMatrixKeys));
 
-/** A deep copy of a stored object, so that what the API returns cannot change the model. */
-const copy = <T,>(value: T): T => deepCopy(value);
-
 /**
- * A deep copy of a stored element, relationship or view, much faster than `copy` on large models. Most values are
- * strings, numbers and booleans; the Maps hold strings only, so a new Map is a deep copy. Any other object (a
- * view's `child` tree, `unrecognized`) is copied with `deepCopy`.
+ * A deep copy of a stored element, relationship or view, much faster than `deepCopy` on large models. Most values are
+ * strings, numbers and booleans; the `features` Map holds strings only, so a new Map is a deep copy. Any other object
+ * (`properties`, `profiles`, a view's `child` tree, `unrecognized`) is copied with `deepCopy`.
  */
+
+/** Types written in the canvas namespace, as a set for the lookups while saving. */
+const canvasTypes: ReadonlySet<string> = new Set(canvasModelTypes);
 const copyElement = <T extends Element>(element: T): T => {
   const result = { ...element } as Record<string, unknown>;
   for (const key in result) {
@@ -429,7 +429,7 @@ export class Archimate {
       source: relationship.source,
       target: relationship.target,
       documentation: relationship.documentation,
-      properties: relationship.properties && copyProperties(relationship.properties),
+      properties: relationship.properties,
     };
     if (relationship.accessType !== undefined) newRelationship.accessType = relationship.accessType;
     if (relationship.directed !== undefined) newRelationship.directed = relationship.directed;
@@ -449,7 +449,7 @@ export class Archimate {
    */
   public listElements(): Element[] {
     return (Object.keys(this.model) as FolderKey[])
-      .filter(folderKey => folderKey !== 'relations' && folderKey !== 'diagrams')
+      .filter(isConceptElement)
       .flatMap(folderKey => this.model[folderKey].elements || [])
       .map(copyElement);
   }
@@ -830,7 +830,7 @@ export class Archimate {
    * Returns copies of the specializations defined on the model, in file order.
    */
   public getProfiles(): Profile[] {
-    return (this.content.profiles ?? []).map(copy);
+    return (this.content.profiles ?? []).map(deepCopy);
   }
 
   /**
@@ -838,7 +838,7 @@ export class Archimate {
    */
   public getProfile(profileId: string): Profile | null {
     const profile = this.content.profiles?.find(profile => profile.id === profileId);
-    return profile ? copy(profile) : null;
+    return profile ? deepCopy(profile) : null;
   }
 
   /**
@@ -846,7 +846,7 @@ export class Archimate {
    * `Element.profiles`; validateModel() reports references to profiles that do not exist.
    */
   public setProfiles(profiles: Profile[] | undefined): void {
-    this.content.profiles = profiles && profiles.length > 0 ? profiles.map(copy) : undefined;
+    this.content.profiles = profiles && profiles.length > 0 ? profiles.map(deepCopy) : undefined;
     this.index.clear();
   }
 
@@ -862,10 +862,9 @@ export class Archimate {
   }
 
   private usesCanvasTypes(): boolean {
-    const canvasTypes: readonly string[] = canvasModelTypes;
     const hasCanvasType = (children: Child[] | undefined): boolean =>
-      (children ?? []).some(child => canvasTypes.includes(child.type) || hasCanvasType(child.child));
-    return (this.model.diagrams.elements || []).some(view => canvasTypes.includes(view.type) || hasCanvasType(view.child));
+      (children ?? []).some(child => canvasTypes.has(child.type) || hasCanvasType(child.child));
+    return (this.model.diagrams.elements || []).some(view => canvasTypes.has(view.type) || hasCanvasType(view.child));
   }
 
   // View Management API
@@ -915,7 +914,7 @@ export class Archimate {
       textAlignment?: number;
       figure?: number;
     }
-  ) {
+  ): ViewDiagramObject | null {
     return this.viewManager.addDiagramObject(viewId, elementId, bounds, options);
   }
 
@@ -932,7 +931,7 @@ export class Archimate {
       textAlignment?: number;
       documentation?: string;
     }
-  ) {
+  ): ViewGroup | null {
     return this.viewManager.addGroup(viewId, name, bounds, options);
   }
 
@@ -950,7 +949,7 @@ export class Archimate {
       fontColor?: string;
       textPosition?: number;
     }
-  ) {
+  ): ViewConnection | null {
     return this.viewManager.addConnection(viewId, sourceObjectId, targetObjectId, relationshipId, options);
   }
 
@@ -1085,7 +1084,7 @@ export class Archimate {
    * a nested folder lists the ids of the elements placed directly in it.
    */
   public getFolders(folderKey: FolderKey): Folder[] {
-    return (this.topLevelFolder(folderKey).folders || []).map(copy);
+    return (this.topLevelFolder(folderKey).folders || []).map(deepCopy);
   }
 
   /**

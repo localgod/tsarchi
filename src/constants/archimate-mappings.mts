@@ -105,6 +105,8 @@ export const canvasModelTypes = [
   'CanvasModelConnection',
 ] as const;
 
+const canvasTypeSet: ReadonlySet<string> = new Set(canvasModelTypes);
+
 export const archimateNamespace = 'http://www.archimatetool.com/archimate';
 export const canvasNamespace = 'http://www.archimatetool.com/archimate/canvas';
 
@@ -117,7 +119,7 @@ export function typeFromXsiType(xsiType: string): string {
     return xsiType.slice('archimate:'.length);
   }
   const type = xsiType.slice('canvas:'.length);
-  return xsiType.startsWith('canvas:') && (canvasModelTypes as readonly string[]).includes(type) ? type : xsiType;
+  return xsiType.startsWith('canvas:') && canvasTypeSet.has(type) ? type : xsiType;
 }
 
 export const archimateModelTypes = [
@@ -224,7 +226,7 @@ export const elementTypeToFolderKey: Map<ArchimateModelType, FolderKey> = new Ma
  */
 export function toXsiType(type: string): string {
   if (type.includes(':')) return type;
-  return (canvasModelTypes as readonly string[]).includes(type) ? `canvas:${type}` : `archimate:${type}`;
+  return canvasTypeSet.has(type) ? `canvas:${type}` : `archimate:${type}`;
 }
 
 /**

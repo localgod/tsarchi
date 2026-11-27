@@ -4,7 +4,7 @@ import { XMLParser } from 'fast-xml-parser';
 import { Archimate } from '../src/Archimate.mjs';
 import type { Schema } from '../src/interfaces/schema/Schema.mjs';
 import type { SourceConnection as SchemaSourceConnection } from '../src/interfaces/schema/SourceConnection.mjs';
-import { SourceConnectionMapper } from '../src/internal/SourceConnectionMapper.mjs';
+import { schemaToSourceConnection, toSchemaSourceConnection } from '../src/internal/SourceConnectionMapper.mjs';
 import type { Child } from '../src/interfaces/Child.mjs';
 import { archimateFromSchema, archimateToSchema } from '../src/internal/SchemaAccess.mjs';
 import { toArray } from '../src/internal/Arrays.mjs';
@@ -152,15 +152,15 @@ describe('Archi-produced models', () => {
   });
 
   it('should default a missing connection xsi:type to Connection', () => {
-    const connection = SourceConnectionMapper.schemaToSourceConnection({
+    const connection = schemaToSourceConnection({
       '@_id': 'c1',
       '@_source': 's1',
       '@_target': 't1',
     } as SchemaSourceConnection);
 
     expect(connection).toMatchObject({ id: 'c1', type: 'Connection', implicitType: true });
-    expect(SourceConnectionMapper.toSchemaSourceConnection(connection)).not.toHaveProperty('@_xsi:type');
-    expect(SourceConnectionMapper.toSchemaSourceConnection({ ...connection, type: 'DiagramModelReference' })).toHaveProperty(
+    expect(toSchemaSourceConnection(connection)).not.toHaveProperty('@_xsi:type');
+    expect(toSchemaSourceConnection({ ...connection, type: 'DiagramModelReference' })).toHaveProperty(
       '@_xsi:type',
       'archimate:DiagramModelReference'
     );

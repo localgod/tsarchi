@@ -15,6 +15,7 @@ This project adheres to [Keep a CHANGELOG](http://keepachangelog.com/)
 
 ### Changed
 
+- Internal simplifications with no change to the public API or to saved files: the attribute, connection and bounds mappers are plain functions, `ViewManager` takes its id source and index as required arguments, and the schema types match what fast-xml-parser returns. `npm run format` passes again ([#565](https://github.com/localgod/tsarchi/issues/565)).
 - Faster edits on large models: `removeDiagramObject`, `removeConnection`, `removeFromView`, `deleteView`, `deleteElement`, `deleteRelationship` and `duplicateView` keep the model's id lookups current instead of rebuilding them, and `findRelationshipsBetween` looks relationships up by endpoint. On a model with 20k elements and 200 views, removing a diagram object went from 3.8 ms to 0.03 ms, deleting an element from 5.6 ms to 1.3 ms and `findRelationshipsBetween` from 0.36 ms to 0.006 ms. Loading skips decoding for values with nothing to decode ([#563](https://github.com/localgod/tsarchi/issues/563)).
 - ⚠️ Breaking: the `TsArchi` class is replaced by two functions from `tsarchi/node`: `loadModel(path)` and `saveModel(model, path)`, which saves any model rather than the one the instance last loaded ([#561](https://github.com/localgod/tsarchi/issues/561)).
 - ⚠️ Breaking: `addDiagramObjectToGroup` is removed; use `addDiagramObject` with `parentId` ([#559](https://github.com/localgod/tsarchi/issues/559)).

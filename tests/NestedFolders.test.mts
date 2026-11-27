@@ -9,6 +9,8 @@ import type { FolderKey, Model } from '../src/interfaces/Model.mjs';
 import { ViewManager } from '../src/internal/ViewManager.mjs';
 import { archimateFromSchema, archimateToSchema } from '../src/internal/SchemaAccess.mjs';
 import { toArray } from '../src/internal/Arrays.mjs';
+import { ModelIndex } from '../src/internal/ModelIndex.mjs';
+import { randomArchiId } from '../src/internal/Ids.mjs';
 
 async function parseFile(path: string): Promise<Archimate> {
   const xml = await readFile(path, 'utf8');
@@ -143,7 +145,8 @@ describe('nested folders', () => {
       folders: [{ id: 'id-folder', name: 'Folder', elementIds: ['id-view'] }],
     };
 
-    expect(new ViewManager({ diagrams } as unknown as Model).deleteView('id-view')).toBe(true);
+    const model = { diagrams } as unknown as Model;
+    expect(new ViewManager(model, randomArchiId, new ModelIndex(() => model)).deleteView('id-view')).toBe(true);
 
     expect(diagrams.elements).toEqual([]);
     expect(diagrams.folders[0].elementIds).toEqual([]);

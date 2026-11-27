@@ -8,6 +8,8 @@ This project adheres to [Keep a CHANGELOG](http://keepachangelog.com/)
 
 ## [Unreleased]
 
+## [5.0.0] - 2026-11-27
+
 ### Added
 
 - A stable, lossless JSON format for a model: `toJson()` and `Archimate.fromJson()`, `loadModelJson()` and `saveModelJson()` in `tsarchi/node`, the `ModelJson` types and a JSON Schema (`modelJsonSchema`, `tsarchi/schema/model-v1.json`). Concepts are flat lists sorted by id, folders list their members, codes are named, and the text is the same for the same model, for storing models in git. `ArchimateParseError` has a new kind, `not-json` ([#550](https://github.com/localgod/tsarchi/issues/550)).
@@ -16,16 +18,16 @@ This project adheres to [Keep a CHANGELOG](http://keepachangelog.com/)
 
 ### Changed
 
-- Tests share their helpers in `tests/helpers.mts` instead of copies in each file, and the unused `tests/compare.mts` is removed: 354 fewer lines of test code, the same 513 tests ([#571](https://github.com/localgod/tsarchi/issues/571)).
-- The README describes the 5.0 API: a new introduction and feature list, a table of contents that matches its sections, a Browser Use section, accurate Error Handling, and the 1.x and 2.x upgrade notes left to this changelog. CONTRIBUTING describes `npm run format` and `npx vp check` correctly ([#567](https://github.com/localgod/tsarchi/issues/567)).
-- Internal simplifications with no change to the public API or to saved files: the attribute, connection and bounds mappers are plain functions, `ViewManager` takes its id source and index as required arguments, and the schema types match what fast-xml-parser returns. `npm run format` passes again ([#565](https://github.com/localgod/tsarchi/issues/565)).
-- Faster edits on large models: `removeDiagramObject`, `removeConnection`, `removeFromView`, `deleteView`, `deleteElement`, `deleteRelationship` and `duplicateView` keep the model's id lookups current instead of rebuilding them, and `findRelationshipsBetween` looks relationships up by endpoint. On a model with 20k elements and 200 views, removing a diagram object went from 3.8 ms to 0.03 ms, deleting an element from 5.6 ms to 1.3 ms and `findRelationshipsBetween` from 0.36 ms to 0.006 ms. Loading skips decoding for values with nothing to decode ([#563](https://github.com/localgod/tsarchi/issues/563)).
-- ⚠️ Breaking: the `TsArchi` class is replaced by two functions from `tsarchi/node`: `loadModel(path)` and `saveModel(model, path)`, which saves any model rather than the one the instance last loaded ([#561](https://github.com/localgod/tsarchi/issues/561)).
-- ⚠️ Breaking: `addDiagramObjectToGroup` is removed; use `addDiagramObject` with `parentId` ([#559](https://github.com/localgod/tsarchi/issues/559)).
 - ⚠️ Breaking: `properties` on models, folders, elements, relationships, views, diagram objects and view connections is a `Property[]` of `{ key, value }`, in file order, instead of a `Map<string, string>`, so a key can appear more than once, as Archi allows. `getProperties()` returns and `setProperties()` takes a list, and `updateElement()` and `upsertElement()` replace the whole list instead of merging it by key. See "Upgrading from 4.x" in the README ([#551](https://github.com/localgod/tsarchi/issues/551)).
-- ⚠️ Breaking: `Element.profiles`, `Child.targetConnections` and `SourceConnection.targetConnections` are `string[]` instead of space-separated strings, as `ViewChild.targetConnections` already was. Files are written as before, with the ids joined by single spaces ([#557](https://github.com/localgod/tsarchi/issues/557)).
-- ⚠️ Breaking: `Element.child`, `Child.sourceConnection` and `SourceConnection.sourceConnection` are arrays only (`Child[]`, `SourceConnection[]`), no longer a single object or an array. A single child or connection loads as a one-item array ([#555](https://github.com/localgod/tsarchi/issues/555)).
 - ⚠️ Breaking: `getMetadata()` returns and `setMetadata()` takes a `Property[]` instead of a `Map<string, string>`, as `ModelContent.metadata` now holds, so the property helpers work on it ([#553](https://github.com/localgod/tsarchi/issues/553)).
+- ⚠️ Breaking: `Element.child`, `Child.sourceConnection` and `SourceConnection.sourceConnection` are arrays only (`Child[]`, `SourceConnection[]`), no longer a single object or an array. A single child or connection loads as a one-item array ([#555](https://github.com/localgod/tsarchi/issues/555)).
+- ⚠️ Breaking: `Element.profiles`, `Child.targetConnections` and `SourceConnection.targetConnections` are `string[]` instead of space-separated strings, as `ViewChild.targetConnections` already was. Files are written as before, with the ids joined by single spaces ([#557](https://github.com/localgod/tsarchi/issues/557)).
+- ⚠️ Breaking: `addDiagramObjectToGroup` is removed; use `addDiagramObject` with `parentId` ([#559](https://github.com/localgod/tsarchi/issues/559)).
+- ⚠️ Breaking: the `TsArchi` class is replaced by two functions from `tsarchi/node`: `loadModel(path)` and `saveModel(model, path)`, which saves any model rather than the one the instance last loaded ([#561](https://github.com/localgod/tsarchi/issues/561)).
+- Faster edits on large models: `removeDiagramObject`, `removeConnection`, `removeFromView`, `deleteView`, `deleteElement`, `deleteRelationship` and `duplicateView` keep the model's id lookups current instead of rebuilding them, and `findRelationshipsBetween` looks relationships up by endpoint. On a model with 20k elements and 200 views, removing a diagram object went from 3.8 ms to 0.03 ms, deleting an element from 5.6 ms to 1.3 ms and `findRelationshipsBetween` from 0.36 ms to 0.006 ms. Loading skips decoding for values with nothing to decode ([#563](https://github.com/localgod/tsarchi/issues/563)).
+- Internal simplifications with no change to the public API or to saved files: the attribute, connection and bounds mappers are plain functions, `ViewManager` takes its id source and index as required arguments, and the schema types match what fast-xml-parser returns. `npm run format` passes again ([#565](https://github.com/localgod/tsarchi/issues/565)).
+- The README describes the 5.0 API: a new introduction and feature list, a table of contents that matches its sections, a Browser Use section, accurate Error Handling, and the 1.x and 2.x upgrade notes left to this changelog. CONTRIBUTING describes `npm run format` and `npx vp check` correctly ([#567](https://github.com/localgod/tsarchi/issues/567)).
+- Tests share their helpers in `tests/helpers.mts` instead of copies in each file, and the unused `tests/compare.mts` is removed: 354 fewer lines of test code, the same 513 tests ([#571](https://github.com/localgod/tsarchi/issues/571)).
 
 ### Fixed
 
@@ -298,7 +300,8 @@ Unpublished from npm. Its changes were released in 1.0.2.
 - A `sync` command-line script that loads a model from `-i` and saves it to `-o`.
 - The package contains the TypeScript sources only, without compiled JavaScript.
 
-[Unreleased]: https://github.com/localgod/tsarchi/compare/4.5.0...HEAD
+[Unreleased]: https://github.com/localgod/tsarchi/compare/5.0.0...HEAD
+[5.0.0]: https://github.com/localgod/tsarchi/compare/4.5.0...5.0.0
 [4.5.0]: https://github.com/localgod/tsarchi/compare/4.4.0...4.5.0
 [4.4.0]: https://github.com/localgod/tsarchi/compare/4.3.0...4.4.0
 [4.3.0]: https://github.com/localgod/tsarchi/compare/4.2.0...4.3.0

@@ -55,8 +55,8 @@ describe('model-level content', () => {
       { id: 'id-profile-contract', name: 'Contract', conceptType: 'AssignmentRelationship' },
       { id: 'id-profile-draft', name: 'Draft', conceptType: 'BusinessRole', specialization: false },
     ]);
-    expect(archimate.getElement('id-customer')?.profiles).toBe('id-profile-premium');
-    expect(archimate.getRelationship('id-rel-assignment')?.profiles).toBe('id-profile-contract');
+    expect(archimate.getElement('id-customer')?.profiles).toEqual(['id-profile-premium']);
+    expect(archimate.getRelationship('id-rel-assignment')?.profiles).toEqual(['id-profile-contract']);
   });
 
   it('should write model content set in code in the order Archi uses', () => {
@@ -65,7 +65,7 @@ describe('model-level content', () => {
     archimate.setMetadata([{ key: 'k', value: 'v' }]);
     archimate.setPurpose('Why');
     archimate.setProperties([{ key: 'p', value: '1' }]);
-    archimate.updateElement('id-customer', { profiles: 'id-profile' });
+    archimate.updateElement('id-customer', { profiles: ['id-profile'] });
 
     const model = archimateToSchema(archimate)['archimate:model'];
     expect(modelKeys(archimate)).toEqual(['folder', 'property', 'purpose', 'metadata', 'profile']);
@@ -81,8 +81,8 @@ describe('model-level content', () => {
     archimate.setMetadata(undefined);
     archimate.setProfiles(undefined);
     archimate.setPurpose(undefined);
-    archimate.updateElement('id-customer', { profiles: '' });
-    archimate.updateElement('id-rel-assignment', { profiles: '' });
+    archimate.updateElement('id-customer', { profiles: [] });
+    archimate.updateElement('id-rel-assignment', { profiles: [] });
 
     expect(modelKeys(archimate)).toEqual(['folder', 'feature']);
     expect(archimate.validateModel()).toEqual([]);

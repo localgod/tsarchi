@@ -22,6 +22,7 @@ import {
 } from './DiagramAttributeMapper.mjs';
 import type { AttributeSpec } from './DiagramAttributeMapper.mjs';
 import { toArray } from './Arrays.mjs';
+import { splitIds } from './Ids.mjs';
 import { schemaToOptionalProperties, schemaToProperties } from './PropertyMapper.mjs';
 
 const attributeKeys = (specs: readonly AttributeSpec[]) => specs.map(([, attribute]) => `@_${attribute}`);
@@ -223,8 +224,8 @@ export class Parser {
       child: schemaElement.child ? this.loadChildren(schemaElement.child) : undefined,
     };
 
-    const profiles = schemaElement['@_profiles'];
-    if (profiles !== undefined) element.profiles = profiles;
+    const profiles = splitIds(schemaElement['@_profiles']);
+    if (profiles.length > 0) element.profiles = profiles;
     Object.assign(
       element,
       DiagramAttributeMapper.readAttributes(schemaElement, viewAttributes),

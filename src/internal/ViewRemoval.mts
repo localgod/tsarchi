@@ -1,7 +1,6 @@
 import type { Element } from '../interfaces/Element.mjs';
 import type { Child } from '../interfaces/Child.mjs';
 import type { SourceConnection } from '../interfaces/SourceConnection.mjs';
-import { splitIds } from './ViewChildMapper.mjs';
 
 /**
  * The connections starting on a child, and every connection nested in them.
@@ -156,13 +155,13 @@ function removeTargetConnectionReferences(children: Child[], connectionIds: Set<
   }
 }
 
-function removeTargetConnectionReference(owner: { targetConnections?: string }, connectionIds: Set<string>): void {
-  const ids = splitIds(owner.targetConnections);
+function removeTargetConnectionReference(owner: { targetConnections?: string[] }, connectionIds: Set<string>): void {
+  const ids = owner.targetConnections ?? [];
   const kept = ids.filter(id => !connectionIds.has(id));
   if (kept.length === ids.length) return;
   if (kept.length === 0) {
     delete owner.targetConnections;
   } else {
-    owner.targetConnections = kept.join(' ');
+    owner.targetConnections = kept;
   }
 }

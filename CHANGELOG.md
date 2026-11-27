@@ -15,6 +15,7 @@ This project adheres to [Keep a CHANGELOG](http://keepachangelog.com/)
 ### Changed
 
 - ⚠️ Breaking: `properties` on models, folders, elements, relationships, views, diagram objects and view connections is a `Property[]` of `{ key, value }`, in file order, instead of a `Map<string, string>`, so a key can appear more than once, as Archi allows. `getProperties()` returns and `setProperties()` takes a list, and `updateElement()` and `upsertElement()` replace the whole list instead of merging it by key. See "Upgrading from 4.x" in the README ([#551](https://github.com/localgod/tsarchi/issues/551)).
+- ⚠️ Breaking: `Element.profiles`, `Child.targetConnections` and `SourceConnection.targetConnections` are `string[]` instead of space-separated strings, as `ViewChild.targetConnections` already was. Files are written as before, with the ids joined by single spaces ([#557](https://github.com/localgod/tsarchi/issues/557)).
 - ⚠️ Breaking: `Element.child`, `Child.sourceConnection` and `SourceConnection.sourceConnection` are arrays only (`Child[]`, `SourceConnection[]`), no longer a single object or an array. A single child or connection loads as a one-item array ([#555](https://github.com/localgod/tsarchi/issues/555)).
 - ⚠️ Breaking: `getMetadata()` returns and `setMetadata()` takes a `Property[]` instead of a `Map<string, string>`, as `ModelContent.metadata` now holds, so the property helpers work on it ([#553](https://github.com/localgod/tsarchi/issues/553)).
 

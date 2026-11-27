@@ -2,8 +2,11 @@ import type { Bendpoint as SchemaBendpoint } from '../interfaces/schema/Bendpoin
 import type { Feature as SchemaFeature } from '../interfaces/schema/Feature.mjs';
 import type { ViewBendpoint } from '../interfaces/View.mjs';
 import { toArray } from './Arrays.mjs';
+import { splitIds } from './Ids.mjs';
 
-type AttributeKind = 'string' | 'number' | 'boolean';
+/** `ids` is an attribute holding several ids separated by spaces, read as a string array. */
+type AttributeKind = 'string' | 'number' | 'boolean' | 'ids';
+type AttributeValue = string | number | boolean | string[];
 
 /**
  * Maps a model property to an XML attribute (without the '@_' prefix) and the value type it holds.
@@ -15,7 +18,7 @@ export type AttributeSpec = readonly [property: string, attribute: string, kind:
  */
 export const childAttributes: readonly AttributeSpec[] = [
   ['name', 'name', 'string'],
-  ['targetConnections', 'targetConnections', 'string'],
+  ['targetConnections', 'targetConnections', 'ids'],
   ['archimateElement', 'archimateElement', 'string'],
   ['textAlignment', 'textAlignment', 'number'],
   ['textPosition', 'textPosition', 'number'],
@@ -53,7 +56,7 @@ export const childFeatures: readonly AttributeSpec[] = [
  */
 export const connectionAttributes: readonly AttributeSpec[] = [
   ['name', 'name', 'string'],
-  ['targetConnections', 'targetConnections', 'string'],
+  ['targetConnections', 'targetConnections', 'ids'],
   ['lineStyle', 'type', 'number'],
   ['font', 'font', 'string'],
   ['fontColor', 'fontColor', 'string'],
@@ -98,7 +101,8 @@ export const conceptAttributes: readonly AttributeSpec[] = [
  */
 export const childTextElements = ['documentation', 'content', 'notes', 'hintContent'] as const;
 
-function readValue(raw: unknown, kind: AttributeKind): string | number | boolean {
+function readValue(raw: unknown, kind: AttributeKind): AttributeValue {
+  if (kind === 'ids') return splitIds(String(raw));
   return kind === 'number' ? Number(raw) : kind === 'boolean' ? String(raw) === 'true' : String(raw);
 }
 
@@ -106,13 +110,16 @@ export class DiagramAttributeMapper {
   /**
    * Reads the given attributes from a parsed XML node into model properties, skipping absent ones.
    */
-  public static readAttributes(node: object, specs: readonly AttributeSpec[]): Record<string, string | number | boolean> {
+  public static readAttributes(node: object, specs: readonly AttributeSpec[]): Record<string, AttributeValue> {
     const source = node as Record<string, unknown>;
-    const result: Record<string, string | number | boolean> = {};
+    const result: Record<string, AttributeValue> = {};
     for (const [property, attribute, kind] of specs) {
       const raw = source[`@_${attribute}`];
       if (raw === undefined || raw === null) continue;
-      result[property] = readValue(raw, kind);
+      const value = readValue(raw, kind);
+      // An empty id list is left out, as EMF does not write one.
+      if (Array.isArray(value) && value.length === 0) continue;
+      result[property] = value;
     }
     return result;
   }
@@ -126,7 +133,11 @@ export class DiagramAttributeMapper {
     for (const [property, attribute] of specs) {
       const value = source[property];
       if (value === undefined || value === null) continue;
-      result[`@_${attribute}`] = String(value);
+      if (Array.isArray(value)) {
+        if (value.length > 0) result[`@_${attribute}`] = value.join(' ');
+      } else {
+        result[`@_${attribute}`] = String(value);
+      }
     }
     return result;
   }
@@ -144,11 +155,8 @@ export class DiagramAttributeMapper {
   /**
    * Reads the given features into model properties, skipping absent ones.
    */
-  public static readFeatures(
-    features: Map<string, string> | undefined,
-    specs: readonly AttributeSpec[]
-  ): Record<string, string | number | boolean> {
-    const result: Record<string, string | number | boolean> = {};
+  public static readFeatures(features: Map<string, string> | undefined, specs: readonly AttributeSpec[]): Record<string, AttributeValue> {
+    const result: Record<string, AttributeValue> = {};
     for (const [property, name, kind] of specs) {
       const raw = features?.get(name);
       if (raw !== undefined) result[property] = readValue(raw, kind);

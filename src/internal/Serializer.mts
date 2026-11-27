@@ -175,8 +175,8 @@ export class Serializer {
       '@_id': el.id,
     };
 
-    if (el.profiles) {
-      element['@_profiles'] = el.profiles;
+    if (el.profiles && el.profiles.length > 0) {
+      element['@_profiles'] = el.profiles.join(' ');
     }
 
     Object.assign(element, DiagramAttributeMapper.writeAttributes(el, viewAttributes));

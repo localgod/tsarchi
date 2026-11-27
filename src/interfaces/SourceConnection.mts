@@ -19,8 +19,8 @@ export interface SourceConnection {
   source: string;
   target: string;
   archimateRelationship?: string;
-  /** Space-separated ids of connections that end on this connection. */
-  targetConnections?: string;
+  /** Ids of the connections that end on this connection (space-separated `targetConnections` in the file). */
+  targetConnections?: string[];
   documentation?: string;
   bendpoints?: ViewBendpoint[];
   /** The `<property>` entries in file order. A key may appear more than once, as Archi allows. */

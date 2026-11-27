@@ -1162,7 +1162,7 @@ describe('Archimate', () => {
               id: 'view-target',
               type: 'DiagramObject',
               archimateElement: 'duplicate-id',
-              targetConnections: 'missing-connection',
+              targetConnections: ['missing-connection'],
               bounds: { x: 200, y: 0, width: 100, height: 50 },
             },
           ],

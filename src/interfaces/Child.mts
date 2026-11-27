@@ -6,7 +6,8 @@ export interface Child {
   type: string;
   id: string;
   name?: string;
-  targetConnections?: string;
+  /** Ids of the connections that end on this child (space-separated `targetConnections` in the file). */
+  targetConnections?: string[];
   archimateElement?: string;
   font?: string;
   fontColor?: string;

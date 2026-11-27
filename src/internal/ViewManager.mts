@@ -11,7 +11,7 @@ import { randomArchiId } from './Ids.mjs';
 import { ModelIndex } from './ModelIndex.mjs';
 import { assertOptionalCode } from './Codes.mjs';
 import { ConnectionTextPosition, DiagramObjectFigure, TextAlignment, Viewpoint } from '../constants/archi-codes.mjs';
-import { splitIds, toViewChild, toViewConnection } from './ViewChildMapper.mjs';
+import { toViewChild, toViewConnection } from './ViewChildMapper.mjs';
 import { allSourceConnections, removeViewChildren, removeViewConnections } from './ViewRemoval.mjs';
 import { copyView } from './ViewCopy.mjs';
 import type { Folder } from '../interfaces/Folder.mjs';
@@ -214,7 +214,7 @@ export class ViewManager {
     };
 
     sourceObject.sourceConnection = [...(sourceObject.sourceConnection ?? []), connection];
-    targetObject.targetConnections = [...splitIds(targetObject.targetConnections), connection.id].join(' ');
+    targetObject.targetConnections = [...(targetObject.targetConnections ?? []), connection.id];
     this.index.addId(connection.id);
 
     return toViewConnection(connection);

@@ -23,7 +23,7 @@ This compiles the TypeScript sources, examples and test scripts into the `dist/`
 ## Tests and Checks
 
 - `npm test` builds the project and runs the tests.
-- `npm run lint` lints the code, and `npm run format` checks the formatting of the Markdown files (`npm run formatfix` fixes it).
+- `npm run lint` lints and type-checks the sources, tests, scripts and examples, and `npm run format` checks the formatting of the code and the Markdown files (`npm run formatfix` fixes it). `npx vp check` runs formatting, lint and type check together.
 - `npm run compare` checks that every model in `tests/fixtures/roundtrip` is saved exactly as it was loaded.
 - `npm run roundtrip:diff -- [file|dir ...]` loads and saves `.archimate` files and lists what was lost, grouped by attribute or element. Run it before and after any change to loading or saving.
 

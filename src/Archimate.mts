@@ -870,7 +870,8 @@ export class Archimate {
   // View Management API
 
   /**
-   * Creates a new view with the specified name and optional properties
+   * Creates an empty ArchiMate view at the top level of the Views folder, with an optional viewpoint, background and
+   * documentation, and returns it.
    */
   public createView(
     name: string,

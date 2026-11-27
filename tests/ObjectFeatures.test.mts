@@ -93,7 +93,7 @@ describe('top-level folder details', () => {
     const details = archimate.updateFolder('business', {
       name: 'Business Layer',
       documentation: 'Changed.',
-      properties: new Map([['Owner', 'EA']]),
+      properties: [{ key: 'Owner', value: 'EA' }],
       features: new Map([
         ['folderFeature', 'changed'],
         ['added', 'yes'],

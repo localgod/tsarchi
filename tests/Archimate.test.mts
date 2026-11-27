@@ -1,5 +1,6 @@
 import { describe, it, beforeEach, expect, vi } from 'vite-plus/test';
 import { Archimate } from '../src/Archimate.mjs';
+import { getProperty, setProperty } from '../src/Properties.mjs';
 import {
   archimateBusinessElementTypes,
   archimateModelTypes,
@@ -192,38 +193,47 @@ describe('Archimate', () => {
   describe('upsertElement()', () => {
     it.each([
       {
-        name: 'Add new element and update properties',
-        initial: { name: 'Test App', type: 'ApplicationComponent', properties: new Map([['version', '1.0']]) },
-        updates: [{ properties: new Map([['status', 'active']]) }],
-        expected: { version: '1.0', status: 'active' },
+        name: 'Add new element and replace properties',
+        initial: { name: 'Test App', type: 'ApplicationComponent', properties: [{ key: 'version', value: '1.0' }] },
+        updates: [{ properties: [{ key: 'status', value: 'active' }] }],
+        expected: [{ key: 'status', value: 'active' }],
       },
       {
-        name: 'Merge properties and preserve id',
+        name: 'Replace properties and preserve id',
         initial: {
           id: 'fixed-id-123',
-          name: 'Merge Test',
+          name: 'Replace Test',
           type: 'ApplicationComponent',
-          properties: new Map([
-            ['version', '1.0'],
-            ['crown', 'gold'],
-          ]),
+          properties: [
+            { key: 'version', value: '1.0' },
+            { key: 'crown', value: 'gold' },
+          ],
         },
         updates: [
           {
-            properties: new Map([
-              ['status', 'planned'],
-              ['version', '1.1'],
-            ]),
+            properties: [
+              { key: 'status', value: 'planned' },
+              { key: 'version', value: '1.1' },
+            ],
           },
         ],
-        expected: { version: '1.1', status: 'planned', crown: 'gold' },
+        expected: [
+          { key: 'status', value: 'planned' },
+          { key: 'version', value: '1.1' },
+        ],
         expectedId: 'fixed-id-123',
+      },
+      {
+        name: 'Keep properties when an update leaves them out',
+        initial: { name: 'Kept Props', type: 'ApplicationComponent', properties: [{ key: 'version', value: '1.0' }] },
+        updates: [{ documentation: 'Docs' }],
+        expected: [{ key: 'version', value: '1.0' }],
       },
       {
         name: 'Add element without previous properties',
         initial: { name: 'No Props', type: 'ApplicationComponent' },
-        updates: [{ properties: new Map([['newProp', 'value']]) }],
-        expected: { newProp: 'value' },
+        updates: [{ properties: [{ key: 'newProp', value: 'value' }] }],
+        expected: [{ key: 'newProp', value: 'value' }],
       },
     ])('should upsert element correctly: $name', ({ initial, updates, expected, expectedId }) => {
       const { id } = archimate.upsertElement({ ...initial } as any);
@@ -235,9 +245,7 @@ describe('Archimate', () => {
       expect(el?.name).toBe(initial.name);
       expect(el?.type).toBe(initial.type);
       if (expectedId) expect(el?.id).toBe(expectedId);
-      for (const [key, val] of Object.entries(expected)) {
-        expect(el?.properties?.get(key)).toBe(val);
-      }
+      expect(el?.properties).toEqual(expected);
     });
 
     it('should add an element without an id even when one with the same name and type exists', () => {
@@ -374,7 +382,7 @@ describe('Archimate', () => {
         id: 'app-a',
         name: 'App A',
         type: 'ApplicationComponent',
-        properties: new Map([['version', '1.0']]),
+        properties: [{ key: 'version', value: '1.0' }],
       });
       archimate.upsertElement({
         id: 'app-b',
@@ -407,18 +415,21 @@ describe('Archimate', () => {
       expect(matches.map(el => el.id)).toEqual(expect.arrayContaining(['app-a', 'business-app-a']));
     });
 
-    it('should update an element by ID and merge properties', () => {
+    it('should update an element by ID and replace its properties', () => {
+      const element = archimate.getElement('app-a')!;
       const updated = archimate.updateElement('app-a', {
         name: 'App A Updated',
         documentation: 'Updated documentation',
-        properties: new Map([['status', 'active']]),
+        properties: setProperty(element.properties, 'status', 'active'),
       });
 
       expect(updated?.id).toBe('app-a');
       expect(updated?.name).toBe('App A Updated');
       expect(updated?.documentation).toBe('Updated documentation');
-      expect(updated?.properties?.get('version')).toBe('1.0');
-      expect(updated?.properties?.get('status')).toBe('active');
+      expect(updated?.properties).toEqual([
+        { key: 'version', value: '1.0' },
+        { key: 'status', value: 'active' },
+      ]);
       expect(archimate.updateElement('missing', { name: 'No-op' })).toBeNull();
     });
 
@@ -569,13 +580,13 @@ describe('Archimate', () => {
         type: 'FlowRelationship',
         source: 'rel-app-a',
         target: 'rel-app-b',
-        properties: new Map([['kind', 'data']]),
+        properties: [{ key: 'kind', value: 'data' }],
       });
 
       expect(relationship.id).toBe('formal-rel-a-b');
       expect(relationship.source).toBe('rel-app-a');
       expect(relationship.target).toBe('rel-app-b');
-      expect(relationship.properties?.get('kind')).toBe('data');
+      expect(getProperty(relationship.properties, 'kind')).toBe('data');
       expect(archimate.getRelationship('formal-rel-a-b')?.name).toBe('Formal A to B');
       expect(archimate.getRelationship('missing')).toBeNull();
     });
@@ -897,7 +908,7 @@ describe('Archimate', () => {
         type: 'FlowRelationship',
         source: 'rel-app-a',
         target: 'rel-app-b',
-        properties: new Map([['kind', 'data']]),
+        properties: [{ key: 'kind', value: 'data' }],
       });
 
       const updated = archimate.upsertRelationship({
@@ -906,12 +917,11 @@ describe('Archimate', () => {
         type: 'FlowRelationship',
         source: 'rel-app-a',
         target: 'rel-app-b',
-        properties: new Map([['status', 'active']]),
+        properties: [{ key: 'status', value: 'active' }],
       });
 
       expect(updated.name).toBe('Formal A to B Updated');
-      expect(updated.properties?.get('kind')).toBe('data');
-      expect(updated.properties?.get('status')).toBe('active');
+      expect(updated.properties).toEqual([{ key: 'status', value: 'active' }]);
       expect(archimate.findRelationshipsBetween('rel-app-a', 'rel-app-b')).toHaveLength(1);
     });
 

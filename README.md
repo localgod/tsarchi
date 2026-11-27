@@ -33,7 +33,7 @@ TSArchi provides a TypeScript-based tool for parsing, modifying, and saving `.ar
 - **Model Serialization**: Save the modified model back into an `.archimate` file.
 - **Type Safety**: Enforces strong TypeScript types for all operations on the model.
 - **Clear Errors**: Files that are not well-formed XML or not Archi models throw an `ArchimateParseError`, and models are validated before they are saved.
-- **Element Upsert**: Insert or update elements and relationships by `id`, merging properties.
+- **Element Upsert**: Insert or update elements and relationships by `id`.
 - **Comprehensive Element Support**: Full support for all ArchiMate 3.x element types and relationships.
 - **Advanced View Management**: Create, update, and manage ArchiMate diagrams with visual positioning and styling.
 - **draw.io Export**: Write a view as a draw.io file, with plain rectangles or draw.io's ArchiMate 3 shapes.
@@ -47,6 +47,15 @@ npm install tsarchi
 ```
 
 The `tsarchi` entry point holds the model API and runs in Node.js and in the browser. `TsArchi`, which reads and writes files, is imported from `tsarchi/node`. `tsarchi/bundle` is the same API as one self-contained ES module, for engines such as QuickJS (see [QuickJS](#quickjs)).
+
+## Upgrading from 4.x
+
+Version 5.0.0 keeps properties as Archi does, as an ordered list in which a key may appear more than once (see [Properties](#properties)):
+
+- `properties` on models, folders, elements, relationships, views, diagram objects and view connections is a `Property[]` of `{ key, value }` instead of a `Map<string, string>`. Read a value with `getProperty(properties, key)` instead of `properties.get(key)`.
+- `getProperties()` returns a `Property[]` and `setProperties()` takes one.
+- `updateElement()` and `upsertElement()` replace the whole `properties` list instead of merging it by key. To change one key, pass `setProperty(element.properties, key, value)`.
+- `updateFolder()`, `updateFolderById()` and `createFolder()` take a `properties` list; an empty list removes the properties.
 
 ## Upgrading from 3.x
 
@@ -102,7 +111,7 @@ const model = await tsArchi.loadModel("./path/to/model.archimate");
 const element = model.upsertElement({
   type: "ApplicationComponent",
   name: "My New Component",
-  properties: new Map([["version", "2.0"]]),
+  properties: [{ key: "version", value: "2.0" }],
 });
 
 // Read the model's name and contents
@@ -198,13 +207,13 @@ for (const folder of model.getFolders("application")) {
 
 New elements are added at the top level of their folder.
 
-`getFolder` returns the id, name, documentation, properties and features of a top-level folder, and `updateFolder` changes them. A detail set to `undefined`, `""` or an empty map is removed:
+`getFolder` returns the id, name, documentation, properties and features of a top-level folder, and `updateFolder` changes them. A detail set to `undefined`, `""`, an empty list or an empty map is removed:
 
 ```typescript
 const { name, documentation } = model.getFolder("business");
 model.updateFolder("business", {
   documentation: "Business layer",
-  properties: new Map([["Owner", "EA"]]),
+  properties: [{ key: "Owner", value: "EA" }],
 });
 ```
 
@@ -299,7 +308,7 @@ model.upsertRelationship({
 });
 ```
 
-`updateElement` changes an element, relationship or view by id. Keys left out are unchanged, and a key set to `undefined` removes that field (a removed `name` becomes empty, which is saved without a `name` attribute, as Archi does). `properties` is merged into the existing properties:
+`updateElement` changes an element, relationship or view by id. Keys left out are unchanged, and a key set to `undefined` removes that field (a removed `name` becomes empty, which is saved without a `name` attribute, as Archi does). `properties` replaces the whole list (see [Properties](#properties)):
 
 ```typescript
 model.updateElement("relationship-id", { name: undefined, documentation: undefined });
@@ -310,10 +319,37 @@ The model's name is available through `model.getName()` and `model.setName(name)
 Model-level properties, metadata and specializations (profiles) are available the same way:
 
 ```typescript
-model.setProperties(new Map([["Owner", "Enterprise Architecture"]]));
+model.setProperties([{ key: "Owner", value: "Enterprise Architecture" }]);
 model.setMetadata(new Map([["creator", "tsarchi"]]));
 model.setProfiles([{ id: "profile-id", name: "Premium", conceptType: "BusinessActor" }]);
 model.updateElement("element-id", { profiles: "profile-id" });
+```
+
+### Properties
+
+Models, folders, elements, relationships, views, diagram objects and view connections keep their `<property>` entries as a `properties` list of `{ key, value }`, in file order. As in Archi, a key may appear more than once. A key or value the file leaves out (Archi does for an empty one) is left out of the entry too.
+
+The property helpers read a list and return changed copies, following jArchi's `prop()` and `removeProp()`. They treat a missing key or value as `""`:
+
+| Helper                                    | Returns                                                                                       |
+| ----------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `getProperty(properties, key)`            | The value of the first property with the key, or `undefined`                                  |
+| `getPropertyValues(properties, key)`      | The values of every property with the key                                                     |
+| `getPropertyKeys(properties)`             | Each key once, in the order they first appear                                                 |
+| `setProperty(properties, key, value)`     | A copy with every property of the key set to the value, or with the property added at the end |
+| `addProperty(properties, key, value)`     | A copy with the property added at the end, even when the key is already there                 |
+| `removeProperty(properties, key, value?)` | A copy without the properties of the key, or only those with the given value                  |
+
+Pass the result to `updateElement`, `updateFolder` or `setProperties`, which replace the whole list:
+
+```typescript
+import { getProperty, setProperty } from "tsarchi";
+
+const element = model.getElement("element-id")!;
+const owner = getProperty(element.properties, "Owner");
+model.updateElement("element-id", {
+  properties: setProperty(element.properties, "Status", "Approved"),
+});
 ```
 
 Folders, elements, relationships and views keep their `<feature>` entries as a `features` map, in file order:
@@ -480,7 +516,12 @@ model.removeFromView("view-id", ["object-id", "connection-id"]);
 // diagram object, a sketch sticky or a canvas block, or onto the view with null. Bounds are relative to the new parent.
 // It goes last among the parent's children (on top) unless given an index, and keeps its id, nested objects and connections.
 // Returns where it was, so calling it again with that and the old bounds undoes the move; null if the move is refused.
-const from = model.moveDiagramObject("view-id", "object-id", "group-id", { x: 24, y: 36, width: 120, height: 55 });
+const from = model.moveDiagramObject("view-id", "object-id", "group-id", {
+  x: 24,
+  y: 36,
+  width: 120,
+  height: 55,
+});
 // Undo, with the bounds it had before: model.moveDiagramObject("view-id", "object-id", from.parentId, oldBounds, { index: from.index });
 
 // Duplicate a view, as Archi's Duplicate does: everything drawn on it, with new ids, referring to the same

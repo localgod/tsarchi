@@ -4,6 +4,7 @@ import type { Child } from '../src/interfaces/Child.mjs';
 import type { Element } from '../src/interfaces/Element.mjs';
 import type { Profile } from '../src/interfaces/Profile.mjs';
 import type { RelationshipInput } from '../src/interfaces/Relationship.mjs';
+import { getProperty } from '../src/Properties.mjs';
 
 function modelWithTwoApps(): Archimate {
   const archimate = new Archimate();
@@ -40,17 +41,17 @@ describe('objects passed to the model are copied', () => {
     const input: Partial<Element> & Pick<Element, 'name' | 'type'> = {
       name: 'CRM',
       type: 'ApplicationComponent',
-      properties: new Map([['owner', 'Sales']]),
+      properties: [{ key: 'owner', value: 'Sales' }],
       features: new Map([['iconColor', '#ff0000']]),
     };
 
     const { id } = archimate.upsertElement(input);
     input.name = 'Changed';
-    input.properties!.set('owner', 'Support');
+    input.properties![0].value = 'Support';
     input.features!.set('iconColor', '#00ff00');
 
     expect(archimate.getElement(id)).toMatchObject({ name: 'CRM' });
-    expect(archimate.getElement(id)?.properties?.get('owner')).toBe('Sales');
+    expect(getProperty(archimate.getElement(id)?.properties, 'owner')).toBe('Sales');
     expect(archimate.getElement(id)?.features?.get('iconColor')).toBe('#ff0000');
   });
 
@@ -58,15 +59,15 @@ describe('objects passed to the model are copied', () => {
     const archimate = new Archimate();
     const { id } = archimate.upsertElement({ name: 'CRM', type: 'ApplicationComponent' });
     const features = new Map([['iconColor', '#ff0000']]);
-    const properties = new Map([['owner', 'sales']]);
+    const properties = [{ key: 'owner', value: 'sales' }];
 
     archimate.upsertElement({ id, name: 'CRM', type: 'ApplicationComponent', features });
     archimate.updateElement(id, { properties });
     features.set('iconColor', '#00ff00');
-    properties.set('owner', 'finance');
+    properties[0].value = 'finance';
 
     expect(archimate.getElement(id)?.features?.get('iconColor')).toBe('#ff0000');
-    expect(archimate.getElement(id)?.properties?.get('owner')).toBe('sales');
+    expect(getProperty(archimate.getElement(id)?.properties, 'owner')).toBe('sales');
   });
 
   it('should not change the model when the input to upsertRelationship is changed afterwards', () => {
@@ -76,21 +77,21 @@ describe('objects passed to the model are copied', () => {
       type: 'FlowRelationship',
       source: 'app-a',
       target: 'app-b',
-      properties: new Map([['kind', 'batch']]),
+      properties: [{ key: 'kind', value: 'batch' }],
     };
 
     const { id } = archimate.upsertRelationship(input);
-    input.properties!.set('kind', 'stream');
+    input.properties![0].value = 'stream';
 
     expect(input).not.toHaveProperty('id');
-    expect(archimate.getRelationship(id)?.properties?.get('kind')).toBe('batch');
+    expect(getProperty(archimate.getRelationship(id)?.properties, 'kind')).toBe('batch');
   });
 });
 
 describe('objects returned by the model are copies', () => {
   function model(): Archimate {
     const archimate = modelWithTwoApps();
-    archimate.updateElement('app-a', { properties: new Map([['owner', 'Sales']]) });
+    archimate.updateElement('app-a', { properties: [{ key: 'owner', value: 'Sales' }] });
     archimate.upsertRelationship({ id: 'flow', name: 'Data', type: 'FlowRelationship', source: 'app-a', target: 'app-b' });
     return archimate;
   }
@@ -110,10 +111,10 @@ describe('objects returned by the model are copies', () => {
     const archimate = model();
     const element = get(archimate);
     element.name = 'Changed';
-    element.properties!.set('owner', 'Support');
+    element.properties![0].value = 'Support';
 
     expect(archimate.getElement('app-a')?.name).toBe('A');
-    expect(archimate.getElement('app-a')?.properties?.get('owner')).toBe('Sales');
+    expect(getProperty(archimate.getElement('app-a')?.properties, 'owner')).toBe('Sales');
   });
 
   const relationshipGetters: [string, (archimate: Archimate) => Element][] = [

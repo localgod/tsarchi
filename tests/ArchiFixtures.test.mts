@@ -228,7 +228,7 @@ describe('Archi-produced models', () => {
 
     archimate.updateElement(elementId, { name: 'Renamed' });
     archimate.updateElement(elementId, { type: 'Bogus1' as ArchimateModelType, documentation: 'Doc' });
-    archimate.updateElement(elementId, { properties: new Map([['k', 'v']]) });
+    archimate.updateElement(elementId, { properties: [{ key: 'k', value: 'v' }] });
     archimate.updateElement(relationshipId, { name: 'Link' });
 
     expect(archimate.findElementsByFolder('technology')[0]).toMatchObject({
@@ -236,7 +236,7 @@ describe('Archi-produced models', () => {
       type: 'Bogus1',
       name: 'Renamed',
       documentation: 'Doc',
-      properties: new Map([['k', 'v']]),
+      properties: [{ key: 'k', value: 'v' }],
     });
     expect(archimate.findElementsByFolder('relations')[0]).toMatchObject({ id: relationshipId, type: 'Bogus3', name: 'Link' });
   });

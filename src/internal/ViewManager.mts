@@ -466,7 +466,7 @@ export class ViewManager {
       type,
       documentation: element.documentation,
       children: toArray(element.child).map(toViewChild),
-      properties: element.properties && new Map(element.properties),
+      properties: element.properties && element.properties.map(property => ({ ...property })),
     };
     if (element.viewpoint !== undefined) view.viewpoint = element.viewpoint;
     if (element.background !== undefined) view.background = element.background;

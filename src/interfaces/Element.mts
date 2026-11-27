@@ -1,3 +1,4 @@
+import type { Property } from './Property.mjs';
 import type { Child } from './Child.mjs';
 import type { ArchimateModelType } from '../constants/archimate-mappings.mjs';
 
@@ -9,7 +10,8 @@ export interface Element {
   source?: string;
   target?: string;
   child?: Child | Child[];
-  properties?: Map<string, string>;
+  /** The `<property>` entries in file order. A key may appear more than once, as Archi allows. */
+  properties?: Property[];
   /** `<feature>` entries (Archi's `IFeatures`), in file order. */
   features?: Map<string, string>;
   /** Space-separated ids of the model profiles (specializations) applied to this element or relationship. */

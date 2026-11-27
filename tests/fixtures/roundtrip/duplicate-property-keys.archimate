@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<archimate:model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:archimate="http://www.archimatetool.com/archimate" name="duplicate property keys" id="id-dup-model" version="5.0.0">
+  <folder name="Strategy" id="id-dup-strategy" type="strategy"/>
+  <folder name="Business" id="id-dup-business" type="business">
+    <folder name="Customers" id="id-dup-customers">
+      <property key="owner" value="sales"/>
+      <property key="owner" value="marketing"/>
+      <element xsi:type="archimate:BusinessActor" name="Customer" id="id-dup-customer">
+        <property key="tag" value="one"/>
+        <property key="owner" value="sales"/>
+        <property key="tag" value="two"/>
+        <property key="tag"/>
+      </element>
+    </folder>
+    <property key="reviewed" value="2026-01"/>
+    <property key="reviewed" value="2026-06"/>
+    <element xsi:type="archimate:BusinessRole" name="Buyer" id="id-dup-buyer"/>
+  </folder>
+  <folder name="Application" id="id-dup-application" type="application"/>
+  <folder name="Technology &amp; Physical" id="id-dup-technology" type="technology"/>
+  <folder name="Motivation" id="id-dup-motivation" type="motivation"/>
+  <folder name="Implementation &amp; Migration" id="id-dup-implementation" type="implementation_migration"/>
+  <folder name="Other" id="id-dup-other" type="other"/>
+  <folder name="Relations" id="id-dup-relations" type="relations">
+    <element xsi:type="archimate:AssignmentRelationship" id="id-dup-assignment" source="id-dup-customer" target="id-dup-buyer">
+      <property key="source" value="interview"/>
+      <property key="source" value="survey"/>
+    </element>
+  </folder>
+  <folder name="Views" id="id-dup-views" type="diagrams">
+    <element xsi:type="archimate:ArchimateDiagramModel" name="Customers" id="id-dup-view">
+      <child xsi:type="archimate:DiagramObject" id="id-dup-customer-object" archimateElement="id-dup-customer">
+        <bounds x="40" y="40" width="120" height="55"/>
+        <sourceConnection xsi:type="archimate:Connection" id="id-dup-assignment-connection" source="id-dup-customer-object" target="id-dup-buyer-object" archimateRelationship="id-dup-assignment">
+          <property key="note" value="a"/>
+          <property key="note" value="b"/>
+        </sourceConnection>
+        <property key="layer" value="front"/>
+        <property key="layer" value="back"/>
+      </child>
+      <child xsi:type="archimate:DiagramObject" id="id-dup-buyer-object" targetConnections="id-dup-assignment-connection" archimateElement="id-dup-buyer">
+        <bounds x="280" y="40" width="120" height="55"/>
+      </child>
+      <property key="audience" value="board"/>
+      <property key="audience" value="team"/>
+    </element>
+  </folder>
+  <property key="Owner" value="Enterprise Architecture"/>
+  <property key="Status" value="Draft"/>
+  <property key="Owner" value="Security"/>
+</archimate:model>

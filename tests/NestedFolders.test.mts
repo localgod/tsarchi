@@ -80,7 +80,7 @@ describe('nested folders', () => {
       elementIds: ['id-portal', 'id-portal-service'],
       folders: [{ id: 'id-folder-legacy', name: 'Legacy', elementIds: ['id-old-portal'] }],
     });
-    expect(portals.properties).toEqual(new Map([['owner', 'digital']]));
+    expect(portals.properties).toEqual([{ key: 'owner', value: 'digital' }]);
     expect(empty).toEqual({ id: 'id-folder-empty', name: 'Empty' });
     expect(archimate.getFolders('strategy')).toEqual([]);
     expect(archimate.listViews().map(view => view.id)).toEqual(['id-portal-view']);
@@ -188,7 +188,7 @@ describe('nested folder details', () => {
       id: 'id-folder-portals',
       name: 'Portals',
       documentation: 'Customer-facing systems.',
-      properties: new Map([['owner', 'digital']]),
+      properties: [{ key: 'owner', value: 'digital' }],
     });
     expect(archimate.getFolderById('id-folder-legacy')).toEqual({ id: 'id-folder-legacy', name: 'Legacy' });
     expect(archimate.getFolderById('id-folder-overviews')).toEqual({ id: 'id-folder-overviews', name: 'Overviews' });
@@ -210,9 +210,10 @@ describe('nested folder details', () => {
   it('should return copies of the folder maps', async () => {
     const archimate = await parseFile(file);
 
-    archimate.getFolderById('id-folder-portals')?.properties?.set('changed', 'no');
+    archimate.getFolderById('id-folder-portals')?.properties?.push({ key: 'changed', value: 'no' });
+    archimate.getFolderById('id-folder-portals')!.properties![0].value = 'changed';
 
-    expect(archimate.getFolderById('id-folder-portals')?.properties).toEqual(new Map([['owner', 'digital']]));
+    expect(archimate.getFolderById('id-folder-portals')?.properties).toEqual([{ key: 'owner', value: 'digital' }]);
   });
 
   it('should write nested folder details set in code and keep its contents', async () => {
@@ -221,7 +222,7 @@ describe('nested folder details', () => {
     const details = archimate.updateFolderById('id-folder-legacy', {
       name: 'Retired',
       documentation: 'No longer used.',
-      properties: new Map([['owner', 'ops']]),
+      properties: [{ key: 'owner', value: 'ops' }],
       features: new Map([['folderFeature', 'yes']]),
     });
 
@@ -238,7 +239,7 @@ describe('nested folder details', () => {
   it('should remove nested folder details that are cleared and leave the others unchanged', async () => {
     const archimate = await parseFile(file);
 
-    archimate.updateFolderById('id-folder-portals', { documentation: undefined, properties: new Map() });
+    archimate.updateFolderById('id-folder-portals', { documentation: undefined, properties: [] });
 
     expect(archimate.getFolderById('id-folder-portals')).toEqual({ id: 'id-folder-portals', name: 'Portals' });
     const portals = findSchemaFolder(archimateToSchema(archimate)['archimate:model'].folder, 'id-folder-portals')!;
@@ -272,14 +273,14 @@ describe('creating, moving and deleting nested folders', () => {
     const created = archimate.createFolder('id-folder-portals', {
       name: 'Mobile',
       documentation: 'Apps.',
-      properties: new Map([['owner', 'mobile']]),
+      properties: [{ key: 'owner', value: 'mobile' }],
     });
 
     expect(created).toEqual({
       id: expect.stringMatching(/^id-[0-9a-f]{32}$/),
       name: 'Mobile',
       documentation: 'Apps.',
-      properties: new Map([['owner', 'mobile']]),
+      properties: [{ key: 'owner', value: 'mobile' }],
     });
     expect(archimate.getFolderById(created.id)).toEqual(created);
     expect(archimate.getFolders('application')[0].folders?.map(folder => folder.id)).toEqual(['id-folder-legacy', created.id]);

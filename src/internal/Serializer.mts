@@ -22,6 +22,7 @@ import {
   viewAttributes,
 } from './DiagramAttributeMapper.mjs';
 import { toArray } from './Arrays.mjs';
+import { propertiesToSchema } from './PropertyMapper.mjs';
 
 export class Serializer {
   private model: Model;
@@ -50,7 +51,7 @@ export class Serializer {
     const model = schema['archimate:model'];
     Object.assign(model, content.unrecognized);
 
-    const property = DiagramAttributeMapper.propertiesToSchema(content.properties);
+    const property = propertiesToSchema(content.properties);
     if (property) {
       model.property = property;
     }
@@ -161,7 +162,7 @@ export class Serializer {
       folder.documentation = documentation;
     }
 
-    const property = DiagramAttributeMapper.propertiesToSchema(properties);
+    const property = propertiesToSchema(properties);
     if (property) {
       folder.property = property;
     }
@@ -191,7 +192,7 @@ export class Serializer {
     }
 
     if (el.properties) {
-      element.property = DiagramAttributeMapper.propertiesToSchema(el.properties) ?? [];
+      element.property = propertiesToSchema(el.properties) ?? [];
     }
 
     if (el.source && el.target) {
@@ -240,7 +241,7 @@ export class Serializer {
       }
     }
 
-    const property = DiagramAttributeMapper.propertiesToSchema(child.properties);
+    const property = propertiesToSchema(child.properties);
     if (property) {
       schemaChild.property = property;
     }

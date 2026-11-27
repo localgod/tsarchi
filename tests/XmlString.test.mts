@@ -71,7 +71,7 @@ describe('Archimate.fromXml / toXml', () => {
     expect(archimate.getElement('id-customer')).toMatchObject({
       name: 'Tab\tseparated',
       documentation: 'Written by Archi on Windows\r\nsecond line\r\nthird line',
-      properties: new Map([['multi\nline', 'one\r\ntwo']]),
+      properties: [{ key: 'multi\nline', value: 'one\r\ntwo' }],
     });
     expect(archimate.getElement('id-insurant')).toMatchObject({
       name: `Quotes "and" 'apostrophes' & <tags>`,
@@ -102,7 +102,7 @@ describe('Archimate.fromXml / toXml', () => {
       name: 'Tab\tand\nline',
       type: 'BusinessActor',
       documentation: 'Windows\r\nline & <tag>',
-      properties: new Map([['key', 'a\r\nb']]),
+      properties: [{ key: 'key', value: 'a\r\nb' }],
     });
 
     const xml = archimate.toXml();
@@ -112,7 +112,7 @@ describe('Archimate.fromXml / toXml', () => {
     expect(Archimate.fromXml(xml).getElement('e')).toMatchObject({
       name: 'Tab\tand\nline',
       documentation: 'Windows\r\nline & <tag>',
-      properties: new Map([['key', 'a\r\nb']]),
+      properties: [{ key: 'key', value: 'a\r\nb' }],
     });
   });
 
@@ -123,13 +123,13 @@ describe('Archimate.fromXml / toXml', () => {
 
     expect(archimate.getName()).toBe(' spaced model ');
     expect(archimate.getPurpose()).toBe(' purpose with spaces ');
-    expect(archimate.getProperties()).toEqual(new Map([['Owner', '  EA  ']]));
+    expect(archimate.getProperties()).toEqual([{ key: 'Owner', value: '  EA  ' }]);
     expect(archimate.getFolder('business')).toMatchObject({ name: 'Business ', documentation: '  indented first line\nsecond line  ' });
     expect(subfolder).toMatchObject({ name: ' Nested', documentation: '\nStarts and ends with a line break\n' });
     expect(archimate.getElement('id-customer')).toMatchObject({
       name: ' Customer ',
       documentation: 'Trailing spaces   ',
-      properties: new Map([[' key ', ' 1.50 ']]),
+      properties: [{ key: ' key ', value: ' 1.50 ' }],
     });
     expect(archimate.getElement('id-insurant')?.documentation).toBe('   ');
     expect(archimate.getRelationship('id-rel-assignment')?.name).toBe(' assigned ');

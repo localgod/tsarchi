@@ -23,6 +23,7 @@ import {
 } from './DiagramAttributeMapper.mjs';
 import type { AttributeSpec } from './DiagramAttributeMapper.mjs';
 import { toArray } from './Arrays.mjs';
+import { schemaToOptionalProperties, schemaToProperties } from './PropertyMapper.mjs';
 
 const attributeKeys = (specs: readonly AttributeSpec[]) => specs.map(([, attribute]) => `@_${attribute}`);
 
@@ -120,7 +121,7 @@ export class Parser {
     const metadata = model.metadata;
     const content: ModelContent = {
       purpose: text(model.purpose),
-      properties: this.createOptionalPropertiesMap(model),
+      properties: schemaToOptionalProperties(model.property),
       metadata: metadata !== undefined ? this.createPropertiesMap({ property: metadata === '' ? undefined : metadata.entry }) : undefined,
       profiles: model.profile !== undefined ? toArray(model.profile).map(profile => this.createProfile(profile)) : undefined,
       unrecognized: Object.keys(unrecognized).length > 0 ? unrecognized : undefined,
@@ -171,7 +172,7 @@ export class Parser {
       id: folder['@_id'] || '',
       name: folder['@_name'] || '',
       documentation: text(folder.documentation),
-      properties: this.createOptionalPropertiesMap(folder),
+      properties: schemaToOptionalProperties(folder.property),
       features: DiagramAttributeMapper.schemaToFeatures(folder.feature),
       unrecognized: DiagramAttributeMapper.readUnrecognized(folder, mappedKeys),
     };
@@ -219,7 +220,7 @@ export class Parser {
       source: schemaElement['@_source'],
       target: schemaElement['@_target'],
       documentation: text(schemaElement.documentation),
-      properties: this.createPropertiesMap(schemaElement),
+      properties: schemaToProperties(schemaElement.property),
       child: schemaElement.child ? this.loadChildren(schemaElement.child) : undefined,
     };
 
@@ -240,11 +241,6 @@ export class Parser {
 
   private extractElementType(typeString: string | undefined): string {
     return typeString ? typeFromXsiType(typeString) : 'Unknown';
-  }
-
-  private createOptionalPropertiesMap(source: { property?: SchemaProperty | SchemaProperty[] }): Map<string, string> | undefined {
-    const properties = this.createPropertiesMap(source);
-    return properties.size > 0 ? properties : undefined;
   }
 
   private createPropertiesMap(element: { property?: SchemaProperty | SchemaProperty[] }): Map<string, string> {
@@ -273,7 +269,7 @@ export class Parser {
       ...DiagramAttributeMapper.readFeatures(features, childFeatures),
       bounds: BoundsMapper.schemaBoundsToBounds(bounds),
       sourceConnection: sourceConnection ? SourceConnectionMapper.schemaToSourceConnections(sourceConnection) : undefined,
-      properties: DiagramAttributeMapper.schemaToProperties(schemaChild.property),
+      properties: schemaToOptionalProperties(schemaChild.property),
       features,
       unrecognized: DiagramAttributeMapper.readUnrecognized(schemaChild, Parser.mappedChildKeys),
     };

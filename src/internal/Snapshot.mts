@@ -33,6 +33,7 @@ import {
 } from './DiagramAttributeMapper.mjs';
 import type { AttributeSpec } from './DiagramAttributeMapper.mjs';
 import { toArray } from './Arrays.mjs';
+import type { Property } from '../interfaces/Property.mjs';
 
 // A snapshot holds the model as fromXml(toXml()) would load it: the writer applies the normalisation the Serializer
 // does (values written as strings, empty collections and falsy text left out, elements placed in their folders), and
@@ -85,7 +86,7 @@ export function writeSnapshot(
     folders: {} as ModelSnapshot['folders'],
   };
   if (content.purpose) snapshot.purpose = String(content.purpose);
-  setEntries(snapshot, 'properties', content.properties);
+  setPropertyEntries(snapshot, content.properties);
   if (content.metadata) snapshot.metadata = writeEntries(content.metadata);
   if (content.profiles && content.profiles.length > 0) snapshot.profiles = content.profiles.map(writeProfile);
   for (const key of folderKeys) {
@@ -101,6 +102,12 @@ function writeEntries(map: Map<unknown, unknown>): SnapshotEntries {
 
 function setEntries(target: object, key: string, map: Map<unknown, unknown> | undefined): void {
   if (map && map.size > 0) (target as Record<string, unknown>)[key] = writeEntries(map);
+}
+
+function setPropertyEntries(target: { properties?: SnapshotEntries }, properties: readonly Property[] | undefined): void {
+  if (properties && properties.length > 0) {
+    target.properties = properties.map(({ key, value }) => [key == null ? null : String(key), value == null ? null : String(value)]);
+  }
 }
 
 function setOpaque(target: { unrecognized?: SnapshotOpaque }, unrecognized: Record<string, unknown> | undefined): void {
@@ -152,7 +159,7 @@ function writeProfile(profile: Profile): ProfileSnapshot {
 function writeFolderDetails(folder: ModelFolder | Folder, name: string): FolderSnapshot {
   const snapshot: FolderSnapshot = { id: String(folder.id || ''), name };
   if (folder.documentation) snapshot.documentation = String(folder.documentation);
-  setEntries(snapshot, 'properties', folder.properties);
+  setPropertyEntries(snapshot, folder.properties);
   setEntries(snapshot, 'features', folder.features);
   return snapshot;
 }
@@ -205,7 +212,7 @@ function writeElement(element: Element): ElementSnapshot {
   }
   writeAttributes(snapshot, element, conceptAttributes);
   if (element.documentation) snapshot.documentation = String(element.documentation);
-  setEntries(snapshot, 'properties', element.properties);
+  setPropertyEntries(snapshot, element.properties);
   setEntries(snapshot, 'features', element.features);
   const children = toArray(element.child);
   if (children.length > 0) snapshot.children = children.map(writeChild);
@@ -227,7 +234,7 @@ function writeChild(child: Child): ChildSnapshot {
   for (const key of childTextElements) {
     if (child[key]) snapshot[key] = String(child[key]);
   }
-  setEntries(snapshot, 'properties', child.properties);
+  setPropertyEntries(snapshot, child.properties);
   setEntries(snapshot, 'features', DiagramAttributeMapper.writeFeatures(child, child.features, childFeatures));
   if (child.child && child.child.length > 0) snapshot.children = child.child.map(writeChild);
   const connections = toArray(child.sourceConnection);
@@ -253,7 +260,7 @@ function writeConnection(connection: SourceConnection): ConnectionSnapshot {
       return written;
     });
   }
-  setEntries(snapshot, 'properties', connection.properties);
+  setPropertyEntries(snapshot, connection.properties);
   setEntries(snapshot, 'features', DiagramAttributeMapper.writeFeatures(connection, connection.features, connectionFeatures));
   const connections = toArray(connection.sourceConnection);
   if (connections.length > 0) snapshot.connections = connections.map(writeConnection);
@@ -345,6 +352,21 @@ function readEntries(value: unknown, path: string): Map<string, string> {
     map.set(key as string, item as string);
   });
   return map;
+}
+
+/**
+ * Reads properties as an ordered list, keeping repeated keys. A missing list is empty.
+ */
+function readPropertyList(value: unknown, path: string): Property[] {
+  if (value === undefined) return [];
+  return readArray(value, path).map((entry, i) => {
+    const pair = readArray(entry, `${path}[${i}]`);
+    if (pair.length !== 2) fail(`${path}[${i}]`, 'expected a [key, value] pair');
+    const property: Property = {};
+    if (pair[0] !== null) property.key = readString(pair[0], `${path}[${i}][0]`);
+    if (pair[1] !== null) property.value = readString(pair[1], `${path}[${i}][1]`);
+    return property;
+  });
 }
 
 function readOptionalEntries(value: unknown, path: string): Map<string, string> | undefined {
@@ -449,8 +471,8 @@ function readModel(value: unknown): SnapshotState {
   const content: ModelContent = {};
   const purpose = readOptionalString(snapshot.purpose, 'snapshot.purpose');
   if (purpose !== undefined) content.purpose = purpose;
-  const properties = readOptionalEntries(snapshot.properties, 'snapshot.properties');
-  if (properties && properties.size > 0) content.properties = properties;
+  const properties = readPropertyList(snapshot.properties, 'snapshot.properties');
+  if (properties.length > 0) content.properties = properties;
   const metadata = readOptionalEntries(snapshot.metadata, 'snapshot.metadata');
   if (metadata) content.metadata = metadata;
   if (snapshot.profiles !== undefined) {
@@ -504,8 +526,8 @@ function readFolderDetails(source: Record<string, unknown>, path: string): Omit<
   };
   const documentation = readOptionalString(source.documentation, `${path}.documentation`);
   if (documentation !== undefined) folder.documentation = documentation;
-  const properties = readOptionalEntries(source.properties, `${path}.properties`);
-  if (properties && properties.size > 0) folder.properties = properties;
+  const properties = readPropertyList(source.properties, `${path}.properties`);
+  if (properties.length > 0) folder.properties = properties;
   const features = readOptionalEntries(source.features, `${path}.features`);
   if (features) folder.features = features;
   const unrecognized = readOpaque(source.unrecognized, `${path}.unrecognized`);
@@ -558,7 +580,7 @@ function readElement(value: unknown, path: string): Element {
   if (target !== undefined) element.target = target;
   const documentation = readOptionalString(source.documentation, `${path}.documentation`);
   if (documentation !== undefined) element.documentation = documentation;
-  element.properties = readOptionalEntries(source.properties, `${path}.properties`) ?? new Map();
+  element.properties = readPropertyList(source.properties, `${path}.properties`);
   if (source.children !== undefined) element.child = readChildren(source.children, `${path}.children`);
   const profiles = readOptionalString(source.profiles, `${path}.profiles`);
   if (profiles !== undefined) element.profiles = profiles;
@@ -588,8 +610,8 @@ function readChild(value: unknown, path: string): Child {
   child.bounds = { x: 0, y: 0, width: 0, height: 0 };
   for (const key of boundsKeys) child.bounds[key] = readNumber(bounds[key], `${path}.bounds.${key}`);
   if (source.connections !== undefined) child.sourceConnection = readConnections(source.connections, `${path}.connections`);
-  const properties = readOptionalEntries(source.properties, `${path}.properties`);
-  if (properties) child.properties = properties;
+  const properties = readPropertyList(source.properties, `${path}.properties`);
+  if (properties.length > 0) child.properties = properties;
   if (features) child.features = features;
   const unrecognized = readOpaque(source.unrecognized, `${path}.unrecognized`);
   if (unrecognized) child.unrecognized = unrecognized;
@@ -637,8 +659,8 @@ function readConnection(value: unknown, path: string): SourceConnection {
       return read;
     });
   }
-  const properties = readOptionalEntries(source.properties, `${path}.properties`);
-  if (properties) connection.properties = properties;
+  const properties = readPropertyList(source.properties, `${path}.properties`);
+  if (properties.length > 0) connection.properties = properties;
   const features = readOptionalEntries(source.features, `${path}.features`);
   if (features) {
     Object.assign(connection, DiagramAttributeMapper.readFeatures(features, connectionFeatures));

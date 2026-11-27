@@ -2,7 +2,6 @@ import { describe, it, expect, beforeEach } from 'vite-plus/test';
 import { Archimate } from '../src/Archimate.mjs';
 import { DiagramObjectFigure } from '../src/constants/archi-codes.mjs';
 import type { Element } from '../src/interfaces/Element.mjs';
-import type { ViewChild } from '../src/interfaces/ViewChild.mjs';
 import { readFile } from 'fs/promises';
 import { XMLParser } from 'fast-xml-parser';
 import type { Schema } from '../src/interfaces/schema/Schema.mjs';
@@ -10,6 +9,7 @@ import type { Folder as SchemaFolder } from '../src/interfaces/schema/Folder.mjs
 import type { Element as SchemaElement } from '../src/interfaces/schema/Element.mjs';
 import { archimateFromSchema, archimateToSchema } from '../src/internal/SchemaAccess.mjs';
 import type { Child } from '../src/interfaces/Child.mjs';
+import { findById, modelXml } from './helpers.mjs';
 
 describe('ViewManager', () => {
   let archimate: Archimate;
@@ -394,14 +394,14 @@ describe('listViews', () => {
 });
 
 describe('non-view elements in the Views folder', () => {
-  const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<archimate:model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:archimate="http://www.archimatetool.com/archimate" name="M" id="id-model" version="5.0.0">
-  <folder name="Business" id="id-business" type="business"/>
+  const xml = modelXml(
+    `  <folder name="Business" id="id-business" type="business"/>
   <folder name="Views" id="id-views" type="diagrams">
     <element xsi:type="archimate:BusinessActor" name="Actor" id="id-actor"/>
     <element xsi:type="archimate:ArchimateDiagramModel" name="View" id="id-view"/>
-  </folder>
-</archimate:model>`;
+  </folder>`,
+    { name: 'M', id: 'id-model' }
+  );
 
   function load(): Archimate {
     const archimate = archimateFromSchema(new XMLParser({ ignoreAttributes: false }).parse(xml) as Schema);
@@ -426,14 +426,7 @@ describe('non-view elements in the Views folder', () => {
 
 describe('views loaded from a file', () => {
   const load = async () => Archimate.fromXml(await readFile('tests/fixtures/roundtrip/nested-diagram-objects.archimate', 'utf8'));
-  const findChild = (children: ViewChild[], id: string): ViewChild | undefined => {
-    for (const child of children) {
-      const found = child.id === id ? child : findChild(child.children, id);
-      if (found) return found;
-    }
-    return undefined;
-  };
-  const child = (archimate: Archimate, id: string) => findChild(archimate.getView('id-nested-view')!.children, id)!;
+  const child = (archimate: Archimate, id: string) => findById(archimate.getView('id-nested-view')!.children, id, c => c.children)!;
   const errors = (archimate: Archimate) => archimate.validateModel().filter(issue => issue.severity === 'error');
 
   it('returns children, connections and target connections as arrays, also when there are none', async () => {
@@ -498,7 +491,7 @@ describe('views loaded from a file', () => {
     const before = archimate.toXml();
 
     const view = archimate.getView('id-nested-view')!;
-    const db = findChild(view.children, 'id-db-object')!;
+    const db = findById(view.children, 'id-db-object', c => c.children)!;
     db.fillColor = '#000000';
     db.bounds.x = 999;
     db.targetConnections.push('id-other');

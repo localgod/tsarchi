@@ -1,31 +1,17 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { readFile } from 'fs/promises';
-import { XMLBuilder, XMLParser } from 'fast-xml-parser';
+import { XMLBuilder } from 'fast-xml-parser';
 import { Archimate } from '../src/Archimate.mjs';
-import type { Schema } from '../src/interfaces/schema/Schema.mjs';
-import { archimateFromSchema, archimateToSchema } from '../src/internal/SchemaAccess.mjs';
+import { archimateToSchema } from '../src/internal/SchemaAccess.mjs';
+import { modelXml, parseFile, parseXml } from './helpers.mjs';
 
 const fixture = 'tests/fixtures/roundtrip/model-content.archimate';
 
-function parseXml(xml: string): Archimate {
-  const raw = new XMLParser({ ignoreAttributes: false }).parse(xml) as Schema;
-  const archimate = archimateFromSchema(raw);
-  return archimate;
-}
-
-async function parseFile(path: string): Promise<Archimate> {
-  return parseXml(await readFile(path, 'utf8'));
-}
-
 function modelWith(content: string): string {
-  return `<?xml version="1.0" encoding="UTF-8"?>
-<archimate:model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:archimate="http://www.archimatetool.com/archimate" name="m" id="id-m" version="5.0.0">
-  <folder name="Business" id="id-business" type="business">
+  return modelXml(`  <folder name="Business" id="id-business" type="business">
     <element xsi:type="archimate:BusinessActor" name="Customer" id="id-customer"/>
   </folder>
   <folder name="Relations" id="id-relations" type="relations"/>
-  ${content}
-</archimate:model>`;
+  ${content}`);
 }
 
 function modelKeys(archimate: Archimate): string[] {

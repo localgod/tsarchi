@@ -1,25 +1,8 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { readFile, readdir } from 'fs/promises';
+import { readdir } from 'fs/promises';
 import { Archimate } from '../src/Archimate.mjs';
 import { archimateToSchema } from '../src/internal/SchemaAccess.mjs';
-
-async function load(path: string): Promise<Archimate> {
-  return Archimate.fromXml(await readFile(path, 'utf8'));
-}
-
-/**
- * Every object in the serialized model that has an `@_id`, keyed by id.
- */
-function collectById(node: unknown, found = new Map<string, Record<string, unknown>>()): Map<string, Record<string, unknown>> {
-  if (Array.isArray(node)) {
-    node.forEach(item => collectById(item, found));
-  } else if (node && typeof node === 'object') {
-    const record = node as Record<string, unknown>;
-    if (typeof record['@_id'] === 'string') found.set(record['@_id'], record);
-    Object.values(record).forEach(value => collectById(value, found));
-  }
-  return found;
-}
+import { collectById, loadFile, modelXml } from './helpers.mjs';
 
 /**
  * Every `@_id` in the serialized model, duplicates included.
@@ -75,7 +58,7 @@ describe('duplicateView', () => {
     const files = (await readdir(roundtripFixtures)).filter(file => file.endsWith('.archimate'));
     let copied = 0;
     for (const file of files) {
-      const archimate = await load(`${roundtripFixtures}/${file}`);
+      const archimate = await loadFile(`${roundtripFixtures}/${file}`);
       const originalIds = new Set(allIds(archimateToSchema(archimate)));
 
       for (const view of archimate.listViews()) {
@@ -102,7 +85,7 @@ describe('duplicateView', () => {
   });
 
   it('should keep the copy after saving and loading', async () => {
-    const archimate = await load(`${roundtripFixtures}/connection-to-connection.archimate`);
+    const archimate = await loadFile(`${roundtripFixtures}/connection-to-connection.archimate`);
 
     const copy = archimate.duplicateView('id-c2c-view', { name: 'Variant' })!;
 
@@ -113,7 +96,7 @@ describe('duplicateView', () => {
   });
 
   it('should refer to the same elements and relationships, without copying them', async () => {
-    const archimate = await load(`${roundtripFixtures}/connection-to-connection.archimate`);
+    const archimate = await loadFile(`${roundtripFixtures}/connection-to-connection.archimate`);
     const elements = archimate.listElements().length;
     const relationships = archimate.listRelationships().length;
 
@@ -126,7 +109,7 @@ describe('duplicateView', () => {
   });
 
   it('should leave the original unchanged when the copy is edited', async () => {
-    const archimate = await load(`${roundtripFixtures}/nested-diagram-objects.archimate`);
+    const archimate = await loadFile(`${roundtripFixtures}/nested-diagram-objects.archimate`);
     const original = archimate.getView('id-nested-view');
 
     const copy = archimate.duplicateView('id-nested-view')!;
@@ -139,7 +122,7 @@ describe('duplicateView', () => {
   });
 
   it('should add the copy at the end of the original view’s nested folder', async () => {
-    const archimate = await load(`${roundtripFixtures}/nested-folders.archimate`);
+    const archimate = await loadFile(`${roundtripFixtures}/nested-folders.archimate`);
 
     const copy = archimate.duplicateView('id-portal-view')!;
 
@@ -152,7 +135,7 @@ describe('duplicateView', () => {
   });
 
   it('should add the copy at the end of the top-level folder', async () => {
-    const archimate = await load(`${roundtripFixtures}/view-references.archimate`);
+    const archimate = await loadFile(`${roundtripFixtures}/view-references.archimate`);
 
     const copy = archimate.duplicateView('id-overview')!;
 
@@ -161,7 +144,7 @@ describe('duplicateView', () => {
   });
 
   it('should point a reference to the view itself at the copy, and keep references to other views', async () => {
-    const archimate = await load(`${roundtripFixtures}/view-references.archimate`);
+    const archimate = await loadFile(`${roundtripFixtures}/view-references.archimate`);
     const xml = archimate.toXml().replace('model="id-other"', 'model="id-overview"');
     const withSelfReference = Archimate.fromXml(xml);
 
@@ -177,9 +160,8 @@ describe('duplicateView', () => {
   });
 
   it('should give new ids to unrecognized content and rewrite references to copied objects in it', () => {
-    const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<archimate:model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:archimate="http://www.archimatetool.com/archimate" name="future" id="id-model" version="5.0.0">
-  <folder name="Business" id="id-business" type="business">
+    const xml = modelXml(
+      `  <folder name="Business" id="id-business" type="business">
     <element xsi:type="archimate:BusinessActor" name="Actor" id="id-actor"/>
   </folder>
   <folder name="Views" id="id-views" type="diagrams">
@@ -189,8 +171,9 @@ describe('duplicateView', () => {
         <futureLink id="id-future" source="id-object" target="id-actor" targetConnections="id-object id-elsewhere"/>
       </child>
     </element>
-  </folder>
-</archimate:model>`;
+  </folder>`,
+      { name: 'future', id: 'id-model' }
+    );
     const archimate = Archimate.fromXml(xml);
 
     const copy = archimate.duplicateView('id-view')!;
@@ -208,7 +191,7 @@ describe('duplicateView', () => {
   });
 
   it('should register the copy’s ids, so new ids do not reuse them', async () => {
-    const archimate = await load(`${roundtripFixtures}/connection-to-connection.archimate`);
+    const archimate = await loadFile(`${roundtripFixtures}/connection-to-connection.archimate`);
 
     const copy = archimate.duplicateView('id-c2c-view')!;
 
@@ -218,7 +201,7 @@ describe('duplicateView', () => {
   });
 
   it('should return null when there is no view with that id', async () => {
-    const archimate = await load(`${roundtripFixtures}/connection-to-connection.archimate`);
+    const archimate = await loadFile(`${roundtripFixtures}/connection-to-connection.archimate`);
     const before = archimate.toXml();
 
     expect(archimate.duplicateView('id-missing')).toBeNull();

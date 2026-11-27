@@ -2,22 +2,17 @@ import { describe, expect, it } from 'vite-plus/test';
 import { readFile } from 'fs/promises';
 import { XMLParser } from 'fast-xml-parser';
 import { Archimate } from '../src/Archimate.mjs';
-import type { Schema } from '../src/interfaces/schema/Schema.mjs';
 import type { SourceConnection as SchemaSourceConnection } from '../src/interfaces/schema/SourceConnection.mjs';
 import { schemaToSourceConnection, toSchemaSourceConnection } from '../src/internal/SourceConnectionMapper.mjs';
-import type { Child } from '../src/interfaces/Child.mjs';
-import { archimateFromSchema, archimateToSchema } from '../src/internal/SchemaAccess.mjs';
+import { archimateToSchema } from '../src/internal/SchemaAccess.mjs';
 import { toArray } from '../src/internal/Arrays.mjs';
 import type { ArchimateModelType } from '../src/constants/archimate-mappings.mjs';
+import { findById, modelXml, parseFile } from './helpers.mjs';
 
 const fixturesDir = 'tests/fixtures/archi';
-
-async function parseFixture(name: string): Promise<Archimate> {
-  const xml = await readFile(`${fixturesDir}/${name}`, 'utf8');
-  const raw = new XMLParser({ ignoreAttributes: false }).parse(xml) as Schema;
-  const archimate = archimateFromSchema(raw);
-  return archimate;
-}
+const parseFixture = (name: string) => parseFile(`${fixturesDir}/${name}`);
+const findChild = (archimate: Archimate, viewId: string, id: string) =>
+  findById(archimate.getElement(viewId)?.child, id, child => child.child);
 
 function collectSourceConnections(node: unknown, found: Record<string, unknown>[] = []): Record<string, unknown>[] {
   if (Array.isArray(node)) {
@@ -31,17 +26,6 @@ function collectSourceConnections(node: unknown, found: Record<string, unknown>[
     }
   }
   return found;
-}
-
-function findChild(archimate: Archimate, viewId: string, id: string): Child | undefined {
-  const search = (children: Child | Child[] | undefined): Child | undefined => {
-    for (const child of Array.isArray(children) ? children : children ? [children] : []) {
-      const found = child.id === id ? child : search(child.child);
-      if (found) return found;
-    }
-    return undefined;
-  };
-  return search(archimate.getElement(viewId)?.child);
 }
 
 // testDeleteHandler has two relationships Archi's matrix rejects; they are warnings, not errors.
@@ -265,12 +249,14 @@ describe('Archi-produced models', () => {
   });
 
   it('should keep an element in the folder it was loaded from when its type is unchanged', () => {
-    const archimate = Archimate.fromXml(`<?xml version="1.0" encoding="UTF-8"?>
-<archimate:model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:archimate="http://www.archimatetool.com/archimate" name="T" id="m" version="5.0.0">
-  <folder name="Motivation" id="f1" type="motivation">
+    const archimate = Archimate.fromXml(
+      modelXml(
+        `  <folder name="Motivation" id="f1" type="motivation">
     <element xsi:type="archimate:Meaning" id="e1" name="E1"/>
-  </folder>
-</archimate:model>`);
+  </folder>`,
+        { name: 'T', id: 'm' }
+      )
+    );
 
     archimate.updateElement('e1', { name: 'Renamed' });
 
@@ -279,12 +265,13 @@ describe('Archi-produced models', () => {
   });
 
   describe('elements in a hand-written model', () => {
-    const wrap = (element: string) => `<?xml version="1.0" encoding="UTF-8"?>
-<archimate:model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:archimate="http://www.archimatetool.com/archimate" name="T" id="m" version="5.0.0">
-  <folder name="Business" id="f1" type="business">
+    const wrap = (element: string) =>
+      modelXml(
+        `  <folder name="Business" id="f1" type="business">
     ${element}
-  </folder>
-</archimate:model>`;
+  </folder>`,
+        { name: 'T', id: 'm' }
+      );
 
     it.each(['<element id="e1" name="E1"/>', '<element xsi:type="" id="e1" name="E1"/>'])(
       'should report a missing type as an error instead of inventing one: %s',

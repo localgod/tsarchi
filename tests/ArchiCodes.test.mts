@@ -15,6 +15,7 @@ import {
   Viewpoint,
 } from '../src/constants/archi-codes.mjs';
 import { ArchimateType, folderType } from '../src/constants/archimate-mappings.mjs';
+import { modelXml } from './helpers.mjs';
 
 const bounds = { x: 0, y: 0, width: 120, height: 55 };
 
@@ -179,12 +180,9 @@ describe('Archi codes', () => {
 
     it('should still update a loaded view whose viewpoint Archi no longer offers', () => {
       const loaded = Archimate.fromXml(
-        `<?xml version="1.0" encoding="UTF-8"?>
-<archimate:model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:archimate="http://www.archimatetool.com/archimate" name="m" id="id-m" version="5.0.0">
-  <folder name="Views" id="id-views" type="diagrams">
+        modelXml(`  <folder name="Views" id="id-views" type="diagrams">
     <element xsi:type="archimate:ArchimateDiagramModel" name="View" id="id-view" viewpoint="retired"/>
-  </folder>
-</archimate:model>`
+  </folder>`)
       );
 
       expect(loaded.updateElement('id-view', { name: 'Renamed' })).toMatchObject({ name: 'Renamed', viewpoint: 'retired' });

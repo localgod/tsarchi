@@ -1,32 +1,14 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { readFile } from 'fs/promises';
 import { Archimate } from '../src/Archimate.mjs';
 import { archimateToSchema } from '../src/internal/SchemaAccess.mjs';
-
-async function load(path: string): Promise<Archimate> {
-  return Archimate.fromXml(await readFile(path, 'utf8'));
-}
-
-/**
- * Every object in the serialized model that has an `@_id`, keyed by id.
- */
-function collectById(node: unknown, found = new Map<string, Record<string, unknown>>()): Map<string, Record<string, unknown>> {
-  if (Array.isArray(node)) {
-    node.forEach(item => collectById(item, found));
-  } else if (node && typeof node === 'object') {
-    const record = node as Record<string, unknown>;
-    if (typeof record['@_id'] === 'string') found.set(record['@_id'], record);
-    Object.values(record).forEach(value => collectById(value, found));
-  }
-  return found;
-}
+import { collectById, loadFile } from './helpers.mjs';
 
 const connectionToConnection = 'tests/fixtures/roundtrip/connection-to-connection.archimate';
 const nestedDiagramObjects = 'tests/fixtures/roundtrip/nested-diagram-objects.archimate';
 
 describe('removeDiagramObject', () => {
   it('should remove the object, its nested objects and their connections, and keep the elements and relationships', async () => {
-    const archimate = await load(nestedDiagramObjects);
+    const archimate = await loadFile(nestedDiagramObjects);
 
     const removed = archimate.removeDiagramObject('id-nested-view', 'id-portal-object');
 
@@ -47,7 +29,7 @@ describe('removeDiagramObject', () => {
   });
 
   it('should remove a group with everything in it', async () => {
-    const archimate = await load(nestedDiagramObjects);
+    const archimate = await loadFile(nestedDiagramObjects);
 
     expect(new Set(archimate.removeDiagramObject('id-nested-view', 'id-group'))).toEqual(
       new Set(['id-group', 'id-group-api-object', 'id-group-portal-object'])
@@ -57,7 +39,7 @@ describe('removeDiagramObject', () => {
   });
 
   it('should remove an object nested at any depth and only that one of the objects showing its element', async () => {
-    const archimate = await load(nestedDiagramObjects);
+    const archimate = await loadFile(nestedDiagramObjects);
 
     expect(archimate.removeDiagramObject('id-nested-view', 'id-nested-portal-object')).toEqual([
       'id-nested-portal-object',
@@ -73,7 +55,7 @@ describe('removeDiagramObject', () => {
   });
 
   it('should remove a note and the connections drawn from it', async () => {
-    const archimate = await load(nestedDiagramObjects);
+    const archimate = await loadFile(nestedDiagramObjects);
 
     expect(archimate.removeDiagramObject('id-nested-view', 'id-note')).toEqual([
       'id-note',
@@ -90,7 +72,7 @@ describe('removeDiagramObject', () => {
   });
 
   it('should remove connections attached to a connection of the removed object', async () => {
-    const archimate = await load(connectionToConnection);
+    const archimate = await loadFile(connectionToConnection);
 
     expect(new Set(archimate.removeDiagramObject('id-c2c-view', 'id-cashier-object'))).toEqual(
       new Set(['id-cashier-object', 'id-assignment-connection', 'id-assignment-association-connection', 'id-contract-connection'])
@@ -126,7 +108,7 @@ describe('removeDiagramObject', () => {
   });
 
   it('should return an empty array for an unknown view or id, or the id of a connection', async () => {
-    const archimate = await load(nestedDiagramObjects);
+    const archimate = await loadFile(nestedDiagramObjects);
     const before = archimate.toXml();
 
     expect(archimate.removeDiagramObject('id-missing', 'id-portal-object')).toEqual([]);
@@ -139,7 +121,7 @@ describe('removeDiagramObject', () => {
 
 describe('removeConnection', () => {
   it('should remove a connection with the connections nested in and attached to it, and keep the relationships', async () => {
-    const archimate = await load(connectionToConnection);
+    const archimate = await loadFile(connectionToConnection);
 
     expect(archimate.removeConnection('id-c2c-view', 'id-assignment-connection')).toEqual([
       'id-assignment-connection',
@@ -158,7 +140,7 @@ describe('removeConnection', () => {
   });
 
   it('should remove a connection nested in a connection and keep its parent', async () => {
-    const archimate = await load(connectionToConnection);
+    const archimate = await loadFile(connectionToConnection);
 
     expect(archimate.removeConnection('id-c2c-view', 'id-assignment-association-connection')).toEqual([
       'id-assignment-association-connection',
@@ -172,7 +154,7 @@ describe('removeConnection', () => {
   });
 
   it('should remove a connection drawn onto a connection and keep the one it ends on', async () => {
-    const archimate = await load(nestedDiagramObjects);
+    const archimate = await loadFile(nestedDiagramObjects);
 
     expect(archimate.removeConnection('id-nested-view', 'id-note-to-connection')).toEqual(['id-note-to-connection']);
 
@@ -183,7 +165,7 @@ describe('removeConnection', () => {
   });
 
   it('should keep the other ids in a space-separated targetConnections', async () => {
-    const archimate = await load(nestedDiagramObjects);
+    const archimate = await loadFile(nestedDiagramObjects);
 
     expect(archimate.removeConnection('id-nested-view', 'id-note-to-db')).toEqual(['id-note-to-db']);
 
@@ -192,7 +174,7 @@ describe('removeConnection', () => {
   });
 
   it('should return an empty array for an unknown view or id, or the id of a diagram object', async () => {
-    const archimate = await load(connectionToConnection);
+    const archimate = await loadFile(connectionToConnection);
     const before = archimate.toXml();
 
     expect(archimate.removeConnection('id-missing', 'id-assignment-connection')).toEqual([]);
@@ -204,8 +186,8 @@ describe('removeConnection', () => {
 
 describe('removeFromView', () => {
   it('should remove diagram children and connections together, as the single-id methods do one by one', async () => {
-    const batch = await load(nestedDiagramObjects);
-    const oneByOne = await load(nestedDiagramObjects);
+    const batch = await loadFile(nestedDiagramObjects);
+    const oneByOne = await loadFile(nestedDiagramObjects);
 
     const removed = batch.removeFromView('id-nested-view', ['id-group', 'id-note-to-connection', 'id-nested-portal-object']);
 
@@ -228,7 +210,7 @@ describe('removeFromView', () => {
   });
 
   it('should skip ids removed along with another id in the list, and ids not found', async () => {
-    const archimate = await load(connectionToConnection);
+    const archimate = await loadFile(connectionToConnection);
 
     const removed = archimate.removeFromView('id-c2c-view', [
       'id-cashier-object',
@@ -247,7 +229,7 @@ describe('removeFromView', () => {
   });
 
   it('should take any iterable of ids', async () => {
-    const archimate = await load(connectionToConnection);
+    const archimate = await loadFile(connectionToConnection);
 
     expect(archimate.removeFromView('id-c2c-view', new Set(['id-assignment-association-connection']))).toEqual([
       'id-assignment-association-connection',
@@ -255,7 +237,7 @@ describe('removeFromView', () => {
   });
 
   it('should return an empty array and leave the model unchanged for an unknown view, no ids or only unknown ids', async () => {
-    const archimate = await load(connectionToConnection);
+    const archimate = await loadFile(connectionToConnection);
     const before = archimate.toXml();
 
     expect(archimate.removeFromView('id-missing', ['id-clerk-object'])).toEqual([]);

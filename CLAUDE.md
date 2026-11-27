@@ -35,6 +35,7 @@ TypeScript library that loads, edits, validates and saves Archi (`.archimate`) m
 
 ## Fixtures
 
+- Shared test helpers (`parseFile`, `loadFile`, `collectById`, `findById`, `modelXml`) are in `tests/helpers.mts`; use them instead of a local copy.
 - `tests/fixtures/archi/` — unmodified files from the Archi repo, provenance listed in its `README.md`. They may still fail validation or round-trip; `tests/ArchiFixtures.test.mts` covers them.
 - `tests/fixtures/roundtrip/` — hand-written fixtures that must validate and round-trip exactly. Every file here is picked up automatically.
 

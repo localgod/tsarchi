@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { readFile } from 'fs/promises';
 import { XMLParser } from 'fast-xml-parser';
 import { Archimate } from '../src/Archimate.mjs';
 import type { Schema } from '../src/interfaces/schema/Schema.mjs';
@@ -11,13 +10,7 @@ import { archimateFromSchema, archimateToSchema } from '../src/internal/SchemaAc
 import { toArray } from '../src/internal/Arrays.mjs';
 import { ModelIndex } from '../src/internal/ModelIndex.mjs';
 import { randomArchiId } from '../src/internal/Ids.mjs';
-
-async function parseFile(path: string): Promise<Archimate> {
-  const xml = await readFile(path, 'utf8');
-  const raw = new XMLParser({ ignoreAttributes: false }).parse(xml) as Schema;
-  const archimate = archimateFromSchema(raw);
-  return archimate;
-}
+import { modelXml, parseFile } from './helpers.mjs';
 
 function findSchemaFolder(folders: SchemaFolder | SchemaFolder[] | undefined, id: string): SchemaFolder | undefined {
   for (const folder of Array.isArray(folders) ? folders : folders ? [folders] : []) {
@@ -44,12 +37,12 @@ function elementIds(folder: SchemaFolder | undefined): string[] {
 
 describe('top-level folders', () => {
   it('should load a model with a single top-level folder', () => {
-    const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<archimate:model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:archimate="http://www.archimatetool.com/archimate" name="M" id="id-model" version="5.0.0">
-  <folder name="Views" id="id-views" type="diagrams">
+    const xml = modelXml(
+      `  <folder name="Views" id="id-views" type="diagrams">
     <element xsi:type="archimate:ArchimateDiagramModel" name="View" id="id-view"/>
-  </folder>
-</archimate:model>`;
+  </folder>`,
+      { name: 'M', id: 'id-model' }
+    );
     const archimate = archimateFromSchema(new XMLParser({ ignoreAttributes: false }).parse(xml) as Schema);
 
     expect(archimate.getFolder('diagrams')).toEqual({ id: 'id-views', name: 'Views' });

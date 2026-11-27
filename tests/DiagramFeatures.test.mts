@@ -1,23 +1,14 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { readFile } from 'fs/promises';
-import { XMLParser } from 'fast-xml-parser';
 import { Archimate } from '../src/Archimate.mjs';
 import type { Child } from '../src/interfaces/Child.mjs';
 import type { SourceConnection } from '../src/interfaces/SourceConnection.mjs';
-import type { Schema } from '../src/interfaces/schema/Schema.mjs';
 import type { Child as SchemaChild } from '../src/interfaces/schema/Child.mjs';
 import type { Element as SchemaElement } from '../src/interfaces/schema/Element.mjs';
 import type { Feature as SchemaFeature } from '../src/interfaces/schema/Feature.mjs';
 import type { SourceConnection as SchemaSourceConnection } from '../src/interfaces/schema/SourceConnection.mjs';
-import { archimateFromSchema, archimateToSchema } from '../src/internal/SchemaAccess.mjs';
+import { archimateToSchema } from '../src/internal/SchemaAccess.mjs';
 import { toArray } from '../src/internal/Arrays.mjs';
-
-async function parseFile(path: string): Promise<Archimate> {
-  const xml = await readFile(path, 'utf8');
-  const raw = new XMLParser({ ignoreAttributes: false }).parse(xml) as Schema;
-  const archimate = archimateFromSchema(raw);
-  return archimate;
-}
+import { parseFile } from './helpers.mjs';
 
 function viewChildren(archimate: Archimate, viewId: string): Child[] {
   const child = archimate.getElement(viewId)?.child;

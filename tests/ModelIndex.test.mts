@@ -5,6 +5,7 @@ import type { Child } from '../src/interfaces/Child.mjs';
 import type { Model } from '../src/interfaces/Model.mjs';
 import type { ModelContent } from '../src/interfaces/Model.mjs';
 import { ModelIndex } from '../src/internal/ModelIndex.mjs';
+import { modelXml } from './helpers.mjs';
 
 type IndexInternals = {
   ids?: Map<string, number>;
@@ -189,13 +190,12 @@ describe('the lookups on a model with duplicate ids', () => {
   });
 
   it('should find the other element with the same id after one is deleted', () => {
-    const archimate = Archimate.fromXml(`<?xml version="1.0" encoding="UTF-8"?>
-<archimate:model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:archimate="http://www.archimatetool.com/archimate" name="m" id="id-m" version="5.0.0">
-  <folder name="Business" id="id-b" type="business">
+    const archimate = Archimate.fromXml(
+      modelXml(`  <folder name="Business" id="id-b" type="business">
     <element xsi:type="archimate:BusinessActor" name="First" id="id-dup"/>
     <element xsi:type="archimate:BusinessActor" name="Second" id="id-dup"/>
-  </folder>
-</archimate:model>`);
+  </folder>`)
+    );
     buildIndex(archimate);
 
     expect(archimate.deleteElement('id-dup')).toBe(true);

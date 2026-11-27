@@ -1,30 +1,6 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { readFile } from 'fs/promises';
-import { XMLParser } from 'fast-xml-parser';
-import { Archimate } from '../src/Archimate.mjs';
-import type { Schema } from '../src/interfaces/schema/Schema.mjs';
-import { archimateFromSchema, archimateToSchema } from '../src/internal/SchemaAccess.mjs';
-
-async function parseFile(path: string, edit: (xml: string) => string = xml => xml): Promise<Archimate> {
-  const xml = edit(await readFile(path, 'utf8'));
-  const raw = new XMLParser({ ignoreAttributes: false }).parse(xml) as Schema;
-  const archimate = archimateFromSchema(raw);
-  return archimate;
-}
-
-/**
- * Every object in the serialized model that has an `@_id`, keyed by id.
- */
-function collectById(node: unknown, found = new Map<string, Record<string, unknown>>()): Map<string, Record<string, unknown>> {
-  if (Array.isArray(node)) {
-    node.forEach(item => collectById(item, found));
-  } else if (node && typeof node === 'object') {
-    const record = node as Record<string, unknown>;
-    if (typeof record['@_id'] === 'string') found.set(record['@_id'], record);
-    Object.values(record).forEach(value => collectById(value, found));
-  }
-  return found;
-}
+import { archimateToSchema } from '../src/internal/SchemaAccess.mjs';
+import { collectById, parseFile } from './helpers.mjs';
 
 const viewReferences = 'tests/fixtures/roundtrip/view-references.archimate';
 

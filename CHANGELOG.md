@@ -15,9 +15,11 @@ This project adheres to [Keep a CHANGELOG](http://keepachangelog.com/)
 ### Changed
 
 - ⚠️ Breaking: `properties` on models, folders, elements, relationships, views, diagram objects and view connections is a `Property[]` of `{ key, value }`, in file order, instead of a `Map<string, string>`, so a key can appear more than once, as Archi allows. `getProperties()` returns and `setProperties()` takes a list, and `updateElement()` and `upsertElement()` replace the whole list instead of merging it by key. See "Upgrading from 4.x" in the README ([#551](https://github.com/localgod/tsarchi/issues/551)).
+- ⚠️ Breaking: `getMetadata()` returns and `setMetadata()` takes a `Property[]` instead of a `Map<string, string>`, as `ModelContent.metadata` now holds, so the property helpers work on it ([#553](https://github.com/localgod/tsarchi/issues/553)).
 
 ### Fixed
 
+- A `<metadata>` entry key that appears more than once, as Archi allows, is no longer lost on load ([#553](https://github.com/localgod/tsarchi/issues/553)).
 - A property key that appears more than once is no longer lost on load: every property is saved again in file order, and kept through `snapshot()` / `restore()` ([#551](https://github.com/localgod/tsarchi/issues/551)).
 
 ## [4.5.0] - 2026-11-02

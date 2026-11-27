@@ -53,7 +53,7 @@ The `tsarchi` entry point holds the model API and runs in Node.js and in the bro
 Version 5.0.0 keeps properties as Archi does, as an ordered list in which a key may appear more than once (see [Properties](#properties)):
 
 - `properties` on models, folders, elements, relationships, views, diagram objects and view connections is a `Property[]` of `{ key, value }` instead of a `Map<string, string>`. Read a value with `getProperty(properties, key)` instead of `properties.get(key)`.
-- `getProperties()` returns a `Property[]` and `setProperties()` takes one.
+- `getProperties()` and `getMetadata()` return a `Property[]`, and `setProperties()` and `setMetadata()` take one. Model metadata keeps repeated keys too.
 - `updateElement()` and `upsertElement()` replace the whole `properties` list instead of merging it by key. To change one key, pass `setProperty(element.properties, key, value)`.
 - `updateFolder()`, `updateFolderById()` and `createFolder()` take a `properties` list; an empty list removes the properties.
 
@@ -320,7 +320,7 @@ Model-level properties, metadata and specializations (profiles) are available th
 
 ```typescript
 model.setProperties([{ key: "Owner", value: "Enterprise Architecture" }]);
-model.setMetadata(new Map([["creator", "tsarchi"]]));
+model.setMetadata([{ key: "creator", value: "tsarchi" }]);
 model.setProfiles([{ id: "profile-id", name: "Premium", conceptType: "BusinessActor" }]);
 model.updateElement("element-id", { profiles: "profile-id" });
 ```

@@ -5,7 +5,6 @@ import type { Schema as ArchimateSchema } from '../interfaces/schema/Schema.mjs'
 import type { Folder as SchemaFolder } from '../interfaces/schema/Folder.mjs';
 import type { Element as SchemaElement } from '../interfaces/schema/Element.mjs';
 import type { Child as SchemaChild } from '../interfaces/schema/Child.mjs';
-import type { Property as SchemaProperty } from '../interfaces/schema/Property.mjs';
 import type { Element } from '../interfaces/Element.mjs';
 import type { Child } from '../interfaces/Child.mjs';
 import type { Folder } from '../interfaces/Folder.mjs';
@@ -122,7 +121,7 @@ export class Parser {
     const content: ModelContent = {
       purpose: text(model.purpose),
       properties: schemaToOptionalProperties(model.property),
-      metadata: metadata !== undefined ? this.createPropertiesMap({ property: metadata === '' ? undefined : metadata.entry }) : undefined,
+      metadata: metadata !== undefined ? schemaToProperties(metadata === '' ? undefined : metadata.entry) : undefined,
       profiles: model.profile !== undefined ? toArray(model.profile).map(profile => this.createProfile(profile)) : undefined,
       unrecognized: Object.keys(unrecognized).length > 0 ? unrecognized : undefined,
     };
@@ -241,17 +240,6 @@ export class Parser {
 
   private extractElementType(typeString: string | undefined): string {
     return typeString ? typeFromXsiType(typeString) : 'Unknown';
-  }
-
-  private createPropertiesMap(element: { property?: SchemaProperty | SchemaProperty[] }): Map<string, string> {
-    const properties = new Map<string, string>();
-    toArray(element.property).forEach(property => {
-      if (property) {
-        properties.set(property['@_key'], property['@_value']);
-      }
-    });
-
-    return properties;
   }
 
   private loadChildren(childElements: SchemaChild | SchemaChild[]): Child[] {

@@ -1,6 +1,5 @@
 import type { Bendpoint as SchemaBendpoint } from '../interfaces/schema/Bendpoint.mjs';
 import type { Feature as SchemaFeature } from '../interfaces/schema/Feature.mjs';
-import type { Property as SchemaProperty } from '../interfaces/schema/Property.mjs';
 import type { ViewBendpoint } from '../interfaces/View.mjs';
 import { toArray } from './Arrays.mjs';
 
@@ -130,11 +129,6 @@ export class DiagramAttributeMapper {
       result[`@_${attribute}`] = String(value);
     }
     return result;
-  }
-
-  public static propertiesToSchema(properties: Map<string, string> | undefined): SchemaProperty[] | undefined {
-    if (!properties || properties.size === 0) return undefined;
-    return Array.from(properties, ([key, value]) => ({ '@_key': key, '@_value': value }));
   }
 
   public static schemaToFeatures(feature: SchemaFeature | SchemaFeature[] | undefined): Map<string, string> | undefined {

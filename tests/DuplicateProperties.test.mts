@@ -107,6 +107,23 @@ describe('duplicate property keys', () => {
     expect(model.toXml()).not.toContain('key="Owner"');
   });
 
+  it('keeps repeated metadata keys', async () => {
+    const model = await load();
+    expect(model.getMetadata()).toEqual([
+      { key: 'creator', value: 'Archi' },
+      { key: 'subject', value: 'sales' },
+      { key: 'creator', value: 'tsarchi' },
+    ]);
+
+    model.setMetadata(setProperty(model.getMetadata(), 'subject', 'finance'));
+    model.getMetadata()[0].value = 'changed';
+    expect(Archimate.fromXml(model.toXml()).getMetadata()).toEqual([
+      { key: 'creator', value: 'Archi' },
+      { key: 'subject', value: 'finance' },
+      { key: 'creator', value: 'tsarchi' },
+    ]);
+  });
+
   it('keeps repeated keys through a snapshot', async () => {
     const model = await load();
     const copy = Archimate.fromSnapshot(JSON.parse(JSON.stringify(model.snapshot())));

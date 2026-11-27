@@ -48,4 +48,9 @@
   <property key="Owner" value="Enterprise Architecture"/>
   <property key="Status" value="Draft"/>
   <property key="Owner" value="Security"/>
+  <metadata>
+    <entry key="creator" value="Archi"/>
+    <entry key="subject" value="sales"/>
+    <entry key="creator" value="tsarchi"/>
+  </metadata>
 </archimate:model>

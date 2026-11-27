@@ -804,18 +804,19 @@ export class Archimate {
   }
 
   /**
-   * Returns a copy of the entries of the model's `<metadata>`, in file order.
+   * Returns a copy of the entries of the model's `<metadata>`, in file order. A key may appear more than once; the
+   * property helpers such as `getProperty` read the list.
    */
-  public getMetadata(): Map<string, string> {
-    return new Map(this.content.metadata);
+  public getMetadata(): Property[] {
+    return copyProperties(this.content.metadata ?? []);
   }
 
   /**
-   * Replaces the entries of the model's `<metadata>`. Pass undefined to remove the element; an empty map
+   * Replaces the entries of the model's `<metadata>`. Pass undefined to remove the element; an empty list
    * writes an empty `<metadata/>`.
    */
-  public setMetadata(metadata: Map<string, string> | undefined): void {
-    this.content.metadata = metadata ? new Map(metadata) : undefined;
+  public setMetadata(metadata: readonly Property[] | undefined): void {
+    this.content.metadata = metadata ? copyProperties(metadata) : undefined;
   }
 
   /**

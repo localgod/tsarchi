@@ -40,12 +40,10 @@ describe('model-level content', () => {
       { key: 'Owner', value: 'Enterprise Architecture' },
       { key: 'Status', value: 'Draft' },
     ]);
-    expect(archimate.getMetadata()).toEqual(
-      new Map([
-        ['schema', 'Dublin Core'],
-        ['creator', 'tsarchi'],
-      ])
-    );
+    expect(archimate.getMetadata()).toEqual([
+      { key: 'schema', value: 'Dublin Core' },
+      { key: 'creator', value: 'tsarchi' },
+    ]);
     expect(archimate.getProfiles()).toEqual([
       {
         id: 'id-profile-premium',
@@ -64,7 +62,7 @@ describe('model-level content', () => {
   it('should write model content set in code in the order Archi uses', () => {
     const archimate = parseXml(modelWith(''));
     archimate.setProfiles([{ id: 'id-profile', name: 'VIP', conceptType: 'BusinessActor' }]);
-    archimate.setMetadata(new Map([['k', 'v']]));
+    archimate.setMetadata([{ key: 'k', value: 'v' }]);
     archimate.setPurpose('Why');
     archimate.setProperties([{ key: 'p', value: '1' }]);
     archimate.updateElement('id-customer', { profiles: 'id-profile' });
@@ -93,7 +91,7 @@ describe('model-level content', () => {
   it('should keep an empty metadata element', () => {
     const archimate = parseXml(modelWith('<metadata/>'));
 
-    expect(archimate.getMetadata().size).toBe(0);
+    expect(archimate.getMetadata()).toEqual([]);
     expect(new XMLBuilder({ ignoreAttributes: false, suppressEmptyNode: true }).build(archimateToSchema(archimate))).toContain(
       '<metadata/>'
     );

@@ -8,7 +8,7 @@ import { isArchimateViewType } from '../constants/archimate-mappings.mjs';
 import { removeFromNestedFolders } from './NestedFolders.mjs';
 import { deepCopy } from './Copy.mjs';
 import { randomArchiId } from './Ids.mjs';
-import { ModelIndex } from './ModelIndex.mjs';
+import { ModelIndex, viewChildIds } from './ModelIndex.mjs';
 import { assertOptionalCode } from './Codes.mjs';
 import { ConnectionTextPosition, DiagramObjectFigure, TextAlignment, Viewpoint } from '../constants/archi-codes.mjs';
 import { toViewChild, toViewConnection } from './ViewChildMapper.mjs';
@@ -248,7 +248,7 @@ export class ViewManager {
     if (!viewElement || !this.findChild(viewElement.child ?? [], diagramObjectId)) return [];
 
     const removedIds = removeViewChildren(viewElement, child => child.id === diagramObjectId);
-    this.index.clear();
+    this.index.removeIds(removedIds);
     return [...removedIds];
   }
 
@@ -261,7 +261,7 @@ export class ViewManager {
     if (!viewElement || !this.hasConnection(viewElement.child ?? [], connectionId)) return [];
 
     const removedIds = removeViewConnections(viewElement, connection => connection.id === connectionId);
-    this.index.clear();
+    this.index.removeIds(removedIds);
     return [...removedIds];
   }
 
@@ -279,7 +279,7 @@ export class ViewManager {
       ...removeViewChildren(viewElement, child => idSet.has(child.id)),
       ...removeViewConnections(viewElement, connection => idSet.has(connection.id)),
     ];
-    if (removedIds.length > 0) this.index.clear();
+    this.index.removeIds(removedIds);
     return removedIds;
   }
 
@@ -334,10 +334,12 @@ export class ViewManager {
     const original = this.findView(viewId);
     if (!original) return null;
 
+    const reserved: string[] = [];
     const copy = copyView(original, () => {
       const id = this.generateUniqueId();
       // Reserve each id, so the ones generated for the rest of the copy differ from it.
       this.index.addId(id);
+      reserved.push(id);
       return id;
     });
     copy.name = options?.name ?? `${original.name} (copy)`;
@@ -345,7 +347,9 @@ export class ViewManager {
     this.model.diagrams.elements!.push(copy);
     const folder = findNestedFolder(this.model.diagrams.folders || [], viewId);
     if (folder) folder.elementIds = [...folder.elementIds!, copy.id];
-    this.index.clear();
+    // The reserved ids are counted again, with the copy's place, when it is recorded as added.
+    this.index.removeIds(reserved);
+    this.index.added('diagrams', copy);
     return this.elementToView(copy);
   }
 
@@ -358,9 +362,9 @@ export class ViewManager {
     const index = this.model.diagrams.elements.findIndex(el => el.id === viewId);
     if (index === -1) return false;
 
-    this.model.diagrams.elements.splice(index, 1);
+    const [view] = this.model.diagrams.elements.splice(index, 1);
     removeFromNestedFolders(this.model.diagrams.folders || [], new Set([viewId]));
-    this.index.clear();
+    this.index.removed([view], viewChildIds(view.child ?? []));
     return true;
   }
 

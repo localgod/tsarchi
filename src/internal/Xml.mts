@@ -25,8 +25,10 @@ function decodeReferences(raw: string): string {
  */
 export const xmlValueOptions = {
   processEntities: false,
-  tagValueProcessor: (_name: string, value: string) => decodeReferences(value.replace(/\r\n?/g, '\n')),
-  attributeValueProcessor: (_name: string, value: string) => decodeReferences(value.replace(/\r\n|[\t\n\r]/g, ' ')),
+  // Most values hold none of these characters, so the replacements are skipped for them.
+  tagValueProcessor: (_name: string, value: string) => (/[&\r]/.test(value) ? decodeReferences(value.replace(/\r\n?/g, '\n')) : value),
+  attributeValueProcessor: (_name: string, value: string) =>
+    /[&\t\n\r]/.test(value) ? decodeReferences(value.replace(/\r\n|[\t\n\r]/g, ' ')) : value,
 } satisfies Partial<X2jOptions>;
 
 const parseOptions: Partial<X2jOptions> = {

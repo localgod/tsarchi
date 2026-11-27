@@ -7,7 +7,7 @@ import type { ModelContent } from '../src/interfaces/Model.mjs';
 import { ModelIndex } from '../src/internal/ModelIndex.mjs';
 
 type IndexInternals = {
-  ids?: Set<string>;
+  ids?: Map<string, number>;
   elements?: Map<string, { folderKey: string; element: object }>;
   relationships?: Map<string, object[]>;
   modelIds(): Iterable<string>;
@@ -32,7 +32,12 @@ function expectIndexCurrent(archimate: Archimate): void {
     () => content.profiles
   ) as unknown as IndexInternals;
 
-  if (cached.ids) expect(cached.ids).toEqual(new Set(fresh.modelIds()));
+  if (cached.ids) {
+    const counts = new Map<string, number>();
+    for (const id of fresh.modelIds()) counts.set(id, (counts.get(id) ?? 0) + 1);
+    const sorted = (ids: Map<string, number>) => [...ids].sort(([a], [b]) => a.localeCompare(b));
+    expect(sorted(cached.ids)).toEqual(sorted(counts));
+  }
 
   if (cached.elements) {
     (fresh as unknown as ModelIndex).element('');
@@ -109,6 +114,24 @@ describe('the lookups behind hasId, getElement and findRelationshipsForElement',
     ],
     ['addConnection', (archimate, viewId, [a, b]) => archimate.addConnection(viewId, b, a)],
     ['deleteView', (archimate, viewId) => archimate.deleteView(viewId)],
+    [
+      'deleteView (with a reference to it in another view)',
+      (archimate, viewId) => {
+        const other = archimate.createView('Other');
+        const reference: Child = { id: 'ref', type: 'DiagramModelReference', model: viewId, bounds: { x: 0, y: 0, width: 1, height: 1 } };
+        archimate.updateElement(other.id, { child: [reference] });
+        buildIndex(archimate);
+        archimate.deleteView(viewId);
+      },
+    ],
+    ['deleteElement (view)', (archimate, viewId) => archimate.deleteElement(viewId)],
+    ['deleteElement (element on a view)', archimate => archimate.deleteElement('app-a')],
+    ['removeDiagramObject', (archimate, viewId, [a]) => archimate.removeDiagramObject(viewId, a)],
+    [
+      'removeConnection',
+      (archimate, viewId) => archimate.removeConnection(viewId, archimate.getView(viewId)!.children[0].sourceConnections[0].id),
+    ],
+    ['removeFromView', (archimate, viewId, [a, b]) => archimate.removeFromView(viewId, [a, b])],
     ['duplicateView', (archimate, viewId) => archimate.duplicateView(viewId)],
     ['createFolder', archimate => archimate.createFolder(archimate.getFolder('application').id, { name: 'Sub' })],
     [
@@ -144,6 +167,55 @@ describe('the lookups behind hasId, getElement and findRelationshipsForElement',
       }
       expectIndexCurrent(archimate);
     }
+  });
+});
+
+describe('the lookups on a model with duplicate ids', () => {
+  it('should still know an id used twice when one use is removed', () => {
+    const { archimate, viewId, objectIds } = modelWithView();
+    // A diagram object that shares its id with an element, as an invalid file can have
+    const copy: Child = { id: 'app-a', type: 'Note', bounds: { x: 0, y: 0, width: 1, height: 1 } };
+    const view = archimate.getElement(viewId)!;
+    archimate.updateElement(viewId, { child: [...view.child!, copy] });
+    buildIndex(archimate);
+
+    archimate.removeDiagramObject(viewId, 'app-a');
+    expect(archimate.hasId('app-a')).toBe(true);
+    expect(archimate.getElement('app-a')?.name).toBe('A');
+    expectIndexCurrent(archimate);
+
+    archimate.removeDiagramObject(viewId, objectIds[0]);
+    expectIndexCurrent(archimate);
+  });
+
+  it('should find the other element with the same id after one is deleted', () => {
+    const archimate = Archimate.fromXml(`<?xml version="1.0" encoding="UTF-8"?>
+<archimate:model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:archimate="http://www.archimatetool.com/archimate" name="m" id="id-m" version="5.0.0">
+  <folder name="Business" id="id-b" type="business">
+    <element xsi:type="archimate:BusinessActor" name="First" id="id-dup"/>
+    <element xsi:type="archimate:BusinessActor" name="Second" id="id-dup"/>
+  </folder>
+</archimate:model>`);
+    buildIndex(archimate);
+
+    expect(archimate.deleteElement('id-dup')).toBe(true);
+    expect(archimate.getElement('id-dup')?.name).toBe('Second');
+    expect(archimate.hasId('id-dup')).toBe(true);
+    expectIndexCurrent(archimate);
+  });
+});
+
+describe('findRelationshipsBetween', () => {
+  it('should find the relationships in folder order, in one or both directions and of one type', () => {
+    const { archimate } = modelWithView();
+    archimate.upsertRelationship({ id: 'back', name: '', type: 'FlowRelationship', source: 'app-b', target: 'app-a' });
+    archimate.upsertRelationship({ id: 'serve', name: '', type: 'ServingRelationship', source: 'app-a', target: 'app-b' });
+    const ids = (relationships: { id: string }[]) => relationships.map(relationship => relationship.id);
+
+    expect(ids(archimate.findRelationshipsBetween('app-a', 'app-b'))).toEqual(['flow', 'serve']);
+    expect(ids(archimate.findRelationshipsBetween('app-a', 'app-b', { bidirectional: true }))).toEqual(['flow', 'back', 'serve']);
+    expect(ids(archimate.findRelationshipsBetween('app-a', 'app-b', { type: 'ServingRelationship' }))).toEqual(['serve']);
+    expect(archimate.findRelationshipsBetween('app-a', 'node')).toEqual([]);
   });
 });
 

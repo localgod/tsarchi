@@ -18,14 +18,19 @@ export interface ElementEntry {
  * Lookups over a model by id, each built from the model when first needed, so that inserts and lookups do not walk
  * the whole model every time.
  *
- * Code that changes the model keeps the index current: it reports what it adds or replaces, and calls `clear()`
- * after any other change to ids, elements, relationships or views.
+ * Code that changes the model keeps the index current: it reports what it adds, replaces or removes, and calls
+ * `clear()` after any other change to ids, elements, relationships or views.
  */
 export class ModelIndex {
-  /** Every id in use: profiles, folders, elements, relationships, views, diagram children and view connections. */
-  private ids: Set<string> | undefined;
+  /**
+   * How often each id is used: profiles, folders, elements, relationships, views, diagram children and view
+   * connections. A count, not a set, so an id used twice in an invalid model stays known when one use is removed.
+   */
+  private ids: Map<string, number> | undefined;
   /** The first element, relationship or view with each id, in folder order. */
   private elements: Map<string, ElementEntry> | undefined;
+  /** Ids that more than one element, relationship or view has, as an invalid file can; built with `elements`. */
+  private duplicateElementIds = new Set<string>();
   /** The relationships with each id as source or target, once each, in folder order. */
   private relationships: Map<string, Relationship[]> | undefined;
 
@@ -35,16 +40,21 @@ export class ModelIndex {
   ) {}
 
   hasId(id: string): boolean {
-    this.ids ??= new Set(this.modelIds());
+    if (!this.ids) {
+      this.ids = new Map();
+      for (const modelId of this.modelIds()) this.ids.set(modelId, (this.ids.get(modelId) ?? 0) + 1);
+    }
     return this.ids.has(id);
   }
 
   element(id: string): ElementEntry | undefined {
     if (!this.elements) {
       this.elements = new Map();
+      this.duplicateElementIds = new Set();
       for (const folderKey of Object.keys(this.model()) as FolderKey[]) {
         for (const element of this.model()[folderKey].elements || []) {
           if (!this.elements.has(element.id)) this.elements.set(element.id, { folderKey, element });
+          else this.duplicateElementIds.add(element.id);
         }
       }
     }
@@ -63,19 +73,32 @@ export class ModelIndex {
    * Records an id added anywhere in the model, such as a diagram child, view connection or folder.
    */
   addId(id: string): void {
-    this.ids?.add(id);
+    if (this.ids) this.ids.set(id, (this.ids.get(id) ?? 0) + 1);
+  }
+
+  /**
+   * Records ids removed anywhere in the model, such as diagram children and view connections, one use each.
+   */
+  removeIds(ids: Iterable<string>): void {
+    if (!this.ids) return;
+    for (const id of ids) {
+      const count = this.ids.get(id);
+      if (count === undefined) continue;
+      if (count > 1) this.ids.set(id, count - 1);
+      else this.ids.delete(id);
+    }
   }
 
   /**
    * Records an element, relationship or view just added at the end of a top-level folder.
    */
   added(folderKey: FolderKey, element: Element): void {
-    if ((element.child ?? []).length > 0) {
-      this.clear();
-      return;
-    }
     this.addId(element.id);
-    if (this.elements && !this.elements.has(element.id)) this.elements.set(element.id, { folderKey, element });
+    for (const id of viewChildIds(element.child ?? [])) this.addId(id);
+    if (this.elements) {
+      if (!this.elements.has(element.id)) this.elements.set(element.id, { folderKey, element });
+      else this.duplicateElementIds.add(element.id);
+    }
     if (folderKey === 'relations' && this.relationships) addByEndpoint(this.relationships, element as Relationship);
   }
 
@@ -86,6 +109,34 @@ export class ModelIndex {
   replaced(previousFolderKey: FolderKey, folderKey: FolderKey, element: Element): void {
     if (this.elements?.get(element.id)?.folderKey === previousFolderKey) this.elements.set(element.id, { folderKey, element });
     if (previousFolderKey === 'relations' || folderKey === 'relations') this.relationships = undefined;
+  }
+
+  /**
+   * Records elements, relationships or views removed from their top-level folders, and the ids of the diagram children
+   * and view connections removed with them (including those of a removed view).
+   */
+  removed(elements: Iterable<Element>, viewObjectIds: Iterable<string> = []): void {
+    const removedRelationships = new Set<Element>();
+    for (const element of elements) {
+      this.removeIds([element.id]);
+      if (this.elements?.get(element.id)?.element === element) {
+        // Another element with the same id (an invalid model) takes its place when the lookup is built again.
+        if (this.duplicateElementIds.has(element.id)) this.elements = undefined;
+        else this.elements.delete(element.id);
+      }
+      if (element.source !== undefined || element.target !== undefined) removedRelationships.add(element);
+    }
+    this.removeIds(viewObjectIds);
+    if (this.relationships && removedRelationships.size > 0) {
+      for (const relationship of removedRelationships as Set<Relationship>) {
+        for (const endpoint of [relationship.source, relationship.target]) {
+          const attached = this.relationships.get(endpoint)?.filter(other => !removedRelationships.has(other));
+          if (attached === undefined) continue;
+          if (attached.length > 0) this.relationships.set(endpoint, attached);
+          else this.relationships.delete(endpoint);
+        }
+      }
+    }
   }
 
   /**
@@ -117,7 +168,10 @@ function* folderIds(folders: Folder[]): Generator<string> {
   }
 }
 
-function* viewChildIds(children: Child[]): Generator<string> {
+/**
+ * The ids of the diagram children at any depth and of the view connections starting on them.
+ */
+export function* viewChildIds(children: Child[]): Generator<string> {
   for (const child of children) {
     yield child.id;
     for (const connection of allSourceConnections(child)) yield connection.id;

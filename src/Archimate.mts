@@ -890,13 +890,16 @@ export class Archimate {
   }
 
   /**
-   * Adds a diagram object to a view, representing a model element
+   * Adds a diagram object for a model element to a view, or into `options.parentId`: a group or an ArchiMate diagram
+   * object in the view, at any depth, with `bounds` relative to it. Returns null when the view is not found; throws when
+   * the element or the parent is not found, or the parent cannot hold it.
    */
   public addDiagramObject(
     viewId: string,
     elementId: string,
     bounds: Bounds,
     options?: {
+      parentId?: string;
       fillColor?: string;
       lineColor?: string;
       fontColor?: string;
@@ -922,25 +925,6 @@ export class Archimate {
     }
   ) {
     return this.viewManager.addGroup(viewId, name, bounds, options);
-  }
-
-  /**
-   * Adds a diagram object to a group within a view
-   */
-  public addDiagramObjectToGroup(
-    viewId: string,
-    groupId: string,
-    elementId: string,
-    bounds: Bounds,
-    options?: {
-      fillColor?: string;
-      lineColor?: string;
-      fontColor?: string;
-      textAlignment?: number;
-      figure?: number;
-    }
-  ) {
-    return this.viewManager.addDiagramObjectToGroup(viewId, groupId, elementId, bounds, options);
   }
 
   /**

@@ -56,6 +56,7 @@ Version 5.0.0 keeps properties as Archi does, as an ordered list in which a key 
 - `getProperties()` and `getMetadata()` return a `Property[]`, and `setProperties()` and `setMetadata()` take one. Model metadata keeps repeated keys too.
 - `updateElement()` and `upsertElement()` replace the whole `properties` list instead of merging it by key. To change one key, pass `setProperty(element.properties, key, value)`.
 - `updateFolder()`, `updateFolderById()` and `createFolder()` take a `properties` list; an empty list removes the properties.
+- `addDiagramObjectToGroup(viewId, groupId, elementId, bounds, options)` is removed. Use `addDiagramObject(viewId, elementId, bounds, { ...options, parentId: groupId })`, which also adds into an ArchiMate diagram object.
 - `Element.profiles`, `Child.targetConnections` and `SourceConnection.targetConnections` are arrays of ids instead of space-separated strings. An empty array is not written.
 - `Element.child`, `Child.sourceConnection` and `SourceConnection.sourceConnection` are always arrays, also for a single child or connection. Code that wrote a single object, for example through `updateElement(viewId, { child })`, passes a one-item array.
 
@@ -463,13 +464,13 @@ const group = model.addGroup(view.id, "Application Layer", groupBounds, {
   documentation: "Application layer components",
 });
 
-// Add elements to groups
-model.addDiagramObjectToGroup(view.id, group.id, "another-element-id", {
-  x: 20,
-  y: 20,
-  width: 120,
-  height: 55,
-});
+// Add elements into a group, or into another element's diagram object, with bounds relative to it
+model.addDiagramObject(
+  view.id,
+  "another-element-id",
+  { x: 20, y: 20, width: 120, height: 55 },
+  { parentId: group.id },
+);
 ```
 
 ### View Management Operations

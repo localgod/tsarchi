@@ -208,7 +208,7 @@ describe('Archimate.fromXml / toXml', () => {
     archimate.upsertRelationship({ id: 'serving', type: 'ServingRelationship', source: service.id, target: role.id });
     const view = archimate.createView('Built');
     const group = archimate.addGroup(view.id, 'Group', { x: 0, y: 0, width: 400, height: 300 })!;
-    const inGroup = archimate.addDiagramObjectToGroup(view.id, group.id, actor.id, { x: 10, y: 10, width: 120, height: 55 })!;
+    const inGroup = archimate.addDiagramObject(view.id, actor.id, { x: 10, y: 10, width: 120, height: 55 }, { parentId: group.id })!;
     const roleObject = archimate.addDiagramObject(view.id, role.id, { x: 450, y: 10, width: 120, height: 55 })!;
     const serviceObject = archimate.addDiagramObject(view.id, service.id, { x: 450, y: 200, width: 120, height: 55 })!;
     const fromGroup = archimate.addConnection(view.id, inGroup.id, roleObject.id, 'assignment', { lineColor: '#ff0000' })!;

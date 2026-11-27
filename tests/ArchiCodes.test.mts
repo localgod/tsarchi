@@ -132,7 +132,7 @@ describe('Archi codes', () => {
       expect(() => archimate.addDiagramObject(view.id, 'app', bounds, { textAlignment: 3 })).toThrowError(
         'Unknown textAlignment 3; expected one of 1, 2, 4.'
       );
-      expect(() => archimate.addDiagramObjectToGroup(view.id, group.id, 'app', bounds, { textAlignment: 0 })).toThrowError(
+      expect(() => archimate.addDiagramObject(view.id, 'app', bounds, { parentId: group.id, textAlignment: 0 })).toThrowError(
         'Unknown textAlignment 0;'
       );
       expect(() => archimate.addGroup(view.id, 'Group', bounds, { textAlignment: 5 })).toThrowError('Unknown textAlignment 5;');

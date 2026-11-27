@@ -10,10 +10,12 @@ This project adheres to [Keep a CHANGELOG](http://keepachangelog.com/)
 
 ### Added
 
+- `addDiagramObject` takes a `parentId` option to add the diagram object into a group or an ArchiMate diagram object at any depth, with bounds relative to it ([#559](https://github.com/localgod/tsarchi/issues/559)).
 - `getProperty`, `getPropertyValues`, `getPropertyKeys`, `setProperty`, `addProperty` and `removeProperty` read a `properties` list and return changed copies, following jArchi's `prop()` and `removeProp()` ([#551](https://github.com/localgod/tsarchi/issues/551)).
 
 ### Changed
 
+- ⚠️ Breaking: `addDiagramObjectToGroup` is removed; use `addDiagramObject` with `parentId` ([#559](https://github.com/localgod/tsarchi/issues/559)).
 - ⚠️ Breaking: `properties` on models, folders, elements, relationships, views, diagram objects and view connections is a `Property[]` of `{ key, value }`, in file order, instead of a `Map<string, string>`, so a key can appear more than once, as Archi allows. `getProperties()` returns and `setProperties()` takes a list, and `updateElement()` and `upsertElement()` replace the whole list instead of merging it by key. See "Upgrading from 4.x" in the README ([#551](https://github.com/localgod/tsarchi/issues/551)).
 - ⚠️ Breaking: `Element.profiles`, `Child.targetConnections` and `SourceConnection.targetConnections` are `string[]` instead of space-separated strings, as `ViewChild.targetConnections` already was. Files are written as before, with the ids joined by single spaces ([#557](https://github.com/localgod/tsarchi/issues/557)).
 - ⚠️ Breaking: `Element.child`, `Child.sourceConnection` and `SourceConnection.sourceConnection` are arrays only (`Child[]`, `SourceConnection[]`), no longer a single object or an array. A single child or connection loads as a one-item array ([#555](https://github.com/localgod/tsarchi/issues/555)).

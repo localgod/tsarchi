@@ -9,6 +9,7 @@ import type { Schema } from '../src/interfaces/schema/Schema.mjs';
 import type { Folder as SchemaFolder } from '../src/interfaces/schema/Folder.mjs';
 import type { Element as SchemaElement } from '../src/interfaces/schema/Element.mjs';
 import { archimateFromSchema, archimateToSchema } from '../src/internal/SchemaAccess.mjs';
+import type { Child } from '../src/interfaces/Child.mjs';
 
 describe('ViewManager', () => {
   let archimate: Archimate;
@@ -131,14 +132,14 @@ describe('ViewManager', () => {
     });
   });
 
-  describe('addDiagramObjectToGroup', () => {
+  describe('addDiagramObject with parentId', () => {
     it('should add a diagram object to a group', () => {
       const view = archimate.createView('Test View');
       const groupBounds = { x: 50, y: 50, width: 300, height: 200 };
       const group = archimate.addGroup(view.id, 'Test Group', groupBounds);
 
       const objectBounds = { x: 20, y: 20, width: 120, height: 55 };
-      const diagramObject = archimate.addDiagramObjectToGroup(view.id, group!.id, 'app-1', objectBounds);
+      const diagramObject = archimate.addDiagramObject(view.id, 'app-1', objectBounds, { parentId: group!.id });
 
       expect(diagramObject).toBeDefined();
       expect(diagramObject?.archimateElement).toBe('app-1');
@@ -149,6 +150,36 @@ describe('ViewManager', () => {
       const updatedGroup = updatedView?.children?.[0] as any;
       expect(updatedGroup.children).toHaveLength(1);
       expect(updatedGroup.children[0].id).toBe(diagramObject?.id);
+      expect(diagramObject).not.toHaveProperty('parentId');
+    });
+
+    it('should add a diagram object inside another diagram object and inside a nested group', () => {
+      const view = archimate.createView('Test View');
+      const outer = archimate.addDiagramObject(view.id, 'app-1', { x: 0, y: 0, width: 300, height: 200 })!;
+      const inner = archimate.addDiagramObject(view.id, 'app-2', { x: 10, y: 10, width: 120, height: 55 }, { parentId: outer.id })!;
+      const group = archimate.addGroup(view.id, 'Outer', { x: 400, y: 0, width: 300, height: 200 })!;
+      const nestedGroup = archimate.addDiagramObject(view.id, 'app-1', { x: 5, y: 5, width: 200, height: 100 }, { parentId: group.id })!;
+      const deep = archimate.addDiagramObject(view.id, 'app-2', { x: 1, y: 1, width: 50, height: 30 }, { parentId: nestedGroup.id })!;
+
+      const children = archimate.getView(view.id)!.children;
+      expect(children[0].children.map(child => child.id)).toEqual([inner.id]);
+      expect(children[1].children[0].children.map(child => child.id)).toEqual([deep.id]);
+      expect(Archimate.fromXml(archimate.toXml()).getView(view.id)!.children).toEqual(children);
+    });
+
+    it('should throw for a parent that is not in the view or cannot hold a diagram object', () => {
+      const view = archimate.createView('Test View');
+      const bounds = { x: 0, y: 0, width: 10, height: 10 };
+      const note: Child = { id: 'id-note', type: 'Note', bounds };
+      archimate.updateElement(view.id, { child: [note] });
+
+      expect(() => archimate.addDiagramObject(view.id, 'app-1', bounds, { parentId: 'id-missing' })).toThrowError(
+        'Group or diagram object with ID id-missing not found in view'
+      );
+      expect(() => archimate.addDiagramObject(view.id, 'app-1', bounds, { parentId: 'id-note' })).toThrowError(
+        'Group or diagram object with ID id-note not found in view'
+      );
+      expect(archimate.getView(view.id)!.children.map(child => child.id)).toEqual(['id-note']);
     });
   });
 
@@ -234,7 +265,7 @@ describe('ViewManager', () => {
       const group = archimate.addGroup(view.id, 'Group', { x: 0, y: 200, width: 400, height: 200 })!;
 
       const obj = archimate.addDiagramObject(view.id, 'app-1', bounds, { figure: DiagramObjectFigure.Alternate })!;
-      const nested = archimate.addDiagramObjectToGroup(view.id, group.id, 'app-2', bounds, { figure: DiagramObjectFigure.Alternate })!;
+      const nested = archimate.addDiagramObject(view.id, 'app-2', bounds, { parentId: group.id, figure: DiagramObjectFigure.Alternate })!;
 
       expect(obj.figure).toBe(1);
       expect(nested.figure).toBe(1);
@@ -248,7 +279,7 @@ describe('ViewManager', () => {
       const group = archimate.addGroup(view.id, 'Group', { x: 0, y: 200, width: 400, height: 200 })!;
 
       const obj = archimate.addDiagramObject(view.id, 'app-1', bounds, { figure: DiagramObjectFigure.Default })!;
-      const nested = archimate.addDiagramObjectToGroup(view.id, group.id, 'app-2', bounds, { figure: DiagramObjectFigure.Default })!;
+      const nested = archimate.addDiagramObject(view.id, 'app-2', bounds, { parentId: group.id, figure: DiagramObjectFigure.Default })!;
 
       expect('figure' in obj).toBe(false);
       expect('figure' in nested).toBe(false);
@@ -262,7 +293,7 @@ describe('ViewManager', () => {
       expect(() => archimate.addDiagramObject(view.id, 'app-1', bounds, { figure: 2 })).toThrowError(
         'Unknown figure 2; expected one of 0, 1.'
       );
-      expect(() => archimate.addDiagramObjectToGroup(view.id, group.id, 'app-1', bounds, { figure: -1 })).toThrowError(
+      expect(() => archimate.addDiagramObject(view.id, 'app-1', bounds, { parentId: group.id, figure: -1 })).toThrowError(
         'Unknown figure -1; expected one of 0, 1.'
       );
       const children = archimate.getView(view.id)!.children;
@@ -444,7 +475,12 @@ describe('views loaded from a file', () => {
   it('adds an object to a loaded group next to the objects already in it', async () => {
     const archimate = await load();
 
-    const added = archimate.addDiagramObjectToGroup('id-nested-view', 'id-group', 'id-db', { x: 300, y: 36, width: 80, height: 40 })!;
+    const added = archimate.addDiagramObject(
+      'id-nested-view',
+      'id-db',
+      { x: 300, y: 36, width: 80, height: 40 },
+      { parentId: 'id-group' }
+    )!;
 
     expect(child(archimate, 'id-group').children.map(nested => nested.id)).toEqual(['id-group-api-object', added.id]);
     expect(archimate.hasId('id-group-portal-object')).toBe(true);

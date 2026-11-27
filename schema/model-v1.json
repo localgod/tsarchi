@@ -1,0 +1,1334 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/localgod/tsarchi/main/schema/model-v1.json",
+  "title": "tsarchi model",
+  "description": "An Archi model in tsarchi's lossless JSON format, version 1. Concepts are in flat lists sorted by id; each folder lists its members in file order; diagram children and connections are in file order.",
+  "type": "object",
+  "required": [
+    "formatVersion",
+    "model",
+    "folders",
+    "elements",
+    "relationships",
+    "views"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "formatVersion": {
+      "const": 1
+    },
+    "model": {
+      "type": "object",
+      "required": [
+        "id",
+        "version"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "purpose": {
+          "type": "string"
+        },
+        "properties": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/entry"
+          }
+        },
+        "metadata": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/entry"
+          },
+          "description": "An empty list is an empty <metadata/>."
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      }
+    },
+    "profiles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "name": {
+            "type": "string"
+          },
+          "conceptType": {
+            "type": "string"
+          },
+          "imagePath": {
+            "type": "string"
+          },
+          "specialization": {
+            "type": "boolean"
+          },
+          "features": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/entry"
+            }
+          }
+        }
+      }
+    },
+    "folders": {
+      "description": "The nine top-level folders, in Archi's order.",
+      "type": "array",
+      "prefixItems": [
+        {
+          "type": "object",
+          "required": [
+            "id",
+            "type"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "name": {
+              "type": "string"
+            },
+            "documentation": {
+              "type": "string"
+            },
+            "properties": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/entry"
+              }
+            },
+            "features": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/entry"
+              }
+            },
+            "members": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "description": "Ids of the elements, relationships or views placed directly in this folder, in file order."
+            },
+            "folders": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/folder"
+              }
+            },
+            "extensions": {
+              "$ref": "#/$defs/extensions"
+            },
+            "type": {
+              "const": "strategy"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "id",
+            "type"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "name": {
+              "type": "string"
+            },
+            "documentation": {
+              "type": "string"
+            },
+            "properties": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/entry"
+              }
+            },
+            "features": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/entry"
+              }
+            },
+            "members": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "description": "Ids of the elements, relationships or views placed directly in this folder, in file order."
+            },
+            "folders": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/folder"
+              }
+            },
+            "extensions": {
+              "$ref": "#/$defs/extensions"
+            },
+            "type": {
+              "const": "business"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "id",
+            "type"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "name": {
+              "type": "string"
+            },
+            "documentation": {
+              "type": "string"
+            },
+            "properties": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/entry"
+              }
+            },
+            "features": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/entry"
+              }
+            },
+            "members": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "description": "Ids of the elements, relationships or views placed directly in this folder, in file order."
+            },
+            "folders": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/folder"
+              }
+            },
+            "extensions": {
+              "$ref": "#/$defs/extensions"
+            },
+            "type": {
+              "const": "application"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "id",
+            "type"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "name": {
+              "type": "string"
+            },
+            "documentation": {
+              "type": "string"
+            },
+            "properties": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/entry"
+              }
+            },
+            "features": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/entry"
+              }
+            },
+            "members": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "description": "Ids of the elements, relationships or views placed directly in this folder, in file order."
+            },
+            "folders": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/folder"
+              }
+            },
+            "extensions": {
+              "$ref": "#/$defs/extensions"
+            },
+            "type": {
+              "const": "technology"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "id",
+            "type"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "name": {
+              "type": "string"
+            },
+            "documentation": {
+              "type": "string"
+            },
+            "properties": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/entry"
+              }
+            },
+            "features": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/entry"
+              }
+            },
+            "members": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "description": "Ids of the elements, relationships or views placed directly in this folder, in file order."
+            },
+            "folders": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/folder"
+              }
+            },
+            "extensions": {
+              "$ref": "#/$defs/extensions"
+            },
+            "type": {
+              "const": "motivation"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "id",
+            "type"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "name": {
+              "type": "string"
+            },
+            "documentation": {
+              "type": "string"
+            },
+            "properties": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/entry"
+              }
+            },
+            "features": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/entry"
+              }
+            },
+            "members": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "description": "Ids of the elements, relationships or views placed directly in this folder, in file order."
+            },
+            "folders": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/folder"
+              }
+            },
+            "extensions": {
+              "$ref": "#/$defs/extensions"
+            },
+            "type": {
+              "const": "implementation_migration"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "id",
+            "type"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "name": {
+              "type": "string"
+            },
+            "documentation": {
+              "type": "string"
+            },
+            "properties": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/entry"
+              }
+            },
+            "features": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/entry"
+              }
+            },
+            "members": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "description": "Ids of the elements, relationships or views placed directly in this folder, in file order."
+            },
+            "folders": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/folder"
+              }
+            },
+            "extensions": {
+              "$ref": "#/$defs/extensions"
+            },
+            "type": {
+              "const": "other"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "id",
+            "type"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "name": {
+              "type": "string"
+            },
+            "documentation": {
+              "type": "string"
+            },
+            "properties": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/entry"
+              }
+            },
+            "features": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/entry"
+              }
+            },
+            "members": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "description": "Ids of the elements, relationships or views placed directly in this folder, in file order."
+            },
+            "folders": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/folder"
+              }
+            },
+            "extensions": {
+              "$ref": "#/$defs/extensions"
+            },
+            "type": {
+              "const": "relations"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "id",
+            "type"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "name": {
+              "type": "string"
+            },
+            "documentation": {
+              "type": "string"
+            },
+            "properties": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/entry"
+              }
+            },
+            "features": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/entry"
+              }
+            },
+            "members": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "description": "Ids of the elements, relationships or views placed directly in this folder, in file order."
+            },
+            "folders": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/folder"
+              }
+            },
+            "extensions": {
+              "$ref": "#/$defs/extensions"
+            },
+            "type": {
+              "const": "diagrams"
+            }
+          }
+        }
+      ],
+      "minItems": 9,
+      "maxItems": 9
+    },
+    "elements": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/element"
+      }
+    },
+    "relationships": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/relationship"
+      }
+    },
+    "views": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/view"
+      }
+    },
+    "extensions": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "xmlDeclaration": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "value"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "value": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "namespaces": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "prefix",
+              "uri"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "prefix": {
+                "type": "string"
+              },
+              "uri": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "number": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "enum": [
+            "NaN",
+            "Infinity",
+            "-Infinity"
+          ]
+        }
+      ]
+    },
+    "entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      }
+    },
+    "extensions": {
+      "description": "Content tsarchi does not map, as one XML element named extensions. It is written back unchanged and is not part of the format.",
+      "type": "string"
+    },
+    "folder": {
+      "type": "object",
+      "required": [
+        "id"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string"
+        },
+        "documentation": {
+          "type": "string"
+        },
+        "properties": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/entry"
+          }
+        },
+        "features": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/entry"
+          }
+        },
+        "members": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "Ids of the elements, relationships or views placed directly in this folder, in file order."
+        },
+        "folders": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/folder"
+          }
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      }
+    },
+    "element": {
+      "type": "object",
+      "required": [
+        "id",
+        "type"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string"
+        },
+        "documentation": {
+          "type": "string"
+        },
+        "properties": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/entry"
+          }
+        },
+        "features": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/entry"
+          }
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        },
+        "profiles": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "junctionType": {
+          "type": "string"
+        }
+      }
+    },
+    "relationship": {
+      "type": "object",
+      "required": [
+        "id",
+        "type"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string"
+        },
+        "documentation": {
+          "type": "string"
+        },
+        "properties": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/entry"
+          }
+        },
+        "features": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/entry"
+          }
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        },
+        "profiles": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1
+        },
+        "target": {
+          "type": "string",
+          "minLength": 1
+        },
+        "accessType": {
+          "anyOf": [
+            {
+              "enum": [
+                "write",
+                "read",
+                "unspecified",
+                "readWrite"
+              ]
+            },
+            {
+              "$ref": "#/$defs/number"
+            }
+          ]
+        },
+        "directed": {
+          "type": "boolean"
+        },
+        "strength": {
+          "type": "string"
+        }
+      }
+    },
+    "view": {
+      "type": "object",
+      "required": [
+        "id",
+        "type"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string"
+        },
+        "documentation": {
+          "type": "string"
+        },
+        "properties": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/entry"
+          }
+        },
+        "features": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/entry"
+          }
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        },
+        "viewpoint": {
+          "type": "string"
+        },
+        "background": {
+          "$ref": "#/$defs/number"
+        },
+        "connectionRouterType": {
+          "anyOf": [
+            {
+              "enum": [
+                "manual",
+                "manhattan"
+              ]
+            },
+            {
+              "$ref": "#/$defs/number"
+            }
+          ]
+        },
+        "children": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/child"
+          }
+        },
+        "connections": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/connection"
+          }
+        }
+      }
+    },
+    "child": {
+      "type": "object",
+      "required": [
+        "id",
+        "type",
+        "bounds"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string"
+        },
+        "archimateElement": {
+          "type": "string",
+          "minLength": 1
+        },
+        "model": {
+          "type": "string",
+          "minLength": 1
+        },
+        "bounds": {
+          "type": "object",
+          "required": [
+            "x",
+            "y",
+            "width",
+            "height"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "x": {
+              "$ref": "#/$defs/number"
+            },
+            "y": {
+              "$ref": "#/$defs/number"
+            },
+            "width": {
+              "$ref": "#/$defs/number"
+            },
+            "height": {
+              "$ref": "#/$defs/number"
+            }
+          }
+        },
+        "figure": {
+          "anyOf": [
+            {
+              "enum": [
+                "default",
+                "alternate"
+              ]
+            },
+            {
+              "$ref": "#/$defs/number"
+            }
+          ]
+        },
+        "textAlignment": {
+          "anyOf": [
+            {
+              "enum": [
+                "left",
+                "center",
+                "right"
+              ]
+            },
+            {
+              "$ref": "#/$defs/number"
+            }
+          ]
+        },
+        "textPosition": {
+          "anyOf": [
+            {
+              "enum": [
+                "top",
+                "center",
+                "bottom"
+              ]
+            },
+            {
+              "$ref": "#/$defs/number"
+            }
+          ]
+        },
+        "fillColor": {
+          "type": "string"
+        },
+        "alpha": {
+          "$ref": "#/$defs/number"
+        },
+        "lineColor": {
+          "type": "string"
+        },
+        "lineWidth": {
+          "$ref": "#/$defs/number"
+        },
+        "font": {
+          "type": "string"
+        },
+        "fontColor": {
+          "type": "string"
+        },
+        "borderType": {
+          "anyOf": [
+            {
+              "enum": [
+                "tabbed",
+                "rectangle",
+                "dogEar",
+                "none"
+              ]
+            },
+            {
+              "$ref": "#/$defs/number"
+            }
+          ]
+        },
+        "borderColor": {
+          "type": "string"
+        },
+        "imagePath": {
+          "type": "string"
+        },
+        "imagePosition": {
+          "$ref": "#/$defs/number"
+        },
+        "locked": {
+          "type": "boolean"
+        },
+        "hintTitle": {
+          "type": "string"
+        },
+        "targetConnections": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "documentation": {
+          "type": "string"
+        },
+        "content": {
+          "type": "string"
+        },
+        "notes": {
+          "type": "string"
+        },
+        "hintContent": {
+          "type": "string"
+        },
+        "properties": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/entry"
+          }
+        },
+        "features": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/entry"
+          },
+          "description": "Every <feature>, style settings such as lineAlpha and gradient included, in file order."
+        },
+        "children": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/child"
+          }
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "allOf": [
+        {
+          "anyOf": [
+            {
+              "not": {
+                "properties": {
+                  "type": {
+                    "enum": [
+                      "Group"
+                    ]
+                  }
+                }
+              }
+            },
+            {
+              "properties": {
+                "borderType": {
+                  "anyOf": [
+                    {
+                      "enum": [
+                        "tabbed",
+                        "rectangle"
+                      ]
+                    },
+                    {
+                      "$ref": "#/$defs/number"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "anyOf": [
+            {
+              "not": {
+                "properties": {
+                  "type": {
+                    "enum": [
+                      "Note"
+                    ]
+                  }
+                }
+              }
+            },
+            {
+              "properties": {
+                "borderType": {
+                  "anyOf": [
+                    {
+                      "enum": [
+                        "dogEar",
+                        "rectangle",
+                        "none"
+                      ]
+                    },
+                    {
+                      "$ref": "#/$defs/number"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "anyOf": [
+            {
+              "properties": {
+                "type": {
+                  "enum": [
+                    "Group",
+                    "Note"
+                  ]
+                }
+              }
+            },
+            {
+              "properties": {
+                "borderType": {
+                  "$ref": "#/$defs/number"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "anyOf": [
+            {
+              "properties": {
+                "type": {
+                  "enum": [
+                    "DiagramObject"
+                  ]
+                }
+              }
+            },
+            {
+              "properties": {
+                "figure": {
+                  "$ref": "#/$defs/number"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "connection": {
+      "type": "object",
+      "required": [
+        "id",
+        "type",
+        "source"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "implicitType": {
+          "const": true
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The diagram child or connection it starts on, which also holds it in the file."
+        },
+        "target": {
+          "type": "string",
+          "minLength": 1
+        },
+        "archimateRelationship": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string"
+        },
+        "lineStyle": {
+          "$ref": "#/$defs/number"
+        },
+        "font": {
+          "type": "string"
+        },
+        "fontColor": {
+          "type": "string"
+        },
+        "lineColor": {
+          "type": "string"
+        },
+        "lineWidth": {
+          "$ref": "#/$defs/number"
+        },
+        "textAlignment": {
+          "anyOf": [
+            {
+              "enum": [
+                "left",
+                "center",
+                "right"
+              ]
+            },
+            {
+              "$ref": "#/$defs/number"
+            }
+          ]
+        },
+        "textPosition": {
+          "anyOf": [
+            {
+              "enum": [
+                "source",
+                "middle",
+                "target"
+              ]
+            },
+            {
+              "$ref": "#/$defs/number"
+            }
+          ]
+        },
+        "locked": {
+          "type": "boolean"
+        },
+        "targetConnections": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "documentation": {
+          "type": "string"
+        },
+        "bendpoints": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "startX",
+              "startY",
+              "endX",
+              "endY"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "startX": {
+                "$ref": "#/$defs/number"
+              },
+              "startY": {
+                "$ref": "#/$defs/number"
+              },
+              "endX": {
+                "$ref": "#/$defs/number"
+              },
+              "endY": {
+                "$ref": "#/$defs/number"
+              }
+            }
+          }
+        },
+        "properties": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/entry"
+          }
+        },
+        "features": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/entry"
+          }
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,133 @@
+{
+  "formatVersion": 1,
+  "model": {
+    "id": "id-ref-model",
+    "name": "character\treferences",
+    "version": "5.0.0",
+    "purpose": "Purpose\r\nwith a Windows line break"
+  },
+  "folders": [
+    {
+      "id": "id-ref-strategy",
+      "type": "strategy",
+      "name": "Strategy"
+    },
+    {
+      "id": "id-ref-business",
+      "type": "business",
+      "name": "Business",
+      "members": [
+        "id-customer",
+        "id-insurant",
+        "id-policy"
+      ]
+    },
+    {
+      "id": "id-ref-application",
+      "type": "application",
+      "name": "Application"
+    },
+    {
+      "id": "id-ref-technology",
+      "type": "technology",
+      "name": "Technology & Physical"
+    },
+    {
+      "id": "id-ref-motivation",
+      "type": "motivation",
+      "name": "Motivation"
+    },
+    {
+      "id": "id-ref-implementation",
+      "type": "implementation_migration",
+      "name": "Implementation & Migration"
+    },
+    {
+      "id": "id-ref-other",
+      "type": "other",
+      "name": "Other"
+    },
+    {
+      "id": "id-ref-relations",
+      "type": "relations",
+      "name": "Relations"
+    },
+    {
+      "id": "id-ref-views",
+      "type": "diagrams",
+      "name": "Views",
+      "members": [
+        "id-view-refs"
+      ]
+    }
+  ],
+  "elements": [
+    {
+      "id": "id-customer",
+      "type": "BusinessActor",
+      "name": "Tab\tseparated",
+      "documentation": "Written by Archi on Windows\r\nsecond line\r\nthird line",
+      "properties": [
+        {
+          "key": "multi\nline",
+          "value": "one\r\ntwo"
+        }
+      ]
+    },
+    {
+      "id": "id-insurant",
+      "type": "BusinessRole",
+      "name": "Quotes \"and\" 'apostrophes' & <tags>",
+      "documentation": "Literal text &#xD; stays text, <b> too & \"quotes\" 'apostrophes'"
+    },
+    {
+      "id": "id-policy",
+      "type": "BusinessObject",
+      "name": "Decimal\rreference",
+      "documentation": "tab\tand line feed\nas decimal references"
+    }
+  ],
+  "relationships": [],
+  "views": [
+    {
+      "id": "id-view-refs",
+      "type": "ArchimateDiagramModel",
+      "name": "View",
+      "children": [
+        {
+          "id": "id-note",
+          "type": "Note",
+          "bounds": {
+            "x": 24,
+            "y": 24,
+            "width": 185,
+            "height": 80
+          },
+          "content": "Note\r\non two lines"
+        }
+      ]
+    }
+  ],
+  "extensions": {
+    "xmlDeclaration": [
+      {
+        "name": "version",
+        "value": "1.0"
+      },
+      {
+        "name": "encoding",
+        "value": "UTF-8"
+      }
+    ],
+    "namespaces": [
+      {
+        "prefix": "xsi",
+        "uri": "http://www.w3.org/2001/XMLSchema-instance"
+      },
+      {
+        "prefix": "archimate",
+        "uri": "http://www.archimatetool.com/archimate"
+      }
+    ]
+  }
+}

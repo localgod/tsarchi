@@ -1,0 +1,159 @@
+{
+  "formatVersion": 1,
+  "model": {
+    "id": "id-fig-model",
+    "name": "figures and references",
+    "version": "5.0.0",
+    "purpose": "Alternate figures, view references, access types and a model purpose"
+  },
+  "folders": [
+    {
+      "id": "id-fig-strategy",
+      "type": "strategy",
+      "name": "Strategy"
+    },
+    {
+      "id": "id-fig-business",
+      "type": "business",
+      "name": "Business",
+      "members": [
+        "id-process",
+        "id-claim"
+      ]
+    },
+    {
+      "id": "id-fig-application",
+      "type": "application",
+      "name": "Application"
+    },
+    {
+      "id": "id-fig-technology",
+      "type": "technology",
+      "name": "Technology & Physical"
+    },
+    {
+      "id": "id-fig-motivation",
+      "type": "motivation",
+      "name": "Motivation"
+    },
+    {
+      "id": "id-fig-implementation",
+      "type": "implementation_migration",
+      "name": "Implementation & Migration"
+    },
+    {
+      "id": "id-fig-other",
+      "type": "other",
+      "name": "Other"
+    },
+    {
+      "id": "id-fig-relations",
+      "type": "relations",
+      "name": "Relations",
+      "members": [
+        "id-access-read",
+        "id-access-write"
+      ]
+    },
+    {
+      "id": "id-fig-views",
+      "type": "diagrams",
+      "name": "Views",
+      "members": [
+        "id-view-overview",
+        "id-view-detail"
+      ]
+    }
+  ],
+  "elements": [
+    {
+      "id": "id-claim",
+      "type": "BusinessObject",
+      "name": "Claim"
+    },
+    {
+      "id": "id-process",
+      "type": "BusinessProcess",
+      "name": "Handle Claim"
+    }
+  ],
+  "relationships": [
+    {
+      "id": "id-access-read",
+      "type": "AccessRelationship",
+      "name": "reads",
+      "source": "id-process",
+      "target": "id-claim",
+      "accessType": "read"
+    },
+    {
+      "id": "id-access-write",
+      "type": "AccessRelationship",
+      "name": "writes",
+      "source": "id-process",
+      "target": "id-claim"
+    }
+  ],
+  "views": [
+    {
+      "id": "id-view-detail",
+      "type": "ArchimateDiagramModel",
+      "name": "Detail",
+      "children": [
+        {
+          "id": "id-dmo-process",
+          "type": "DiagramObject",
+          "archimateElement": "id-process",
+          "bounds": {
+            "x": 24,
+            "y": 24,
+            "width": 120,
+            "height": 55
+          },
+          "figure": "alternate"
+        }
+      ]
+    },
+    {
+      "id": "id-view-overview",
+      "type": "ArchimateDiagramModel",
+      "name": "Overview",
+      "children": [
+        {
+          "id": "id-ref-detail",
+          "type": "DiagramModelReference",
+          "model": "id-view-detail",
+          "bounds": {
+            "x": 12,
+            "y": 12,
+            "width": 120,
+            "height": 55
+          },
+          "fillColor": "#80ffff"
+        }
+      ]
+    }
+  ],
+  "extensions": {
+    "xmlDeclaration": [
+      {
+        "name": "version",
+        "value": "1.0"
+      },
+      {
+        "name": "encoding",
+        "value": "UTF-8"
+      }
+    ],
+    "namespaces": [
+      {
+        "prefix": "xsi",
+        "uri": "http://www.w3.org/2001/XMLSchema-instance"
+      },
+      {
+        "prefix": "archimate",
+        "uri": "http://www.archimatetool.com/archimate"
+      }
+    ]
+  }
+}

@@ -1,0 +1,206 @@
+{
+  "formatVersion": 1,
+  "model": {
+    "id": "id-rel-props-model",
+    "name": "relationships and properties",
+    "version": "5.0.0"
+  },
+  "folders": [
+    {
+      "id": "id-rel-props-strategy",
+      "type": "strategy",
+      "name": "Strategy"
+    },
+    {
+      "id": "id-rel-props-business",
+      "type": "business",
+      "name": "Business",
+      "members": [
+        "id-customer"
+      ]
+    },
+    {
+      "id": "id-rel-props-application",
+      "type": "application",
+      "name": "Application",
+      "members": [
+        "id-portal",
+        "id-portal-service"
+      ]
+    },
+    {
+      "id": "id-rel-props-technology",
+      "type": "technology",
+      "name": "Technology & Physical",
+      "members": [
+        "id-web-cluster"
+      ]
+    },
+    {
+      "id": "id-rel-props-motivation",
+      "type": "motivation",
+      "name": "Motivation",
+      "members": [
+        "id-driver",
+        "id-goal"
+      ]
+    },
+    {
+      "id": "id-rel-props-implementation",
+      "type": "implementation_migration",
+      "name": "Implementation & Migration"
+    },
+    {
+      "id": "id-rel-props-other",
+      "type": "other",
+      "name": "Other"
+    },
+    {
+      "id": "id-rel-props-relations",
+      "type": "relations",
+      "name": "Relations",
+      "members": [
+        "id-serving",
+        "id-realization",
+        "id-association-directed",
+        "id-association",
+        "id-influence-strength",
+        "id-influence"
+      ]
+    },
+    {
+      "id": "id-rel-props-views",
+      "type": "diagrams",
+      "name": "Views"
+    }
+  ],
+  "elements": [
+    {
+      "id": "id-customer",
+      "type": "BusinessActor",
+      "name": "Customer",
+      "documentation": "External customer actor.",
+      "properties": [
+        {
+          "key": "segment",
+          "value": "enterprise"
+        }
+      ]
+    },
+    {
+      "id": "id-driver",
+      "type": "Driver",
+      "name": "Customer Satisfaction"
+    },
+    {
+      "id": "id-goal",
+      "type": "Goal",
+      "name": "Faster Onboarding"
+    },
+    {
+      "id": "id-portal",
+      "type": "ApplicationComponent",
+      "name": "Portal",
+      "documentation": "Customer-facing portal.",
+      "properties": [
+        {
+          "key": "owner",
+          "value": "digital"
+        },
+        {
+          "key": "criticality",
+          "value": "high"
+        }
+      ]
+    },
+    {
+      "id": "id-portal-service",
+      "type": "ApplicationService",
+      "name": "Portal Service",
+      "properties": [
+        {
+          "key": "sla",
+          "value": "gold"
+        }
+      ]
+    },
+    {
+      "id": "id-web-cluster",
+      "type": "Node",
+      "name": "Web Cluster"
+    }
+  ],
+  "relationships": [
+    {
+      "id": "id-association",
+      "type": "AssociationRelationship",
+      "source": "id-customer",
+      "target": "id-portal-service"
+    },
+    {
+      "id": "id-association-directed",
+      "type": "AssociationRelationship",
+      "name": "uses",
+      "source": "id-customer",
+      "target": "id-portal",
+      "directed": true
+    },
+    {
+      "id": "id-influence",
+      "type": "InfluenceRelationship",
+      "source": "id-driver",
+      "target": "id-goal"
+    },
+    {
+      "id": "id-influence-strength",
+      "type": "InfluenceRelationship",
+      "source": "id-goal",
+      "target": "id-driver",
+      "strength": "++"
+    },
+    {
+      "id": "id-realization",
+      "type": "RealizationRelationship",
+      "name": "realizes",
+      "source": "id-web-cluster",
+      "target": "id-portal"
+    },
+    {
+      "id": "id-serving",
+      "type": "ServingRelationship",
+      "name": "serves",
+      "documentation": "Portal exposes the service.",
+      "source": "id-portal",
+      "target": "id-portal-service",
+      "properties": [
+        {
+          "key": "protocol",
+          "value": "https"
+        }
+      ]
+    }
+  ],
+  "views": [],
+  "extensions": {
+    "xmlDeclaration": [
+      {
+        "name": "version",
+        "value": "1.0"
+      },
+      {
+        "name": "encoding",
+        "value": "UTF-8"
+      }
+    ],
+    "namespaces": [
+      {
+        "prefix": "xsi",
+        "uri": "http://www.w3.org/2001/XMLSchema-instance"
+      },
+      {
+        "prefix": "archimate",
+        "uri": "http://www.archimatetool.com/archimate"
+      }
+    ]
+  }
+}

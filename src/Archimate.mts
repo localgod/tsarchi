@@ -24,6 +24,7 @@ import { removeFromNestedFolders } from './internal/NestedFolders.mjs';
 import { deepCopy } from './internal/Copy.mjs';
 import { randomArchiId } from './internal/Ids.mjs';
 import { readSnapshot, writeSnapshot } from './internal/Snapshot.mjs';
+import { formatJson, isJsonStructureError, jsonToSnapshot, snapshotToJson } from './internal/JsonFormat.mjs';
 import type { ModelSnapshot } from './interfaces/ModelSnapshot.mjs';
 import { allSourceConnections, removeViewChildren, removeViewConnections } from './internal/ViewRemoval.mjs';
 import {
@@ -702,6 +703,41 @@ export class Archimate {
     const archimate = new Archimate();
     archimate.restore(snapshot);
     return archimate;
+  }
+
+  /**
+   * Returns the model as text in tsarchi's stable JSON format (see `ModelJson` and `modelJsonSchema`), for storing it,
+   * for example in git, or reading it outside TypeScript. The format is lossless: `Archimate.fromJson()` gives a model
+   * that `toXml()` writes as this one. The text is the same for the same model: concepts sorted by id, fields in a
+   * fixed order, two-space indentation and a final line break. Like `snapshot()`, it does not validate the model.
+   * Throws when an element, relationship, view, folder, profile, diagram child or view connection has no id, when an
+   * id is used twice, or when the model holds what the format cannot give back (a concept with fields of another
+   * kind for its folder, or a view connection held by another object than its source).
+   */
+  public toJson(): string {
+    return formatJson(snapshotToJson(this.snapshot()));
+  }
+
+  /**
+   * Creates a model from text in the JSON format that `toJson()` writes. Throws an ArchimateParseError: `not-json` when
+   * the text is not JSON, `invalid-structure` when it is not a document of a format version this tsarchi reads.
+   * Like `fromXml()`, it does not validate the model.
+   */
+  public static fromJson(text: string): Archimate {
+    let value: unknown;
+    try {
+      value = JSON.parse(text);
+    } catch (error) {
+      throw new ArchimateParseError('not-json', `Not JSON: ${(error as Error).message}`, { cause: error });
+    }
+    let snapshot: ModelSnapshot;
+    try {
+      snapshot = jsonToSnapshot(value);
+    } catch (error) {
+      if (!isJsonStructureError(error)) throw error;
+      throw new ArchimateParseError('invalid-structure', `Not a tsarchi JSON model: ${error.message}`, { cause: error });
+    }
+    return Archimate.fromSnapshot(snapshot);
   }
 
   /**

@@ -1,0 +1,309 @@
+{
+  "formatVersion": 1,
+  "model": {
+    "id": "id-sketch-canvas-model",
+    "name": "sketch and canvas",
+    "version": "5.0.0"
+  },
+  "folders": [
+    {
+      "id": "id-sc-strategy",
+      "type": "strategy",
+      "name": "Strategy"
+    },
+    {
+      "id": "id-sc-business",
+      "type": "business",
+      "name": "Business"
+    },
+    {
+      "id": "id-sc-application",
+      "type": "application",
+      "name": "Application"
+    },
+    {
+      "id": "id-sc-technology",
+      "type": "technology",
+      "name": "Technology & Physical"
+    },
+    {
+      "id": "id-sc-motivation",
+      "type": "motivation",
+      "name": "Motivation"
+    },
+    {
+      "id": "id-sc-implementation",
+      "type": "implementation_migration",
+      "name": "Implementation & Migration"
+    },
+    {
+      "id": "id-sc-other",
+      "type": "other",
+      "name": "Other"
+    },
+    {
+      "id": "id-sc-relations",
+      "type": "relations",
+      "name": "Relations"
+    },
+    {
+      "id": "id-sc-views",
+      "type": "diagrams",
+      "name": "Views",
+      "members": [
+        "id-sketch",
+        "id-canvas"
+      ]
+    }
+  ],
+  "elements": [],
+  "relationships": [],
+  "views": [
+    {
+      "id": "id-canvas",
+      "type": "CanvasModel",
+      "name": "Canvas",
+      "connectionRouterType": "manhattan",
+      "children": [
+        {
+          "id": "id-block",
+          "type": "CanvasModelBlock",
+          "bounds": {
+            "x": 88,
+            "y": 43,
+            "width": 200,
+            "height": 200
+          },
+          "textAlignment": "left",
+          "textPosition": "center",
+          "lineColor": "#111111",
+          "borderColor": "#000000",
+          "imagePath": "images/block.png",
+          "imagePosition": 2,
+          "locked": true,
+          "hintTitle": "Block hint",
+          "content": "Block",
+          "hintContent": "Fill in the block",
+          "properties": [
+            {
+              "key": "section",
+              "value": "1"
+            }
+          ],
+          "children": [
+            {
+              "id": "id-nested-sticky",
+              "type": "CanvasModelSticky",
+              "bounds": {
+                "x": 10,
+                "y": 10,
+                "width": 75,
+                "height": 63
+              },
+              "textPosition": "center",
+              "fillColor": "#ffff95",
+              "borderColor": "#C0C0C0"
+            }
+          ]
+        },
+        {
+          "id": "id-image",
+          "type": "CanvasModelImage",
+          "bounds": {
+            "x": 395,
+            "y": 51,
+            "width": 200,
+            "height": 150
+          },
+          "borderColor": "#000000",
+          "imagePath": "images/logo.png",
+          "locked": true
+        },
+        {
+          "id": "id-canvas-sticky",
+          "type": "CanvasModelSticky",
+          "bounds": {
+            "x": 756,
+            "y": 217,
+            "width": 75,
+            "height": 63
+          },
+          "textPosition": "center",
+          "fillColor": "#ffa093",
+          "borderColor": "#C0C0C0",
+          "imagePath": "images/sticky.png",
+          "imagePosition": 0,
+          "targetConnections": [
+            "id-canvas-connection"
+          ],
+          "content": "Sticky",
+          "notes": "Remember this"
+        }
+      ],
+      "connections": [
+        {
+          "id": "id-canvas-connection",
+          "type": "CanvasModelConnection",
+          "source": "id-block",
+          "target": "id-canvas-sticky",
+          "lineStyle": 1,
+          "locked": true
+        }
+      ]
+    },
+    {
+      "id": "id-sketch",
+      "type": "SketchModel",
+      "name": "Sketch",
+      "documentation": "A sketch view",
+      "background": 1,
+      "properties": [
+        {
+          "key": "owner",
+          "value": "architecture"
+        }
+      ],
+      "children": [
+        {
+          "id": "id-sketch-group",
+          "type": "Group",
+          "name": "Group",
+          "bounds": {
+            "x": 36,
+            "y": 60,
+            "width": 400,
+            "height": 140
+          },
+          "textAlignment": "left",
+          "children": [
+            {
+              "id": "id-sticky-nested",
+              "type": "SketchModelSticky",
+              "name": "Sticky",
+              "bounds": {
+                "x": 49,
+                "y": 48,
+                "width": 135,
+                "height": 70
+              },
+              "textAlignment": "left",
+              "textPosition": "center",
+              "fillColor": "#ffffb5",
+              "alpha": 200,
+              "lineColor": "#5c5c5c",
+              "fontColor": "#333333",
+              "documentation": "Sticky documentation",
+              "content": "Sticky content",
+              "properties": [
+                {
+                  "key": "status",
+                  "value": "draft"
+                }
+              ],
+              "features": [
+                {
+                  "key": "lineAlpha",
+                  "value": "128"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "id-sketch-actor",
+          "type": "SketchModelActor",
+          "name": "Actor",
+          "bounds": {
+            "x": 624,
+            "y": 109,
+            "width": 75,
+            "height": 100
+          },
+          "textPosition": "bottom",
+          "lineColor": "#000000",
+          "targetConnections": [
+            "id-sketch-connection"
+          ],
+          "documentation": "An actor"
+        },
+        {
+          "id": "id-sticky",
+          "type": "SketchModelSticky",
+          "name": "Sticky",
+          "bounds": {
+            "x": 305,
+            "y": 313,
+            "width": 135,
+            "height": 70
+          },
+          "textAlignment": "left",
+          "fillColor": "#60ff60",
+          "lineColor": "#5c5c5c"
+        }
+      ],
+      "connections": [
+        {
+          "id": "id-sketch-connection",
+          "type": "Connection",
+          "implicitType": true,
+          "source": "id-sketch-group",
+          "target": "id-sketch-actor",
+          "name": "talks to",
+          "lineStyle": 3,
+          "font": "1|Segoe UI|9.0|1|WINDOWS|1|-12|0|0|0|700|0|0|0|0|3|2|1|34|Segoe UI",
+          "fontColor": "#0000ff",
+          "lineColor": "#ff0000",
+          "lineWidth": 2,
+          "textPosition": "source",
+          "documentation": "Sketch connection",
+          "bendpoints": [
+            {
+              "startX": 10,
+              "startY": 0,
+              "endX": 0,
+              "endY": -20
+            },
+            {
+              "startX": 30,
+              "startY": 5,
+              "endX": -40,
+              "endY": 15
+            }
+          ],
+          "properties": [
+            {
+              "key": "weight",
+              "value": "heavy"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "extensions": {
+    "xmlDeclaration": [
+      {
+        "name": "version",
+        "value": "1.0"
+      },
+      {
+        "name": "encoding",
+        "value": "UTF-8"
+      }
+    ],
+    "namespaces": [
+      {
+        "prefix": "xsi",
+        "uri": "http://www.w3.org/2001/XMLSchema-instance"
+      },
+      {
+        "prefix": "archimate",
+        "uri": "http://www.archimatetool.com/archimate"
+      },
+      {
+        "prefix": "canvas",
+        "uri": "http://www.archimatetool.com/archimate/canvas"
+      }
+    ]
+  }
+}

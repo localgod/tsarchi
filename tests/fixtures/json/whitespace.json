@@ -1,0 +1,189 @@
+{
+  "formatVersion": 1,
+  "model": {
+    "id": "id-ws-model",
+    "name": " spaced model ",
+    "version": "5.0.0",
+    "purpose": " purpose with spaces ",
+    "properties": [
+      {
+        "key": "Owner",
+        "value": "  EA  "
+      }
+    ]
+  },
+  "folders": [
+    {
+      "id": "id-ws-strategy",
+      "type": "strategy",
+      "name": "Strategy"
+    },
+    {
+      "id": "id-ws-business",
+      "type": "business",
+      "name": "Business ",
+      "documentation": "  indented first line\nsecond line  ",
+      "members": [
+        "id-customer"
+      ],
+      "folders": [
+        {
+          "id": "id-ws-subfolder",
+          "name": " Nested",
+          "documentation": "\nStarts and ends with a line break\n",
+          "members": [
+            "id-insurant"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "id-ws-application",
+      "type": "application",
+      "name": "Application"
+    },
+    {
+      "id": "id-ws-technology",
+      "type": "technology",
+      "name": "Technology & Physical"
+    },
+    {
+      "id": "id-ws-motivation",
+      "type": "motivation",
+      "name": "Motivation"
+    },
+    {
+      "id": "id-ws-implementation",
+      "type": "implementation_migration",
+      "name": "Implementation & Migration"
+    },
+    {
+      "id": "id-ws-other",
+      "type": "other",
+      "name": "Other"
+    },
+    {
+      "id": "id-ws-relations",
+      "type": "relations",
+      "name": "Relations",
+      "members": [
+        "id-rel-assignment"
+      ]
+    },
+    {
+      "id": "id-ws-views",
+      "type": "diagrams",
+      "name": "Views",
+      "members": [
+        "id-view-ws"
+      ]
+    }
+  ],
+  "elements": [
+    {
+      "id": "id-customer",
+      "type": "BusinessActor",
+      "name": " Customer ",
+      "documentation": "Trailing spaces   ",
+      "properties": [
+        {
+          "key": " key ",
+          "value": " 1.50 "
+        }
+      ]
+    },
+    {
+      "id": "id-insurant",
+      "type": "BusinessRole",
+      "name": "Insurant",
+      "documentation": "   "
+    }
+  ],
+  "relationships": [
+    {
+      "id": "id-rel-assignment",
+      "type": "AssignmentRelationship",
+      "name": " assigned ",
+      "source": "id-customer",
+      "target": "id-insurant"
+    }
+  ],
+  "views": [
+    {
+      "id": "id-view-ws",
+      "type": "ArchimateDiagramModel",
+      "name": "View ",
+      "children": [
+        {
+          "id": "id-dmo-customer",
+          "type": "DiagramObject",
+          "archimateElement": "id-customer",
+          "bounds": {
+            "x": 24,
+            "y": 24,
+            "width": 120,
+            "height": 55
+          }
+        },
+        {
+          "id": "id-dmo-insurant",
+          "type": "DiagramObject",
+          "archimateElement": "id-insurant",
+          "bounds": {
+            "x": 204,
+            "y": 24,
+            "width": 120,
+            "height": 55
+          },
+          "targetConnections": [
+            "id-conn-assignment"
+          ]
+        },
+        {
+          "id": "id-note",
+          "type": "Note",
+          "bounds": {
+            "x": 24,
+            "y": 120,
+            "width": 185,
+            "height": 80
+          },
+          "content": "\n  Note with an indented line\n"
+        }
+      ],
+      "connections": [
+        {
+          "id": "id-conn-assignment",
+          "type": "Connection",
+          "source": "id-dmo-customer",
+          "target": "id-dmo-insurant",
+          "archimateRelationship": "id-rel-assignment",
+          "name": " label ",
+          "documentation": " connection "
+        }
+      ]
+    }
+  ],
+  "extensions": {
+    "xmlDeclaration": [
+      {
+        "name": "version",
+        "value": "1.0"
+      },
+      {
+        "name": "encoding",
+        "value": "UTF-8"
+      }
+    ],
+    "namespaces": [
+      {
+        "prefix": "xsi",
+        "uri": "http://www.w3.org/2001/XMLSchema-instance"
+      },
+      {
+        "prefix": "archimate",
+        "uri": "http://www.archimatetool.com/archimate"
+      }
+    ]
+  }
+}

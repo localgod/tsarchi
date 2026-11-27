@@ -1,0 +1,185 @@
+{
+  "formatVersion": 1,
+  "model": {
+    "id": "id-numeric-model",
+    "name": "numeric text",
+    "version": "5.0.0",
+    "purpose": "1.0"
+  },
+  "folders": [
+    {
+      "id": "id-numeric-strategy",
+      "type": "strategy",
+      "name": "Strategy"
+    },
+    {
+      "id": "id-numeric-business",
+      "type": "business",
+      "name": "Business",
+      "documentation": "007",
+      "members": [
+        "id-customer",
+        "id-policy"
+      ],
+      "folders": [
+        {
+          "id": "id-numeric-subfolder",
+          "name": "Release 1.0",
+          "documentation": "2.0",
+          "members": [
+            "id-insurant"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "id-numeric-application",
+      "type": "application",
+      "name": "Application"
+    },
+    {
+      "id": "id-numeric-technology",
+      "type": "technology",
+      "name": "Technology & Physical"
+    },
+    {
+      "id": "id-numeric-motivation",
+      "type": "motivation",
+      "name": "Motivation"
+    },
+    {
+      "id": "id-numeric-implementation",
+      "type": "implementation_migration",
+      "name": "Implementation & Migration"
+    },
+    {
+      "id": "id-numeric-other",
+      "type": "other",
+      "name": "Other"
+    },
+    {
+      "id": "id-numeric-relations",
+      "type": "relations",
+      "name": "Relations",
+      "members": [
+        "id-rel-assignment"
+      ]
+    },
+    {
+      "id": "id-numeric-views",
+      "type": "diagrams",
+      "name": "Views",
+      "members": [
+        "id-view-numbers"
+      ]
+    }
+  ],
+  "elements": [
+    {
+      "id": "id-customer",
+      "type": "BusinessActor",
+      "name": "Customer",
+      "documentation": "1.50"
+    },
+    {
+      "id": "id-insurant",
+      "type": "BusinessRole",
+      "name": "Insurant",
+      "documentation": "true"
+    },
+    {
+      "id": "id-policy",
+      "type": "BusinessObject",
+      "name": "Policy",
+      "documentation": "0x1A"
+    }
+  ],
+  "relationships": [
+    {
+      "id": "id-rel-assignment",
+      "type": "AssignmentRelationship",
+      "documentation": "1e3",
+      "source": "id-customer",
+      "target": "id-insurant"
+    }
+  ],
+  "views": [
+    {
+      "id": "id-view-numbers",
+      "type": "ArchimateDiagramModel",
+      "name": "Numbers",
+      "documentation": "10.0",
+      "children": [
+        {
+          "id": "id-dmo-customer",
+          "type": "DiagramObject",
+          "archimateElement": "id-customer",
+          "bounds": {
+            "x": 24,
+            "y": 24,
+            "width": 120,
+            "height": 55
+          },
+          "documentation": "3.10"
+        },
+        {
+          "id": "id-dmo-insurant",
+          "type": "DiagramObject",
+          "archimateElement": "id-insurant",
+          "bounds": {
+            "x": 204,
+            "y": 24,
+            "width": 120,
+            "height": 55
+          },
+          "targetConnections": [
+            "id-conn-assignment"
+          ]
+        },
+        {
+          "id": "id-note",
+          "type": "Note",
+          "bounds": {
+            "x": 24,
+            "y": 120,
+            "width": 185,
+            "height": 80
+          },
+          "content": "0.10"
+        }
+      ],
+      "connections": [
+        {
+          "id": "id-conn-assignment",
+          "type": "Connection",
+          "source": "id-dmo-customer",
+          "target": "id-dmo-insurant",
+          "archimateRelationship": "id-rel-assignment",
+          "documentation": "-0"
+        }
+      ]
+    }
+  ],
+  "extensions": {
+    "xmlDeclaration": [
+      {
+        "name": "version",
+        "value": "1.0"
+      },
+      {
+        "name": "encoding",
+        "value": "UTF-8"
+      }
+    ],
+    "namespaces": [
+      {
+        "prefix": "xsi",
+        "uri": "http://www.w3.org/2001/XMLSchema-instance"
+      },
+      {
+        "prefix": "archimate",
+        "uri": "http://www.archimatetool.com/archimate"
+      }
+    ]
+  }
+}

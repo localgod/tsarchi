@@ -1,0 +1,181 @@
+{
+  "formatVersion": 1,
+  "model": {
+    "id": "id-nested-view-model",
+    "name": "nested view notes",
+    "version": "5.0.0"
+  },
+  "folders": [
+    {
+      "id": "id-nested-strategy",
+      "type": "strategy",
+      "name": "Strategy"
+    },
+    {
+      "id": "id-nested-business",
+      "type": "business",
+      "name": "Business"
+    },
+    {
+      "id": "id-nested-application",
+      "type": "application",
+      "name": "Application",
+      "members": [
+        "id-frontend",
+        "id-backend"
+      ]
+    },
+    {
+      "id": "id-nested-technology",
+      "type": "technology",
+      "name": "Technology & Physical"
+    },
+    {
+      "id": "id-nested-motivation",
+      "type": "motivation",
+      "name": "Motivation"
+    },
+    {
+      "id": "id-nested-implementation",
+      "type": "implementation_migration",
+      "name": "Implementation & Migration"
+    },
+    {
+      "id": "id-nested-other",
+      "type": "other",
+      "name": "Other"
+    },
+    {
+      "id": "id-nested-relations",
+      "type": "relations",
+      "name": "Relations",
+      "members": [
+        "id-api-call"
+      ]
+    },
+    {
+      "id": "id-nested-views",
+      "type": "diagrams",
+      "name": "Views",
+      "members": [
+        "id-application-view"
+      ]
+    }
+  ],
+  "elements": [
+    {
+      "id": "id-backend",
+      "type": "ApplicationComponent",
+      "name": "Backend"
+    },
+    {
+      "id": "id-frontend",
+      "type": "ApplicationComponent",
+      "name": "Frontend"
+    }
+  ],
+  "relationships": [
+    {
+      "id": "id-api-call",
+      "type": "FlowRelationship",
+      "name": "api call",
+      "source": "id-frontend",
+      "target": "id-backend"
+    }
+  ],
+  "views": [
+    {
+      "id": "id-application-view",
+      "type": "ArchimateDiagramModel",
+      "name": "Application View",
+      "children": [
+        {
+          "id": "id-app-group",
+          "type": "Group",
+          "name": "Applications",
+          "bounds": {
+            "x": 40,
+            "y": 40,
+            "width": 460,
+            "height": 240
+          },
+          "textAlignment": "left",
+          "fillColor": "#eeeeee",
+          "documentation": "Grouped application components.",
+          "children": [
+            {
+              "id": "id-frontend-object",
+              "type": "DiagramObject",
+              "archimateElement": "id-frontend",
+              "bounds": {
+                "x": 40,
+                "y": 80,
+                "width": 120,
+                "height": 55
+              }
+            },
+            {
+              "id": "id-backend-object",
+              "type": "DiagramObject",
+              "archimateElement": "id-backend",
+              "bounds": {
+                "x": 280,
+                "y": 80,
+                "width": 120,
+                "height": 55
+              },
+              "fillColor": "#c9e7b7",
+              "targetConnections": [
+                "id-api-connection"
+              ]
+            },
+            {
+              "id": "id-note",
+              "type": "Note",
+              "name": "Deployment note",
+              "bounds": {
+                "x": 160,
+                "y": 160,
+                "width": 160,
+                "height": 70
+              },
+              "fillColor": "#fff2cc",
+              "documentation": "Keep the note attached to the application view."
+            }
+          ]
+        }
+      ],
+      "connections": [
+        {
+          "id": "id-api-connection",
+          "type": "Connection",
+          "source": "id-frontend-object",
+          "target": "id-backend-object",
+          "archimateRelationship": "id-api-call"
+        }
+      ]
+    }
+  ],
+  "extensions": {
+    "xmlDeclaration": [
+      {
+        "name": "version",
+        "value": "1.0"
+      },
+      {
+        "name": "encoding",
+        "value": "UTF-8"
+      }
+    ],
+    "namespaces": [
+      {
+        "prefix": "xsi",
+        "uri": "http://www.w3.org/2001/XMLSchema-instance"
+      },
+      {
+        "prefix": "archimate",
+        "uri": "http://www.archimatetool.com/archimate"
+      }
+    ]
+  }
+}

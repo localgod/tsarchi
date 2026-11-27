@@ -1,10 +1,12 @@
 /**
  * Why a text could not be loaded as an Archi model.
  * `not-xml`: the text is not well-formed XML.
+ * `not-json`: the text given to `Archimate.fromJson` is not JSON.
  * `not-archimate`: the XML has no `<archimate:model>` root element.
- * `invalid-structure`: the root is `<archimate:model>`, but its content could not be read as a model.
+ * `invalid-structure`: the root is `<archimate:model>`, but its content could not be read as a model; or a
+ * snapshot or JSON document is not in its format.
  */
-export type ArchimateParseErrorKind = 'not-xml' | 'not-archimate' | 'invalid-structure';
+export type ArchimateParseErrorKind = 'not-xml' | 'not-json' | 'not-archimate' | 'invalid-structure';
 
 export interface ArchimateParseErrorDetails {
   /** 1-based line of the XML error, for `not-xml`. */

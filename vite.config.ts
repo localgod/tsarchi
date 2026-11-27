@@ -88,6 +88,10 @@ export default defineConfig({
     ignorePatterns: [
       'src/index.mts',
       'src/internal/relationships-matrix.mts',
+      // Written by Archimate.toJson(): the tests compare them byte for byte.
+      'tests/fixtures/json/**',
+      // Written by scripts/write-json-schema.js; a test compares it with the source.
+      'schema/**',
       '.claude/**',
       '.devcontainer/**',
       '.github/**',

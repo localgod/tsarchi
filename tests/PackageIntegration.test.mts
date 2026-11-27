@@ -89,6 +89,7 @@ describe('package integration', () => {
       'README.md',
       'dist/bundle/tsarchi.mjs',
       'package.json',
+      'schema/model-v1.json',
     ]);
   });
 
@@ -128,9 +129,9 @@ describe('public API', () => {
     expect(index).not.toHaveProperty('SourceConnectionMapper');
   });
 
-  it('exports loadModel and saveModel from the node entry point', async () => {
+  it('exports the model file functions from the node entry point', async () => {
     const node = await import('../src/node/index.mjs');
 
-    expect(Object.keys(node).sort()).toEqual(['loadModel', 'saveModel']);
+    expect(Object.keys(node).sort()).toEqual(['loadModel', 'loadModelJson', 'saveModel', 'saveModelJson']);
   });
 });

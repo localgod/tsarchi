@@ -1,0 +1,134 @@
+{
+  "formatVersion": 1,
+  "model": {
+    "id": "id-default-bounds-model",
+    "name": "default bounds",
+    "version": "5.0.0"
+  },
+  "folders": [
+    {
+      "id": "id-bounds-strategy",
+      "type": "strategy",
+      "name": "Strategy"
+    },
+    {
+      "id": "id-bounds-business",
+      "type": "business",
+      "name": "Business",
+      "members": [
+        "id-customer"
+      ]
+    },
+    {
+      "id": "id-bounds-application",
+      "type": "application",
+      "name": "Application"
+    },
+    {
+      "id": "id-bounds-technology",
+      "type": "technology",
+      "name": "Technology & Physical"
+    },
+    {
+      "id": "id-bounds-motivation",
+      "type": "motivation",
+      "name": "Motivation"
+    },
+    {
+      "id": "id-bounds-implementation",
+      "type": "implementation_migration",
+      "name": "Implementation & Migration"
+    },
+    {
+      "id": "id-bounds-other",
+      "type": "other",
+      "name": "Other"
+    },
+    {
+      "id": "id-bounds-relations",
+      "type": "relations",
+      "name": "Relations"
+    },
+    {
+      "id": "id-bounds-views",
+      "type": "diagrams",
+      "name": "Views",
+      "members": [
+        "id-default-bounds-view"
+      ]
+    }
+  ],
+  "elements": [
+    {
+      "id": "id-customer",
+      "type": "BusinessActor",
+      "name": "Customer"
+    }
+  ],
+  "relationships": [],
+  "views": [
+    {
+      "id": "id-default-bounds-view",
+      "type": "ArchimateDiagramModel",
+      "name": "Default Bounds",
+      "children": [
+        {
+          "id": "id-origin-note",
+          "type": "Note",
+          "bounds": {
+            "x": 0,
+            "y": 0,
+            "width": 193,
+            "height": 85
+          },
+          "textAlignment": "left",
+          "content": "This note sits at x, y 0."
+        },
+        {
+          "id": "id-default-size-object",
+          "type": "DiagramObject",
+          "archimateElement": "id-customer",
+          "bounds": {
+            "x": 240,
+            "y": 12,
+            "width": -1,
+            "height": -1
+          }
+        },
+        {
+          "id": "id-default-group",
+          "type": "Group",
+          "name": "Default size at origin",
+          "bounds": {
+            "x": 0,
+            "y": 0,
+            "width": -1,
+            "height": -1
+          }
+        }
+      ]
+    }
+  ],
+  "extensions": {
+    "xmlDeclaration": [
+      {
+        "name": "version",
+        "value": "1.0"
+      },
+      {
+        "name": "encoding",
+        "value": "UTF-8"
+      }
+    ],
+    "namespaces": [
+      {
+        "prefix": "xsi",
+        "uri": "http://www.w3.org/2001/XMLSchema-instance"
+      },
+      {
+        "prefix": "archimate",
+        "uri": "http://www.archimatetool.com/archimate"
+      }
+    ]
+  }
+}

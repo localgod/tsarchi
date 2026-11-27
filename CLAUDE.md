@@ -18,6 +18,7 @@ TypeScript library that loads, edits, validates and saves Archi (`.archimate`) m
 - `src/internal/DiagramAttributeMapper.mts` — attribute tables (`childAttributes`, `connectionAttributes`, `childTextElements`) that drive both parse and serialize of diagram children and connections.
 - `src/internal/SourceConnectionMapper.mts`, `src/internal/BoundMapper.mts` — view connections and bounds.
 - `src/internal/PropertyMapper.mts` — `<property>` (and `<metadata>` entry) lists ⇄ `Property[]`; `src/Properties.mts` — the public property helpers (`getProperty`, `setProperty`, …).
+- `src/internal/JsonFormat.mts` — the stable JSON format (`toJson()` / `fromJson()`), a mapping of the snapshot (`src/internal/Snapshot.mts`); `src/interfaces/ModelJson.mts` types it and `src/constants/model-json-schema.mts` is its schema, written to `schema/model-v1.json` by `npm run build`. A change to the format updates both, and the golden files in `tests/fixtures/json/` (`UPDATE_JSON_FIXTURES=1 npm test`).
 - `src/internal/ModelIndex.mts` — id, element and relationship lookups. Every change to the model reports what it adds, replaces or removes, or calls `clear()`; `tests/ModelIndex.test.mts` checks the lookups against a fresh index after each kind of change.
 - `src/constants/archimate-mappings.mts` — element/view types, folders, `toXsiType()` / `typeFromXsiType()`.
 - `src/interfaces/` — domain types; `src/interfaces/schema/` — fast-xml-parser shapes (`@_` attribute keys, all values strings).

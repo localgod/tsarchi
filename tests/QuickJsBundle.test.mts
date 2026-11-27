@@ -110,6 +110,10 @@ describe('QuickJS bundle', () => {
         const restored = Archimate.fromSnapshot(JSON.parse(JSON.stringify(model.snapshot())));
         return restored.toXml() === model.toXml();
       });
+      step('json', () => {
+        const json = model.toJson();
+        return Archimate.fromJson(json).toXml() === model.toXml() && Archimate.fromJson(json).toJson() === json;
+      });
       step('validateModel', () => model.validateModel().length);
       step('deleteElement', () => model.deleteElement(data.id));
       step('parseError', () => {
@@ -133,6 +137,7 @@ describe('QuickJS bundle', () => {
       addToView: true,
       getFolders: 0,
       snapshot: true,
+      json: true,
       validateModel: 0,
       deleteElement: true,
       parseError: true,

@@ -124,3 +124,32 @@ export function parseArchimateXml(input: string): Schema {
 export function buildArchimateXml(schema: object): string {
   return new XMLBuilder(buildOptions).build(schema);
 }
+
+/** The element that wraps unrecognized content when it is written as an XML fragment. */
+const fragmentRoot = 'extensions';
+
+/**
+ * Writes content in its parsed XML form (attributes as `@_` keys, child elements, text) as one XML element named
+ * `extensions`, with the values escaped as in a saved file. `parseXmlFragment` reads it back.
+ */
+export function buildXmlFragment(node: Record<string, unknown>): string {
+  return new XMLBuilder({ ...buildOptions, format: false }).build({ [fragmentRoot]: node });
+}
+
+/**
+ * Reads an XML fragment written by `buildXmlFragment` back into its parsed form. Throws when the text is not
+ * well-formed XML or not one `extensions` element.
+ */
+export function parseXmlFragment(text: string): Record<string, unknown> {
+  const result = XMLValidator.validate(text);
+  if (result !== true) throw new Error(`not well-formed XML: ${result.err.msg}`);
+  const parsed = new XMLParser(parseOptions).parse(text) as Record<string, unknown>;
+  removeIndentation(parsed);
+  const keys = Object.keys(parsed);
+  if (keys.length !== 1 || keys[0] !== fragmentRoot) throw new Error(`expected one <${fragmentRoot}> element`);
+  const node = parsed[fragmentRoot];
+  // An element with neither attributes nor content parses to an empty string
+  if (node === '') return {};
+  if (!node || typeof node !== 'object' || Array.isArray(node)) throw new Error(`expected one <${fragmentRoot}> element`);
+  return node as Record<string, unknown>;
+}

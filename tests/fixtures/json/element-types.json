@@ -1,0 +1,128 @@
+{
+  "formatVersion": 1,
+  "model": {
+    "id": "id-element-types-model",
+    "name": "element-types",
+    "version": "5.0.0"
+  },
+  "folders": [
+    {
+      "id": "id-element-types-strategy",
+      "type": "strategy",
+      "name": "Strategy"
+    },
+    {
+      "id": "id-element-types-business",
+      "type": "business",
+      "name": "Business",
+      "members": [
+        "id-product"
+      ]
+    },
+    {
+      "id": "id-element-types-application",
+      "type": "application",
+      "name": "Application",
+      "members": [
+        "id-application-event"
+      ]
+    },
+    {
+      "id": "id-element-types-technology",
+      "type": "technology",
+      "name": "Technology & Physical",
+      "members": [
+        "id-equipment",
+        "id-material"
+      ]
+    },
+    {
+      "id": "id-element-types-motivation",
+      "type": "motivation",
+      "name": "Motivation"
+    },
+    {
+      "id": "id-element-types-implementation",
+      "type": "implementation_migration",
+      "name": "Implementation & Migration"
+    },
+    {
+      "id": "id-element-types-other",
+      "type": "other",
+      "name": "Other"
+    },
+    {
+      "id": "id-element-types-relations",
+      "type": "relations",
+      "name": "Relations",
+      "members": [
+        "id-product-event",
+        "id-equipment-material"
+      ]
+    },
+    {
+      "id": "id-element-types-views",
+      "type": "diagrams",
+      "name": "Views"
+    }
+  ],
+  "elements": [
+    {
+      "id": "id-application-event",
+      "type": "ApplicationEvent",
+      "name": "Application Event"
+    },
+    {
+      "id": "id-equipment",
+      "type": "Equipment",
+      "name": "Equipment"
+    },
+    {
+      "id": "id-material",
+      "type": "Material",
+      "name": "Material"
+    },
+    {
+      "id": "id-product",
+      "type": "Product",
+      "name": "Product"
+    }
+  ],
+  "relationships": [
+    {
+      "id": "id-equipment-material",
+      "type": "AccessRelationship",
+      "source": "id-equipment",
+      "target": "id-material"
+    },
+    {
+      "id": "id-product-event",
+      "type": "TriggeringRelationship",
+      "source": "id-product",
+      "target": "id-application-event"
+    }
+  ],
+  "views": [],
+  "extensions": {
+    "xmlDeclaration": [
+      {
+        "name": "version",
+        "value": "1.0"
+      },
+      {
+        "name": "encoding",
+        "value": "UTF-8"
+      }
+    ],
+    "namespaces": [
+      {
+        "prefix": "xsi",
+        "uri": "http://www.w3.org/2001/XMLSchema-instance"
+      },
+      {
+        "prefix": "archimate",
+        "uri": "http://www.archimatetool.com/archimate"
+      }
+    ]
+  }
+}

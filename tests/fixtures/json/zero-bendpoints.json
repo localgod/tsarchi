@@ -1,0 +1,212 @@
+{
+  "formatVersion": 1,
+  "model": {
+    "id": "id-zb-model",
+    "name": "zero bendpoints",
+    "version": "5.0.0"
+  },
+  "folders": [
+    {
+      "id": "id-zb-strategy",
+      "type": "strategy",
+      "name": "Strategy"
+    },
+    {
+      "id": "id-zb-business",
+      "type": "business",
+      "name": "Business",
+      "members": [
+        "id-clerk",
+        "id-cashier",
+        "id-manager"
+      ]
+    },
+    {
+      "id": "id-zb-application",
+      "type": "application",
+      "name": "Application"
+    },
+    {
+      "id": "id-zb-technology",
+      "type": "technology",
+      "name": "Technology & Physical"
+    },
+    {
+      "id": "id-zb-motivation",
+      "type": "motivation",
+      "name": "Motivation"
+    },
+    {
+      "id": "id-zb-implementation",
+      "type": "implementation_migration",
+      "name": "Implementation & Migration"
+    },
+    {
+      "id": "id-zb-other",
+      "type": "other",
+      "name": "Other"
+    },
+    {
+      "id": "id-zb-relations",
+      "type": "relations",
+      "name": "Relations",
+      "members": [
+        "id-cashier-assignment",
+        "id-manager-assignment"
+      ]
+    },
+    {
+      "id": "id-zb-views",
+      "type": "diagrams",
+      "name": "Views",
+      "members": [
+        "id-zb-view"
+      ]
+    }
+  ],
+  "elements": [
+    {
+      "id": "id-cashier",
+      "type": "BusinessRole",
+      "name": "Cashier"
+    },
+    {
+      "id": "id-clerk",
+      "type": "BusinessActor",
+      "name": "Clerk"
+    },
+    {
+      "id": "id-manager",
+      "type": "BusinessRole",
+      "name": "Manager"
+    }
+  ],
+  "relationships": [
+    {
+      "id": "id-cashier-assignment",
+      "type": "AssignmentRelationship",
+      "source": "id-clerk",
+      "target": "id-cashier"
+    },
+    {
+      "id": "id-manager-assignment",
+      "type": "AssignmentRelationship",
+      "source": "id-clerk",
+      "target": "id-manager"
+    }
+  ],
+  "views": [
+    {
+      "id": "id-zb-view",
+      "type": "ArchimateDiagramModel",
+      "name": "Zero Bendpoints",
+      "children": [
+        {
+          "id": "id-clerk-object",
+          "type": "DiagramObject",
+          "archimateElement": "id-clerk",
+          "bounds": {
+            "x": 40,
+            "y": 40,
+            "width": 120,
+            "height": 55
+          }
+        },
+        {
+          "id": "id-cashier-object",
+          "type": "DiagramObject",
+          "archimateElement": "id-cashier",
+          "bounds": {
+            "x": 280,
+            "y": 40,
+            "width": 120,
+            "height": 55
+          },
+          "targetConnections": [
+            "id-cashier-connection"
+          ]
+        },
+        {
+          "id": "id-manager-object",
+          "type": "DiagramObject",
+          "archimateElement": "id-manager",
+          "bounds": {
+            "x": 280,
+            "y": 160,
+            "width": 120,
+            "height": 55
+          },
+          "targetConnections": [
+            "id-manager-connection"
+          ]
+        }
+      ],
+      "connections": [
+        {
+          "id": "id-cashier-connection",
+          "type": "Connection",
+          "source": "id-clerk-object",
+          "target": "id-cashier-object",
+          "archimateRelationship": "id-cashier-assignment",
+          "bendpoints": [
+            {
+              "startX": 0,
+              "startY": 0,
+              "endX": 0,
+              "endY": 0
+            }
+          ]
+        },
+        {
+          "id": "id-manager-connection",
+          "type": "Connection",
+          "source": "id-clerk-object",
+          "target": "id-manager-object",
+          "archimateRelationship": "id-manager-assignment",
+          "bendpoints": [
+            {
+              "startX": 10,
+              "startY": 0,
+              "endX": 0,
+              "endY": -20
+            },
+            {
+              "startX": 0,
+              "startY": 0,
+              "endX": 0,
+              "endY": 0
+            },
+            {
+              "startX": 0,
+              "startY": 30,
+              "endX": 0,
+              "endY": 0
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "extensions": {
+    "xmlDeclaration": [
+      {
+        "name": "version",
+        "value": "1.0"
+      },
+      {
+        "name": "encoding",
+        "value": "UTF-8"
+      }
+    ],
+    "namespaces": [
+      {
+        "prefix": "xsi",
+        "uri": "http://www.w3.org/2001/XMLSchema-instance"
+      },
+      {
+        "prefix": "archimate",
+        "uri": "http://www.archimatetool.com/archimate"
+      }
+    ]
+  }
+}

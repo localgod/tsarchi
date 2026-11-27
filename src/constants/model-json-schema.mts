@@ -35,7 +35,7 @@ export const modelJsonSchema = {
   $id: 'https://raw.githubusercontent.com/localgod/tsarchi/main/schema/model-v1.json',
   title: 'tsarchi model',
   description:
-    "An Archi model in tsarchi's lossless JSON format, version 1. Concepts are in flat lists sorted by id; each folder lists its members in file order; diagram children and connections are in file order.",
+    "An Archi model in tsarchi's lossless JSON format, version 1. Concepts are in flat lists sorted by id in Unicode code point order; ids are unique; each folder lists its members in file order; diagram children and connections are in file order.",
   type: 'object',
   required: ['formatVersion', 'model', 'folders', 'elements', 'relationships', 'views'],
   additionalProperties: false,
@@ -109,7 +109,7 @@ export const modelJsonSchema = {
     entry: { type: 'object', additionalProperties: false, properties: { key: text, value: text } },
     extensions: {
       description:
-        'Content tsarchi does not map, as one XML element named extensions. It is written back unchanged and is not part of the format.',
+        'Content tsarchi does not map, as one XML element named extensions. It is written back unchanged and is not part of the format. Prefixes it does not declare are those of extensions.namespaces.',
       type: 'string',
     },
     folder: { type: 'object', required: ['id'], additionalProperties: false, properties: folder },

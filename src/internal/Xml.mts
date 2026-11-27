@@ -148,8 +148,8 @@ export function parseXmlFragment(text: string): Record<string, unknown> {
   const keys = Object.keys(parsed);
   if (keys.length !== 1 || keys[0] !== fragmentRoot) throw new Error(`expected one <${fragmentRoot}> element`);
   const node = parsed[fragmentRoot];
-  // An element with neither attributes nor content parses to an empty string
-  if (node === '') return {};
+  // An element with neither attributes nor child elements parses to its text: empty, or the content's only text
+  if (typeof node === 'string') return node === '' ? {} : { '#text': node };
   if (!node || typeof node !== 'object' || Array.isArray(node)) throw new Error(`expected one <${fragmentRoot}> element`);
   return node as Record<string, unknown>;
 }

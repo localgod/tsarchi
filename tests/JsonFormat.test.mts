@@ -8,6 +8,7 @@ import { AccessType, GroupBorderType, NoteBorderType, TextAlignment } from '../s
 import type { ModelJson } from '../src/interfaces/ModelJson.mjs';
 import type { Child } from '../src/interfaces/Child.mjs';
 import { modelXml } from './helpers.mjs';
+import { compareCodePoints } from '../src/internal/JsonFormat.mjs';
 
 // ajv is CommonJS: its class is the default export in Node and the module itself when bundled.
 type Ajv = typeof import('ajv/dist/2020.js').default;
@@ -40,14 +41,15 @@ describe('toJson and fromJson on every fixture', () => {
     expect(Archimate.fromJson(model.toJson()).toXml()).toBe(model.toXml());
   });
 
-  // Set UPDATE_JSON_FIXTURES=1 to write the files after a deliberate change to the format.
+  // After a deliberate change to the format, or for a new fixture, run with UPDATE_JSON_FIXTURES=1 to write the files.
   it.each(fixtures(roundtripDir))('%s: matches its committed JSON', path => {
     const golden = `${goldenDir}/${basename(path, '.archimate')}.json`;
     const json = load(path).toJson();
-    if (process.env.UPDATE_JSON_FIXTURES || !existsSync(golden)) {
+    if (process.env.UPDATE_JSON_FIXTURES) {
       mkdirSync(goldenDir, { recursive: true });
       writeFileSync(golden, json);
     }
+    expect(existsSync(golden), `${golden} is missing; write it with UPDATE_JSON_FIXTURES=1 npm test`).toBe(true);
     expect(json).toBe(readFileSync(golden, 'utf8'));
   });
 });
@@ -197,7 +199,17 @@ describe('fromJson on text that is not a model in the format', () => {
 
   it.each<[string, (json: ModelJson) => void, RegExp]>([
     ['another format version', json => Object.assign(json, { formatVersion: 2 }), /formatVersion: expected 1/],
-    ['an unknown field', json => Object.assign(json.elements[0], { colour: 'red' }), /json\.elements\[0\]: unknown field "colour"/],
+    ['an unknown field', json => Object.assign(json.elements[0], { colour: 'red' }), /json\.elements\[0\]: unexpected key 'colour'/],
+    ['a missing list of concepts', json => delete (json as Partial<ModelJson>).relationships, /json\.relationships: expected an array/],
+    ['a folder id an element also has', json => (json.folders[1].id = json.elements[0].id), /is used more than once/],
+    [
+      'a diagram child id used in two views',
+      json => {
+        json.views.push({ ...json.views[0], id: 'id-copy', connections: undefined });
+        json.folders[8].members!.push('id-copy');
+      },
+      /is used more than once/,
+    ],
     [
       'a member no concept has',
       json => json.folders[1].members!.push('id-missing'),
@@ -228,6 +240,54 @@ describe('fromJson on text that is not a model in the format', () => {
     const json = valid();
     (json.model as unknown as Record<string, unknown>).version = 5;
     expect(fromJson(json)).toThrowError(expect.objectContaining({ kind: 'invalid-structure' }));
+  });
+});
+
+describe('unrecognized content', () => {
+  it('keeps content that is only text', () => {
+    const model = Archimate.fromXml(
+      modelXml(
+        '<folder name="Business" id="id-business" type="business"><element xsi:type="archimate:BusinessActor" name="A" id="id-a">stray</element></folder>'
+      )
+    );
+    const json = model.toJson();
+    expect(json).toContain('"extensions": "<extensions>stray</extensions>"');
+    expect(Archimate.fromJson(json).toXml()).toBe(model.toXml());
+  });
+
+  it('gives content set in code back as XML-equal content, numbers as strings', () => {
+    const model = new Archimate();
+    const { id } = model.upsertElement({ name: 'A', type: 'BusinessActor' });
+    model.updateElement(id, { unrecognized: { '@_n': 5, x: [{ '@_a': '1' }] } });
+
+    const back = Archimate.fromJson(model.toJson());
+    expect(back.toXml()).toBe(model.toXml());
+    expect(back.getElement(id)!.unrecognized).toEqual({ '@_n': '5', x: { '@_a': '1' } });
+  });
+
+  it('throws for content that would not read back the same', () => {
+    const model = new Archimate();
+    const { id } = model.upsertElement({ name: 'A', type: 'BusinessActor' });
+    model.updateElement(id, { unrecognized: { 'not a name': 'x' } });
+
+    expect(() => model.toJson()).toThrowError(`the unrecognized content of "${id}" does not read back the same as XML.`);
+  });
+});
+
+describe('the order of concepts', () => {
+  it('is by Unicode code point, not by UTF-16 code unit', () => {
+    const model = new Archimate();
+    for (const id of ['id-\u{1F600}', 'id-\uFF5E', 'id-b', 'id-a']) model.upsertElement({ id, name: id, type: 'BusinessActor' });
+
+    // JavaScript's `<` puts the emoji (a surrogate pair, 0xD83D…) before U+FF5E; code point order puts it after.
+    expect((JSON.parse(model.toJson()) as ModelJson).elements.map(element => element.id)).toEqual([
+      'id-a',
+      'id-b',
+      'id-\uFF5E',
+      'id-\u{1F600}',
+    ]);
+    expect(compareCodePoints('id', 'id-a')).toBeLessThan(0);
+    expect(compareCodePoints('id-a', 'id-a')).toBe(0);
   });
 });
 

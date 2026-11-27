@@ -5,8 +5,8 @@ import type { FolderKey } from './Model.mjs';
  * reads it. `modelJsonSchema` is its JSON Schema.
  *
  * The format is lossless: a model loaded from an .archimate file and written as JSON gives the same .archimate text
- * when read back, every order in the file included. Concepts are in flat lists sorted by id, and each folder lists
- * its members in file order. Ids are required and unique.
+ * when read back, every order in the file included. Concepts are in flat lists sorted by id, in Unicode code point
+ * order, and each folder lists its members in file order. Ids are required and unique across the document.
  */
 export interface ModelJson {
   formatVersion: 1;
@@ -53,6 +53,8 @@ export interface JsonNamespace {
 /**
  * Content tsarchi does not map, as one XML element named `extensions` that carries the unrecognized attributes and
  * holds the unrecognized child elements. It is written back unchanged; its content is not part of the format.
+ * Namespace prefixes in it that it does not declare itself are those of the document's `extensions.namespaces`;
+ * a namespace-aware XML parser needs them declared to read it. Values are strings, as in any XML.
  */
 export type JsonExtensions = string;
 

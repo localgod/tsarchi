@@ -22,6 +22,7 @@ import {
   TextPosition,
 } from '../constants/archi-codes.mjs';
 import { buildXmlFragment, parseXmlFragment } from './Xml.mjs';
+import { StructureError, fail, readArray, readObject } from './StructureReader.mjs';
 
 // The JSON format is a mapping of the snapshot, which already holds the model losslessly and canonically: equal
 // .archimate text gives an equal snapshot. Writing turns the folder tree of concepts into flat lists sorted by id,
@@ -54,14 +55,15 @@ const codeTables = {
 };
 type CodeTable = (typeof codeTables)[keyof typeof codeTables];
 
+const anyChildCodes = { textAlignment: codeTables.textAlignment, textPosition: codeTables.textPosition };
+const childCodesByType: Record<string, Record<string, CodeTable>> = {
+  DiagramObject: { ...anyChildCodes, figure: codeTables.figure },
+  Group: { ...anyChildCodes, borderType: codeTables.groupBorderType },
+  Note: { ...anyChildCodes, borderType: codeTables.noteBorderType },
+};
+
 /** The tables for the coded fields of a diagram child, by its type. */
-function childCodes(type: string): Record<string, CodeTable> {
-  const tables: Record<string, CodeTable> = { textAlignment: codeTables.textAlignment, textPosition: codeTables.textPosition };
-  if (type === 'DiagramObject') tables.figure = codeTables.figure;
-  if (type === 'Group') tables.borderType = codeTables.groupBorderType;
-  if (type === 'Note') tables.borderType = codeTables.noteBorderType;
-  return tables;
-}
+const childCodes = (type: string): Record<string, CodeTable> => childCodesByType[type] ?? anyChildCodes;
 const elementCodes = { accessType: codeTables.accessType, connectionRouterType: codeTables.connectionRouterType };
 const connectionCodes = { textAlignment: codeTables.textAlignment, textPosition: codeTables.connectionTextPosition };
 
@@ -78,19 +80,13 @@ function nameToCode(value: unknown, table: CodeTable | undefined, path: string):
 
 // Errors
 
-class JsonStructureError extends Error {}
-
-function fail(path: string, message: string): never {
-  throw new JsonStructureError(`${path}: ${message}`);
-}
-
 function cannotWrite(message: string): never {
   throw new Error(`The model cannot be written as JSON: ${message}`);
 }
 
 /** Whether an error came from reading a JSON document that is not in the format. */
 export function isJsonStructureError(error: unknown): error is Error {
-  return error instanceof JsonStructureError;
+  return error instanceof StructureError;
 }
 
 // Writing
@@ -115,8 +111,22 @@ function setEntries(target: Record_, key: string, entries: SnapshotEntries | und
   if (written) target[key] = written;
 }
 
-function setExtensions(target: Record_, unrecognized: SnapshotOpaque | undefined): void {
-  if (unrecognized) target.extensions = buildXmlFragment(unrecognized);
+/**
+ * Writes unrecognized content as an XML fragment. It reads back as XML-equal content: what the snapshot held as a
+ * number or a one-item array comes back as a string or a single element, which .archimate writes the same way.
+ * Throws for content that does not read back the same, rather than change it.
+ */
+function setExtensions(target: Record_, unrecognized: SnapshotOpaque | undefined, owner: string): void {
+  if (!unrecognized) return;
+  const fragment = buildXmlFragment(unrecognized);
+  let readBack: string | undefined;
+  try {
+    readBack = buildXmlFragment(parseXmlFragment(fragment));
+  } catch {
+    readBack = undefined;
+  }
+  if (readBack !== fragment) cannotWrite(`the unrecognized content of ${owner} does not read back the same as XML.`);
+  target.extensions = fragment;
 }
 
 const elementKeys = ['type', 'name', 'documentation', 'profiles', 'junctionType'] as const;
@@ -168,12 +178,27 @@ const connectionKeys = [
   'documentation',
   'bendpoints',
 ] as const;
-const conceptFieldsByList = {
-  elements: new Set<string>(['id', ...elementKeys, 'properties', 'features', 'unrecognized']),
-  relationships: new Set<string>(['id', ...relationshipKeys, 'properties', 'features', 'unrecognized']),
-  views: new Set<string>(['id', ...viewKeys, 'properties', 'features', 'children', 'unrecognized']),
+/**
+ * The fields of each list of concepts: those copied as they are, and those that hold the diagram (`children` in the
+ * snapshot, `children` and `connections` in JSON). The snapshot holds unrecognized content as `unrecognized`, JSON as
+ * `extensions`.
+ */
+const conceptLists = {
+  elements: { keys: elementKeys, snapshot: [] as string[], json: [] as string[] },
+  relationships: { keys: relationshipKeys, snapshot: [] as string[], json: [] as string[] },
+  views: { keys: viewKeys, snapshot: ['children'], json: ['children', 'connections'] },
 };
-type ConceptList = keyof typeof conceptFieldsByList;
+type ConceptList = keyof typeof conceptLists;
+const conceptListNames = Object.keys(conceptLists) as ConceptList[];
+const fieldSets = (side: 'snapshot' | 'json', extensionsKey: string) =>
+  Object.fromEntries(
+    conceptListNames.map(list => [
+      list,
+      new Set<string>(['id', ...conceptLists[list].keys, 'properties', 'features', ...conceptLists[list][side], extensionsKey]),
+    ])
+  ) as unknown as Record<ConceptList, ReadonlySet<string>>;
+const snapshotFields = fieldSets('snapshot', 'unrecognized');
+const jsonFields = fieldSets('json', 'extensions');
 
 const listOf = (folderKey: FolderKey): ConceptList =>
   folderKey === 'relations' ? 'relationships' : folderKey === 'diagrams' ? 'views' : 'elements';
@@ -207,7 +232,7 @@ export function snapshotToJson(snapshot: ModelSnapshot): ModelJson {
   if (snapshot.purpose !== undefined) model.purpose = snapshot.purpose;
   setEntries(model, 'properties', snapshot.properties);
   setEntries(model, 'metadata', snapshot.metadata);
-  setExtensions(model, snapshot.unrecognized);
+  setExtensions(model, snapshot.unrecognized, 'the model');
 
   const json: Record_ = { formatVersion: jsonFormatVersion, model };
   if (snapshot.profiles) json.profiles = snapshot.profiles.map(profile => writeProfile(profile, ids));
@@ -226,7 +251,7 @@ export function snapshotToJson(snapshot: ModelSnapshot): ModelJson {
       });
     }
     if (folder.folders) record.folders = folder.folders.map(nested => writeFolder(nested, list, `A folder in "${folder.name}"`));
-    setExtensions(record, folder.unrecognized);
+    setExtensions(record, folder.unrecognized, `the folder "${folder.id}"`);
     return record;
   };
   json.folders = folderKeys.map(key => {
@@ -234,7 +259,7 @@ export function snapshotToJson(snapshot: ModelSnapshot): ModelJson {
     return { id, type: key, ...rest };
   });
 
-  const byId = (a: Record_, b: Record_) => ((a.id as string) < (b.id as string) ? -1 : 1);
+  const byId = (a: Record_, b: Record_) => compareCodePoints(a.id as string, b.id as string);
   json.elements = lists.elements.sort(byId);
   json.relationships = lists.relationships.sort(byId);
   json.views = lists.views.sort(byId);
@@ -244,6 +269,21 @@ export function snapshotToJson(snapshot: ModelSnapshot): ModelJson {
   if (snapshot.model.namespaces.length > 0) extensions.namespaces = snapshot.model.namespaces.map(([prefix, uri]) => ({ prefix, uri }));
   if (Object.keys(extensions).length > 0) json.extensions = extensions;
   return json as unknown as ModelJson;
+}
+
+/**
+ * Orders strings by Unicode code point, which any language can reproduce. JavaScript's `<` compares UTF-16 code
+ * units, which differs for characters beyond U+FFFF.
+ */
+export function compareCodePoints(a: string, b: string): number {
+  for (let i = 0, j = 0; i < a.length && j < b.length;) {
+    const ca = a.codePointAt(i)!;
+    const cb = b.codePointAt(j)!;
+    if (ca !== cb) return ca - cb;
+    i += ca > 0xffff ? 2 : 1;
+    j += cb > 0xffff ? 2 : 1;
+  }
+  return a.length - b.length || (a < b ? -1 : a > b ? 1 : 0);
 }
 
 function writeProfile(profile: ProfileSnapshot, ids: IdRegistry): ProfileJson {
@@ -256,11 +296,10 @@ function writeProfile(profile: ProfileSnapshot, ids: IdRegistry): ProfileJson {
 
 function writeConcept(element: ElementSnapshot, list: ConceptList, ids: IdRegistry): Record_ & { id: string } {
   const id = ids.add(element.id, `A concept of type ${element.type} named "${element.name}"`);
-  const misplaced = Object.keys(element).find(key => !conceptFieldsByList[list].has(key));
+  const misplaced = Object.keys(element).find(key => !snapshotFields[list].has(key));
   if (misplaced) cannotWrite(`"${id}" has the field "${misplaced}", which a concept in ${list} does not have.`);
 
-  const keys = list === 'elements' ? elementKeys : list === 'relationships' ? relationshipKeys : viewKeys;
-  const record: Record_ = { id, ...pick(element as unknown as Record_, keys, elementCodes) };
+  const record: Record_ = { id, ...pick(element as unknown as Record_, conceptLists[list].keys, elementCodes) };
   if (record.name === '') delete record.name;
   setEntries(record, 'properties', element.properties);
   setEntries(record, 'features', element.features);
@@ -269,7 +308,7 @@ function writeConcept(element: ElementSnapshot, list: ConceptList, ids: IdRegist
     record.children = element.children.map(child => writeChild(child, connections, ids));
     if (connections.length > 0) record.connections = connections;
   }
-  setExtensions(record, element.unrecognized);
+  setExtensions(record, element.unrecognized, `"${id}"`);
   return record as Record_ & { id: string };
 }
 
@@ -280,7 +319,7 @@ function writeChild(child: ChildSnapshot, connections: Record_[], ids: IdRegistr
   setEntries(record, 'features', child.features);
   for (const connection of child.connections ?? []) writeConnection(connection, id, connections, ids);
   if (child.children) record.children = child.children.map(nested => writeChild(nested, connections, ids));
-  setExtensions(record, child.unrecognized);
+  setExtensions(record, child.unrecognized, `"${id}"`);
   return record;
 }
 
@@ -292,27 +331,28 @@ function writeConnection(connection: ConnectionSnapshot, ownerId: string, connec
   const record: Record_ = { id, ...pick(connection as unknown as Record_, connectionKeys, connectionCodes) };
   setEntries(record, 'properties', connection.properties);
   setEntries(record, 'features', connection.features);
-  setExtensions(record, connection.unrecognized);
+  setExtensions(record, connection.unrecognized, `"${id}"`);
   connections.push(record);
   for (const nested of connection.connections ?? []) writeConnection(nested, id, connections, ids);
 }
 
 // Reading
 
-function readObject(value: unknown, path: string, allowed: ReadonlySet<string>): Record_ {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) fail(path, 'expected an object');
-  for (const key of Object.keys(value)) if (!allowed.has(key)) fail(path, `unknown field "${key}"`);
-  return value as Record_;
-}
-
-function readArray(value: unknown, path: string): unknown[] {
-  if (!Array.isArray(value)) fail(path, 'expected an array');
-  return value;
-}
-
 function readId(value: unknown, path: string): string {
   if (typeof value !== 'string' || value === '') fail(path, 'expected a non-empty id');
   return value;
+}
+
+/** The ids read so far, so that one used twice anywhere in the document is rejected. */
+class IdClaims {
+  private readonly ids = new Set<string>();
+
+  claim(value: unknown, path: string): string {
+    const id = readId(value, path);
+    if (this.ids.has(id)) fail(path, `the id "${id}" is used more than once`);
+    this.ids.add(id);
+    return id;
+  }
 }
 
 function readEntries(value: unknown, path: string): SnapshotEntries | undefined {
@@ -346,14 +386,11 @@ const modelKeys = new Set(['id', 'name', 'version', 'purpose', 'properties', 'me
 const profileKeys = new Set(['id', 'name', 'conceptType', 'imagePath', 'specialization', 'features']);
 const folderKeySet = new Set(['id', 'name', 'documentation', 'properties', 'features', 'members', 'folders', 'extensions']);
 const topLevelFolderKeySet = new Set([...folderKeySet, 'type']);
-const recordKeys = {
-  elements: new Set(['id', ...elementKeys, 'properties', 'features', 'extensions']),
-  relationships: new Set(['id', ...relationshipKeys, 'properties', 'features', 'extensions']),
-  views: new Set(['id', ...viewKeys, 'properties', 'features', 'children', 'connections', 'extensions']),
-};
 const childKeySet = new Set(['id', ...childKeys, 'properties', 'features', 'children', 'extensions']);
 const connectionKeySet = new Set(['id', ...connectionKeys, 'properties', 'features', 'extensions']);
 const extensionKeys = new Set(['xmlDeclaration', 'namespaces']);
+const attributeKeys = new Set(['name', 'value']);
+const namespaceKeys = new Set(['prefix', 'uri']);
 
 /**
  * The snapshot for a document in the JSON format. Throws a `JsonStructureError` when it is not in the format; the
@@ -368,6 +405,8 @@ export function jsonToSnapshot(value: unknown): ModelSnapshot {
     );
   }
 
+  // Ids are unique across the whole document, as toJson() writes them.
+  const ids = new IdClaims();
   const model = readObject(json.model, 'json.model', modelKeys);
   const extensions = json.extensions === undefined ? {} : readObject(json.extensions, 'json.extensions', extensionKeys);
   const snapshot: Record_ = {
@@ -376,7 +415,7 @@ export function jsonToSnapshot(value: unknown): ModelSnapshot {
       extensions.xmlDeclaration === undefined
         ? []
         : readArray(extensions.xmlDeclaration, 'json.extensions.xmlDeclaration').map((item, i) => {
-            const attribute = readObject(item, `json.extensions.xmlDeclaration[${i}]`, new Set(['name', 'value']));
+            const attribute = readObject(item, `json.extensions.xmlDeclaration[${i}]`, attributeKeys);
             return [attribute.name, attribute.value];
           }),
     model: {
@@ -387,7 +426,7 @@ export function jsonToSnapshot(value: unknown): ModelSnapshot {
         extensions.namespaces === undefined
           ? []
           : readArray(extensions.namespaces, 'json.extensions.namespaces').map((item, i) => {
-              const namespace = readObject(item, `json.extensions.namespaces[${i}]`, new Set(['prefix', 'uri']));
+              const namespace = readObject(item, `json.extensions.namespaces[${i}]`, namespaceKeys);
               return [namespace.prefix, namespace.uri];
             }),
     },
@@ -400,7 +439,7 @@ export function jsonToSnapshot(value: unknown): ModelSnapshot {
   if (json.profiles !== undefined) {
     snapshot.profiles = readArray(json.profiles, 'json.profiles').map((item, i) => {
       const profile = readObject(item, `json.profiles[${i}]`, profileKeys);
-      const read: Record_ = { id: readId(profile.id, `json.profiles[${i}].id`), name: profile.name ?? '' };
+      const read: Record_ = { id: ids.claim(profile.id, `json.profiles[${i}].id`), name: profile.name ?? '' };
       unpick(read, profile, ['conceptType', 'imagePath', 'specialization'], {}, `json.profiles[${i}]`);
       const features = readEntries(profile.features, `json.profiles[${i}].features`);
       if (features) read.features = features;
@@ -412,12 +451,11 @@ export function jsonToSnapshot(value: unknown): ModelSnapshot {
 
   // Concepts by id, each to be placed once by a folder's members.
   const concepts = new Map<string, { record: Record_; list: ConceptList; path: string }>();
-  for (const list of ['elements', 'relationships', 'views'] as const) {
-    readArray(json[list] ?? [], `json.${list}`).forEach((item, i) => {
+  for (const list of conceptListNames) {
+    readArray(json[list], `json.${list}`).forEach((item, i) => {
       const path = `json.${list}[${i}]`;
-      const record = readObject(item, path, recordKeys[list]);
-      const id = readId(record.id, `${path}.id`);
-      if (concepts.has(id)) fail(`${path}.id`, `the id "${id}" is used more than once`);
+      const record = readObject(item, path, jsonFields[list]);
+      const id = ids.claim(record.id, `${path}.id`);
       concepts.set(id, { record, list, path });
     });
   }
@@ -425,7 +463,7 @@ export function jsonToSnapshot(value: unknown): ModelSnapshot {
 
   const readFolder = (item: unknown, path: string, list: ConceptList, allowed: ReadonlySet<string>): Record_ => {
     const folder = readObject(item, path, allowed);
-    const read: Record_ = { id: readId(folder.id, `${path}.id`), name: folder.name ?? '' };
+    const read: Record_ = { id: ids.claim(folder.id, `${path}.id`), name: folder.name ?? '' };
     if (folder.documentation !== undefined) read.documentation = folder.documentation;
     const folderProperties = readEntries(folder.properties, `${path}.properties`);
     if (folderProperties) read.properties = folderProperties;
@@ -445,7 +483,7 @@ export function jsonToSnapshot(value: unknown): ModelSnapshot {
         if (concept.list !== list) fail(at, `"${id}" is in ${concept.list}, but this folder holds ${list}`);
         if (placed.has(id)) fail(at, `"${id}" is a member of more than one folder`);
         placed.add(id);
-        return readConcept(concept.record, concept.list, concept.path);
+        return readConcept(concept.record, concept.list, concept.path, ids);
       });
     }
     const folderUnrecognized = readExtensions(folder.extensions, `${path}.extensions`);
@@ -470,10 +508,9 @@ export function jsonToSnapshot(value: unknown): ModelSnapshot {
   return snapshot as unknown as ModelSnapshot;
 }
 
-function readConcept(record: Record_, list: ConceptList, path: string): Record_ {
-  const keys = list === 'elements' ? elementKeys : list === 'relationships' ? relationshipKeys : viewKeys;
+function readConcept(record: Record_, list: ConceptList, path: string, ids: IdClaims): Record_ {
   const read: Record_ = { id: record.id };
-  unpick(read, record, keys, elementCodes, path);
+  unpick(read, record, conceptLists[list].keys, elementCodes, path);
   read.name = record.name ?? '';
   const properties = readEntries(record.properties, `${path}.properties`);
   if (properties) read.properties = properties;
@@ -481,15 +518,16 @@ function readConcept(record: Record_, list: ConceptList, path: string): Record_ 
   if (features) read.features = features;
   if (list === 'views' && record.children !== undefined) {
     const owners = new Map<string, Record_>();
-    read.children = readArray(record.children, `${path}.children`).map((child, i) => readChild(child, `${path}.children[${i}]`, owners));
+    read.children = readArray(record.children, `${path}.children`).map((child, i) =>
+      readChild(child, `${path}.children[${i}]`, owners, ids)
+    );
     if (record.connections !== undefined) {
       readArray(record.connections, `${path}.connections`).forEach((item, i) => {
         const at = `${path}.connections[${i}]`;
-        const connection = readConnection(item, at);
+        const connection = readConnection(item, at, ids);
         const owner = owners.get(connection.source as string);
         if (!owner)
           fail(`${at}.source`, `no diagram child or earlier connection in the view has the id ${JSON.stringify(connection.source)}`);
-        if (owners.has(connection.id as string)) fail(`${at}.id`, `the id "${connection.id}" is used more than once in the view`);
         ((owner.connections ??= []) as Record_[]).push(connection);
         owners.set(connection.id as string, connection);
       });
@@ -502,11 +540,10 @@ function readConcept(record: Record_, list: ConceptList, path: string): Record_ 
   return read;
 }
 
-function readChild(item: unknown, path: string, owners: Map<string, Record_>): Record_ {
+function readChild(item: unknown, path: string, owners: Map<string, Record_>, ids: IdClaims): Record_ {
   const child = readObject(item, path, childKeySet);
-  const id = readId(child.id, `${path}.id`);
+  const id = ids.claim(child.id, `${path}.id`);
   if (typeof child.type !== 'string') fail(`${path}.type`, 'expected a string');
-  if (owners.has(id)) fail(`${path}.id`, `the id "${id}" is used more than once in the view`);
   const read: Record_ = { id };
   unpick(read, child, childKeys, childCodes(child.type), path);
   const properties = readEntries(child.properties, `${path}.properties`);
@@ -515,16 +552,18 @@ function readChild(item: unknown, path: string, owners: Map<string, Record_>): R
   if (features) read.features = features;
   owners.set(id, read);
   if (child.children !== undefined) {
-    read.children = readArray(child.children, `${path}.children`).map((nested, i) => readChild(nested, `${path}.children[${i}]`, owners));
+    read.children = readArray(child.children, `${path}.children`).map((nested, i) =>
+      readChild(nested, `${path}.children[${i}]`, owners, ids)
+    );
   }
   const unrecognized = readExtensions(child.extensions, `${path}.extensions`);
   if (unrecognized) read.unrecognized = unrecognized;
   return read;
 }
 
-function readConnection(item: unknown, path: string): Record_ {
+function readConnection(item: unknown, path: string, ids: IdClaims): Record_ {
   const connection = readObject(item, path, connectionKeySet);
-  const read: Record_ = { id: readId(connection.id, `${path}.id`) };
+  const read: Record_ = { id: ids.claim(connection.id, `${path}.id`) };
   unpick(read, connection, connectionKeys, connectionCodes, path);
   readId(connection.source, `${path}.source`);
   const properties = readEntries(connection.properties, `${path}.properties`);

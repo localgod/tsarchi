@@ -1645,7 +1645,7 @@ export class Archimate {
       const viewPath = `folder.diagrams.elements[${viewIndex}]`;
       if (!viewElement.child) continue;
 
-      const children = (viewElement.child ?? []);
+      const children = viewElement.child ?? [];
       const childIds = new Set<string>();
       const connectionIds = new Set<string>();
 

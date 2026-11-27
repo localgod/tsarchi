@@ -7,7 +7,7 @@ import { splitIds } from './ViewChildMapper.mjs';
  * The connections starting on a child, and every connection nested in them.
  */
 export function allSourceConnections(child: Child): SourceConnection[] {
-  return flattenConnections((child.sourceConnection ?? []));
+  return flattenConnections(child.sourceConnection ?? []);
 }
 
 /**
@@ -17,7 +17,7 @@ export function flattenConnections(connections: SourceConnection[]): SourceConne
   return connections.flatMap(connection => {
     const nested = connection.sourceConnection;
     if (!nested) return [connection];
-    return [connection, ...flattenConnections((nested ?? []))];
+    return [connection, ...flattenConnections(nested ?? [])];
   });
 }
 
@@ -29,7 +29,7 @@ export function removeViewChildren(viewElement: Element, shouldRemove: (child: C
   const removedIds = new Set<string>();
   if (!viewElement.child) return removedIds;
 
-  const keptChildren = removeMatchingChildren((viewElement.child ?? []), shouldRemove, removedIds);
+  const keptChildren = removeMatchingChildren(viewElement.child ?? [], shouldRemove, removedIds);
   if (removedIds.size === 0) return removedIds;
 
   viewElement.child = keptChildren;
@@ -47,7 +47,7 @@ export function removeViewConnections(viewElement: Element, shouldRemove: (conne
   const removedIds = new Set<string>();
   if (!viewElement.child) return removedIds;
 
-  const children = (viewElement.child ?? []);
+  const children = viewElement.child ?? [];
   // A connection can be attached to a removed connection that was visited earlier or later.
   while (removeConnectionsFromChildren(children, shouldRemove, removedIds));
   if (removedIds.size > 0) removeTargetConnectionReferences(children, removedIds);

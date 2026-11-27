@@ -215,7 +215,7 @@ function writeElement(element: Element): ElementSnapshot {
   if (element.documentation) snapshot.documentation = String(element.documentation);
   setPropertyEntries(snapshot, element.properties);
   setEntries(snapshot, 'features', element.features);
-  const children = (element.child ?? []);
+  const children = element.child ?? [];
   if (children.length > 0) snapshot.children = children.map(writeChild);
   setOpaque(snapshot, element.unrecognized);
   return snapshot;
@@ -238,7 +238,7 @@ function writeChild(child: Child): ChildSnapshot {
   setPropertyEntries(snapshot, child.properties);
   setEntries(snapshot, 'features', DiagramAttributeMapper.writeFeatures(child, child.features, childFeatures));
   if (child.child && child.child.length > 0) snapshot.children = child.child.map(writeChild);
-  const connections = (child.sourceConnection ?? []);
+  const connections = child.sourceConnection ?? [];
   if (connections.length > 0) snapshot.connections = connections.map(writeConnection);
   setOpaque(snapshot, child.unrecognized);
   return snapshot;
@@ -263,7 +263,7 @@ function writeConnection(connection: SourceConnection): ConnectionSnapshot {
   }
   setPropertyEntries(snapshot, connection.properties);
   setEntries(snapshot, 'features', DiagramAttributeMapper.writeFeatures(connection, connection.features, connectionFeatures));
-  const connections = (connection.sourceConnection ?? []);
+  const connections = connection.sourceConnection ?? [];
   if (connections.length > 0) snapshot.connections = connections.map(writeConnection);
   setOpaque(snapshot, connection.unrecognized);
   return snapshot;

@@ -18,12 +18,12 @@ export function copyView(view: Element, newId: () => string): Element {
     collectUnrecognizedIds(owner.unrecognized, ids, newId);
   };
   collectUnrecognizedIds(copy.unrecognized, ids, newId);
-  forEachObject((copy.child ?? []), collect, collect);
+  forEachObject(copy.child ?? [], collect, collect);
 
   copy.id = ids.get(view.id)!;
   rewriteUnrecognized(copy.unrecognized, ids);
   forEachObject(
-    (copy.child ?? []),
+    copy.child ?? [],
     child => {
       rewriteIds(child, ids);
       if (child.model === view.id) child.model = copy.id;
@@ -44,13 +44,13 @@ function forEachObject(children: Child[], onChild: (child: Child) => void, onCon
   const visitConnections = (connections: SourceConnection[]): void => {
     for (const connection of connections) {
       onConnection(connection);
-      visitConnections((connection.sourceConnection ?? []));
+      visitConnections(connection.sourceConnection ?? []);
     }
   };
   for (const child of children) {
     onChild(child);
-    visitConnections((child.sourceConnection ?? []));
-    forEachObject((child.child ?? []), onChild, onConnection);
+    visitConnections(child.sourceConnection ?? []);
+    forEachObject(child.child ?? [], onChild, onConnection);
   }
 }
 

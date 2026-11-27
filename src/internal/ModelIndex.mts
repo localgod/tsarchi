@@ -104,7 +104,7 @@ export class ModelIndex {
       yield* folderIds(folder.folders || []);
       for (const element of folder.elements || []) {
         yield element.id;
-        yield* viewChildIds((element.child ?? []));
+        yield* viewChildIds(element.child ?? []);
       }
     }
   }
@@ -121,7 +121,7 @@ function* viewChildIds(children: Child[]): Generator<string> {
   for (const child of children) {
     yield child.id;
     for (const connection of allSourceConnections(child)) yield connection.id;
-    yield* viewChildIds((child.child ?? []));
+    yield* viewChildIds(child.child ?? []);
   }
 }
 

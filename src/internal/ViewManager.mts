@@ -42,7 +42,8 @@ export class ViewManager {
   }
 
   /**
-   * Creates a new view with the specified name and optional properties
+   * Creates an empty ArchiMate view at the top level of the Views folder, with an optional viewpoint, background and
+   * documentation, and returns it.
    */
   createView(
     name: string,

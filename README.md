@@ -1,20 +1,23 @@
 # TSArchi
 
-**TSArchi** is a TypeScript-based utility for parsing `.archimate` files and manipulating the contained ArchiMate models. The project enables reading, editing, and saving enterprise architecture models compliant with the ArchiMate standard.
+**TSArchi** is a TypeScript library that loads, edits, validates and saves the `.archimate` files of [Archi](https://www.archimatetool.com/), the ArchiMate modelling tool. Files written by Archi are saved back unchanged, including content tsarchi does not map.
 
 - [TSArchi](#tsarchi)
-  - [Introduction](#introduction)
   - [Features](#features)
   - [Installation](#installation)
+  - [Upgrading from 4.x](#upgrading-from-4x)
   - [Upgrading from 3.x](#upgrading-from-3x)
-  - [Upgrading from 2.x](#upgrading-from-2x)
-  - [Upgrading from 1.x](#upgrading-from-1x)
   - [Usage](#usage)
-    - [Parsing an ArchiMate File Programmatically](#parsing-an-archimate-file-programmatically)
+    - [Loading and Saving Files](#loading-and-saving-files)
     - [Loading and Saving Text](#loading-and-saving-text)
     - [Browser Use](#browser-use)
+    - [QuickJS](#quickjs)
+    - [Snapshots](#snapshots)
+    - [Exporting a View to draw.io](#exporting-a-view-to-drawio)
     - [Nested Folders](#nested-folders)
     - [Relationship Management](#relationship-management)
+    - [Properties](#properties)
+    - [Features and Unrecognized Content](#features-and-unrecognized-content)
     - [Available Element Types](#available-element-types)
     - [View Management](#view-management)
     - [View Management Operations](#view-management-operations)
@@ -22,21 +25,17 @@
   - [Contributing](#contributing)
   - [License](#license)
 
-## Introduction
-
-TSArchi provides a TypeScript-based tool for parsing, modifying, and saving `.archimate` files. ArchiMate is an open, independent modeling language for enterprise architecture, and TSArchi allows you to work with these models programmatically.
-
 ## Features
 
-- **Parsing**: Reads `.archimate` files and converts them into a TypeScript object model.
-- **Model Manipulation**: Add, modify, and remove elements and relationships in the parsed model.
-- **Model Serialization**: Save the modified model back into an `.archimate` file.
-- **Type Safety**: Enforces strong TypeScript types for all operations on the model.
-- **Clear Errors**: Files that are not well-formed XML or not Archi models throw an `ArchimateParseError`, and models are validated before they are saved.
-- **Element Upsert**: Insert or update elements and relationships by `id`.
-- **Comprehensive Element Support**: Full support for all ArchiMate 3.x element types and relationships.
-- **Advanced View Management**: Create, update, and manage ArchiMate diagrams with visual positioning and styling.
-- **draw.io Export**: Write a view as a draw.io file, with plain rectangles or draw.io's ArchiMate 3 shapes.
+- **Lossless load and save**: Archi files round-trip unchanged, including newer Archi styling and content tsarchi does not map.
+- **Model editing**: Add, change, move and delete elements, relationships, views, folders, properties and specializations, with ids kept unique.
+- **Views**: Build views from diagram objects, groups and connections with explicit bounds, restyle, move, remove and duplicate their contents. Layout is left to callers.
+- **Validation**: Models are checked before they are saved: duplicate ids, broken references, unknown types, and relationship types against Archi's relationships matrix, including its Junction rules.
+- **Clear errors**: Text that is not well-formed XML or not an Archi model throws an `ArchimateParseError`.
+- **Every ArchiMate 3 type**: All element, relationship and view types Archi writes, as TypeScript types and named constants.
+- **Snapshots**: The model as plain JSON-safe data, for undo, copies and workers.
+- **draw.io export**: Write a view as a draw.io file, with plain rectangles or draw.io's ArchiMate 3 shapes.
+- **Runs anywhere**: Node.js, browsers and QuickJS.
 
 ## Installation
 
@@ -50,9 +49,9 @@ The `tsarchi` entry point holds the model API and runs in Node.js and in the bro
 
 ## Upgrading from 4.x
 
-Version 5.0.0 keeps properties as Archi does, as an ordered list in which a key may appear more than once (see [Properties](#properties)):
+Version 5.0.0 makes the model types hold what the file holds, and replaces two APIs:
 
-- `properties` on models, folders, elements, relationships, views, diagram objects and view connections is a `Property[]` of `{ key, value }` instead of a `Map<string, string>`. Read a value with `getProperty(properties, key)` instead of `properties.get(key)`.
+- `properties` on models, folders, elements, relationships, views, diagram objects and view connections is a `Property[]` of `{ key, value }` instead of a `Map<string, string>`: an ordered list in which a key may appear more than once, as in Archi (see [Properties](#properties)). Read a value with `getProperty(properties, key)` instead of `properties.get(key)`.
 - `getProperties()` and `getMetadata()` return a `Property[]`, and `setProperties()` and `setMetadata()` take one. Model metadata keeps repeated keys too.
 - `updateElement()` and `upsertElement()` replace the whole `properties` list instead of merging it by key. To change one key, pass `setProperty(element.properties, key, value)`.
 - `updateFolder()`, `updateFolderById()` and `createFolder()` take a `properties` list; an empty list removes the properties.
@@ -74,34 +73,13 @@ Version 4.0.0 narrows tsarchi to loading, editing, validating and saving models:
 - `generateRandomId()` is no longer public. Use `generateUniqueId()`, which never returns an id that is in use.
 - Elements, relationships, nested folders and profiles are returned as copies, as views already are: `getElement()`, `getRelationship()`, `listElements()`, `listRelationships()`, the `find…` methods, `getFolders()`, `getProfiles()`, `getProfile()` and the return values of `upsertElement()`, `upsertRelationship()` and `updateElement()`. Changing a returned object no longer changes the model; pass the change to `updateElement()`. Diagram styling without a method of its own is changed the same way: edit `getElement(viewId).child` and write it back with `updateElement(viewId, { child })`.
 
-## Upgrading from 2.x
-
-Version 3.0.0 has breaking changes in how views are read and in the element type lists:
-
-- `getView()`, `listViews()`, `createView()`, `addDiagramObject()`, `addGroup()`, `addDiagramObjectToGroup()` and `addConnection()` return copies in one shape, for views loaded from a file and views built with the API alike. Nested objects are in `children`, connections in `sourceConnections`, and the ids of the connections ending on an object in `targetConnections` (an array). All three are always present, empty when there is nothing in them. Change a view through the view methods: changing a returned view no longer changes the model.
-- `ViewChild` and `ViewConnection` have every field of `Child` and `SourceConnection` (figure, features, documentation, content, …), and `ViewChild.type` is a string, as loaded views also contain types such as `DiagramModelReference` and `SketchModelSticky`.
-- The stored form, with `child`, `sourceConnection` and space-separated `targetConnections` as in the file, is still available through `getElement(viewId).child`.
-- `Meaning` and `Value` are motivation elements, as in Archi: they move from `archimateBusinessElementTypes` / `ArchimateBusinessElementType` to `archimateMotivationElementTypes` / `ArchimateMotivationElementType`.
-
-## Upgrading from 1.x
-
-Version 2.0.0 has breaking changes. The main ones:
-
-- `TsArchi` is imported from `tsarchi/node` instead of `tsarchi`.
-- `Parser`, `Serializer`, `BoundsMapper`, `SourceConnectionMapper` and `DiagramAttributeMapper` are no longer exported. Load and save models through `Archimate` and `TsArchi`.
-- `TsArchi.load()` and `loadModel()` throw an `ArchimateParseError` for a file that is not an Archi model, and pass on file read errors, instead of logging them and returning an empty result.
-- Every `ValidationIssue` has a `severity`. Only errors stop a model from being saved; unnamed elements, relationships that Archi's relationships matrix rejects, and element or relationship types tsarchi does not know are warnings.
-- `upsertElement()` matches an existing element on `id` when one is given, instead of on `name` and `type`.
-- The type lists follow Archi: types Archi never writes, such as `UsedByRelationship` and `Stage`, are removed, and short names such as `Flow` are no longer model types, though `upsertRelationship()` still accepts them. `Junction` is an element type in the Other folder.
-- `View.background` is a number. `Child.sourceConnection` and the schema's `Model.folder` can be a single object or an array.
-
-See the [changelog](CHANGELOG.md) for the full list.
+Upgrade notes for earlier versions are in the [changelog](CHANGELOG.md) under 3.0.0 and 2.0.0.
 
 ## Usage
 
-### Parsing an ArchiMate File Programmatically
+### Loading and Saving Files
 
-You can use TSArchi programmatically in your TypeScript/JavaScript projects:
+In Node.js, `loadModel` and `saveModel` from `tsarchi/node` read and write `.archimate` files:
 
 ```typescript
 import { loadModel, saveModel } from "tsarchi/node";
@@ -146,6 +124,10 @@ try {
 ```
 
 `loadModel` throws the same `ArchimateParseError`, and passes on file read errors.
+
+### Browser Use
+
+The `tsarchi` entry point uses no Node built-ins, so it can be bundled for the browser. `loadModel` and `saveModel` read and write files with `fs/promises` and are exported from `tsarchi/node` instead. In a browser, load and save with `Archimate.fromXml` and `toXml`.
 
 ### QuickJS
 
@@ -194,8 +176,6 @@ const stencilled = model.toDrawio(viewId, { stencils: true }); // draw.io's Arch
 - Connections become edges between the same cells, with bendpoints at the position Archi draws them and the relationship's ArchiMate line and arrow style. Connections that end on other connections stay connected.
 - Fill, line and font colours, opacity, line width, font and text alignment are kept; diagram objects without a fill get Archi's default for their layer.
 - Cell ids are the diagram object and connection ids. The export is one-way: tsarchi does not read draw.io files.
-
-The `tsarchi` entry point uses no Node built-ins, so it can be bundled for the browser. `loadModel` and `saveModel` read and write files with `fs/promises` and are exported from `tsarchi/node` instead. In a browser, load and save with `Archimate.fromXml` and `toXml`.
 
 ### Nested Folders
 
@@ -353,6 +333,8 @@ model.updateElement("element-id", {
   properties: setProperty(element.properties, "Status", "Approved"),
 });
 ```
+
+### Features and Unrecognized Content
 
 Folders, elements, relationships and views keep their `<feature>` entries as a `features` map, in file order:
 
@@ -538,9 +520,9 @@ model.deleteView("view-id");
 TSArchi reports problems instead of silently changing the model:
 
 - Loading text that is not well-formed XML or not an Archi model throws an `ArchimateParseError` (see [Loading and Saving Text](#loading-and-saving-text))
-- Missing or malformed bounds data defaults to zero values
-- Duplicate elements are handled gracefully with upsert operations
-- View operations validate element and relationship existence
+- Bounds are read as Archi writes them: a missing attribute takes Archi's default (0 for `x` and `y`, -1 for `width` and `height`, which means the default size), a value that is not a number reads as 0, and a diagram object without `<bounds>` gets zero bounds
+- `upsertElement()` and `upsertRelationship()` match on `id`, and throw when the id is already used by something else
+- `addDiagramObject()`, `addGroup()` and `addConnection()` return `null` when the view does not exist, and throw when the element, relationship, parent or diagram object they refer to does not; the update and remove methods return `false` or an empty list instead
 - Models are validated before saving to catch duplicate IDs, unknown types, broken relationships, broken view references, and references to missing profiles
 - Relationship types are checked against Archi's relationships matrix, including its Junction rules. `upsertRelationship()` throws for a type Archi would not allow
 

@@ -8,6 +8,18 @@ This project adheres to [Keep a CHANGELOG](http://keepachangelog.com/)
 
 ## [Unreleased]
 
+### Added
+
+- `getProperty`, `getPropertyValues`, `getPropertyKeys`, `setProperty`, `addProperty` and `removeProperty` read a `properties` list and return changed copies, following jArchi's `prop()` and `removeProp()` ([#551](https://github.com/localgod/tsarchi/issues/551)).
+
+### Changed
+
+- ⚠️ Breaking: `properties` on models, folders, elements, relationships, views, diagram objects and view connections is a `Property[]` of `{ key, value }`, in file order, instead of a `Map<string, string>`, so a key can appear more than once, as Archi allows. `getProperties()` returns and `setProperties()` takes a list, and `updateElement()` and `upsertElement()` replace the whole list instead of merging it by key. See "Upgrading from 4.x" in the README ([#551](https://github.com/localgod/tsarchi/issues/551)).
+
+### Fixed
+
+- A property key that appears more than once is no longer lost on load: every property is saved again in file order, and kept through `snapshot()` / `restore()` ([#551](https://github.com/localgod/tsarchi/issues/551)).
+
 ## [4.5.0] - 2026-11-02
 
 ### Added

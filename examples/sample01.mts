@@ -41,10 +41,10 @@ async function main() {
     model.upsertElement({
       type: 'ApplicationComponent',
       name: 'New Application Component',
-      properties: new Map([
-        ['version', '1.0'],
-        ['status', 'planned'],
-      ]),
+      properties: [
+        { key: 'version', value: '1.0' },
+        { key: 'status', value: 'planned' },
+      ],
     });
   } else {
     console.log('Application component already exists, skipping creation.');

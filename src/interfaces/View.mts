@@ -1,3 +1,4 @@
+import type { Property } from './Property.mjs';
 import type { ViewChild } from './ViewChild.mjs';
 import type { SourceConnection } from './SourceConnection.mjs';
 import type { ArchimateViewType } from '../constants/archimate-mappings.mjs';
@@ -14,7 +15,8 @@ export interface View {
   connectionRouterType?: number;
   /** The view's diagram children, a copy of what is stored. */
   children: ViewChild[];
-  properties?: Map<string, string>;
+  /** The `<property>` entries in file order. A key may appear more than once, as Archi allows. */
+  properties?: Property[];
   /** `<feature>` entries (Archi's `IFeatures`), in file order. */
   features?: Map<string, string>;
   /**

@@ -1,3 +1,4 @@
+import type { Property } from './Property.mjs';
 /**
  * A user-created folder nested below one of the model's top-level folders.
  *
@@ -8,7 +9,8 @@ export interface Folder {
   id: string;
   name: string;
   documentation?: string;
-  properties?: Map<string, string>;
+  /** The `<property>` entries in file order. A key may appear more than once, as Archi allows. */
+  properties?: Property[];
   /** `<feature>` entries (Archi's `IFeatures`), in file order. */
   features?: Map<string, string>;
   elementIds?: string[];

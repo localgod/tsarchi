@@ -40,28 +40,28 @@ async function main() {
   const webApp = model.upsertElement({
     type: 'ApplicationComponent',
     name: 'Web Application',
-    properties: new Map([
-      ['technology', 'React'],
-      ['status', 'active'],
-    ]),
+    properties: [
+      { key: 'technology', value: 'React' },
+      { key: 'status', value: 'active' },
+    ],
   });
 
   const database = model.upsertElement({
     type: 'ApplicationComponent',
     name: 'Database',
-    properties: new Map([
-      ['technology', 'PostgreSQL'],
-      ['status', 'active'],
-    ]),
+    properties: [
+      { key: 'technology', value: 'PostgreSQL' },
+      { key: 'status', value: 'active' },
+    ],
   });
 
   const apiGateway = model.upsertElement({
     type: 'ApplicationComponent',
     name: 'API Gateway',
-    properties: new Map([
-      ['technology', 'Kong'],
-      ['status', 'active'],
-    ]),
+    properties: [
+      { key: 'technology', value: 'Kong' },
+      { key: 'status', value: 'active' },
+    ],
   });
 
   // Relationships are checked against Archi's relationships matrix.

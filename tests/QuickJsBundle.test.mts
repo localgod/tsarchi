@@ -88,7 +88,7 @@ describe('QuickJS bundle', () => {
       let data;
       step('structuredClone', () => typeof structuredClone);
       step('upsertElement', () => {
-        app = model.upsertElement({ name: 'App', type: 'ApplicationComponent', properties: new Map([['k', 'v']]) });
+        app = model.upsertElement({ name: 'App', type: 'ApplicationComponent', properties: [{ key: 'k', value: 'v' }] });
         data = model.upsertElement({ name: 'Data', type: 'DataObject' });
         return [...app.properties];
       });
@@ -96,7 +96,7 @@ describe('QuickJS bundle', () => {
         model.upsertRelationship({ name: '', type: 'AccessRelationship', source: app.id, target: data.id, accessType: 1 })
           .accessType
       );
-      step('updateElement', () => [...model.updateElement(app.id, { properties: new Map([['x', 'y']]) }).properties]);
+      step('updateElement', () => [...model.updateElement(app.id, { properties: [{ key: 'x', value: 'y' }] }).properties]);
       step('views', () => model.findElementsByType('ArchimateDiagramModel').map(view => view.child !== undefined));
       step('getView', () => model.getView(model.listViews()[0].id).children.length);
       step('addToView', () => {
@@ -125,12 +125,9 @@ describe('QuickJS bundle', () => {
 
     expect(result).toEqual({
       structuredClone: 'undefined',
-      upsertElement: [['k', 'v']],
+      upsertElement: [{ key: 'k', value: 'v' }],
       upsertRelationship: 1,
-      updateElement: [
-        ['k', 'v'],
-        ['x', 'y'],
-      ],
+      updateElement: [{ key: 'x', value: 'y' }],
       views: [true],
       getView: expect.any(Number),
       addToView: true,

@@ -132,11 +132,6 @@ export class DiagramAttributeMapper {
     return result;
   }
 
-  public static schemaToProperties(property: SchemaProperty | SchemaProperty[] | undefined): Map<string, string> | undefined {
-    if (!property) return undefined;
-    return new Map(toArray(property).map(p => [p['@_key'], p['@_value']]));
-  }
-
   public static propertiesToSchema(properties: Map<string, string> | undefined): SchemaProperty[] | undefined {
     if (!properties || properties.size === 0) return undefined;
     return Array.from(properties, ([key, value]) => ({ '@_key': key, '@_value': value }));

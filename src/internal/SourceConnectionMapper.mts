@@ -2,6 +2,7 @@ import type { SourceConnection as SchemaSourceConnection } from '../interfaces/s
 import type { SourceConnection } from '../interfaces/SourceConnection.mjs';
 import { DiagramAttributeMapper, connectionAttributes, connectionFeatures } from './DiagramAttributeMapper.mjs';
 import { toXsiType, typeFromXsiType } from '../constants/archimate-mappings.mjs';
+import { propertiesToSchema, schemaToOptionalProperties } from './PropertyMapper.mjs';
 
 /**
  * Archi omits xsi:type on plain connections in sketch and canvas models; Archi itself assumes this type.
@@ -44,7 +45,7 @@ export class SourceConnectionMapper {
     }
     const bendpoints = DiagramAttributeMapper.schemaToBendpoints(b.bendpoint);
     if (bendpoints) connection.bendpoints = bendpoints;
-    const properties = DiagramAttributeMapper.schemaToProperties(b.property);
+    const properties = schemaToOptionalProperties(b.property);
     if (properties) connection.properties = properties;
     const features = DiagramAttributeMapper.schemaToFeatures(b.feature);
     if (features) {
@@ -70,7 +71,7 @@ export class SourceConnectionMapper {
     if (b.documentation) connection.documentation = b.documentation;
     const bendpoint = DiagramAttributeMapper.bendpointsToSchema(b.bendpoints);
     if (bendpoint) connection.bendpoint = bendpoint;
-    const property = DiagramAttributeMapper.propertiesToSchema(b.properties);
+    const property = propertiesToSchema(b.properties);
     if (property) connection.property = property;
     const feature = DiagramAttributeMapper.featuresToSchema(DiagramAttributeMapper.writeFeatures(b, b.features, connectionFeatures));
     if (feature) connection.feature = feature;

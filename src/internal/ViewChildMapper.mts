@@ -21,6 +21,7 @@ function copyValues<T extends object>(source: T): T {
     if (value instanceof Map) copy[key] = new Map(value);
     else if (key === 'bounds' && value) copy[key] = { ...value };
     else if (key === 'bendpoints' && Array.isArray(value)) copy[key] = value.map(bendpoint => ({ ...bendpoint }));
+    else if (key === 'properties' && Array.isArray(value)) copy[key] = value.map(property => ({ ...property }));
     else if (key === 'unrecognized' && value) copy[key] = deepCopy(value);
   }
   return copy as T;

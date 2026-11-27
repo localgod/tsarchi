@@ -1,6 +1,7 @@
 // Auto-generated index.mts
 
 export * from "./Archimate.mjs";
+export * from "./Properties.mjs";
 export * from "./constants/archi-codes.mjs";
 export * from "./constants/archimate-mappings.mjs";
 export * from "./interfaces/ArchimateParseError.mjs";
@@ -12,6 +13,7 @@ export * from "./interfaces/Folder.mjs";
 export * from "./interfaces/Model.mjs";
 export * from "./interfaces/ModelSnapshot.mjs";
 export * from "./interfaces/Profile.mjs";
+export * from "./interfaces/Property.mjs";
 export * from "./interfaces/Relationship.mjs";
 export * from "./interfaces/SourceConnection.mjs";
 export * from "./interfaces/ValidationIssue.mjs";

@@ -1,3 +1,4 @@
+import type { Property } from './Property.mjs';
 import type { ViewBendpoint } from './View.mjs';
 
 export interface SourceConnection {
@@ -22,7 +23,8 @@ export interface SourceConnection {
   targetConnections?: string;
   documentation?: string;
   bendpoints?: ViewBendpoint[];
-  properties?: Map<string, string>;
+  /** The `<property>` entries in file order. A key may appear more than once, as Archi allows. */
+  properties?: Property[];
   /** Whether the name label is shown (feature `nameVisible`); Archi's default is `true`. */
   nameVisible?: boolean;
   /**

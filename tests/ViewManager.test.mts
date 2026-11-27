@@ -21,14 +21,14 @@ describe('ViewManager', () => {
       id: 'app-1',
       type: 'ApplicationComponent',
       name: 'App Component 1',
-      properties: new Map([['version', '1.0']]),
+      properties: [{ key: 'version', value: '1.0' }],
     };
 
     const appComponent2: Element = {
       id: 'app-2',
       type: 'ApplicationComponent',
       name: 'App Component 2',
-      properties: new Map([['version', '2.0']]),
+      properties: [{ key: 'version', value: '2.0' }],
     };
 
     const businessProcess: Element = {

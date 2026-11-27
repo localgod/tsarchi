@@ -38,9 +38,9 @@ function state(archimate: Archimate): unknown {
 function modelBuiltInCode(): Archimate {
   const archimate = new Archimate();
   archimate.setName('Built in code');
-  archimate.setProperties(new Map([['owner', 'team']]));
+  archimate.setProperties([{ key: 'owner', value: 'team' }]);
   const actor = archimate.upsertElement({ name: 'Customer', type: 'BusinessActor', documentation: 'Buys things' });
-  const role = archimate.upsertElement({ name: 'Buyer', type: 'BusinessRole', properties: new Map([['k', 'v']]) });
+  const role = archimate.upsertElement({ name: 'Buyer', type: 'BusinessRole', properties: [{ key: 'k', value: 'v' }] });
   const app = archimate.upsertElement({ name: 'Shop', type: 'ApplicationComponent' });
   const assignment = archimate.upsertRelationship({ name: '', type: 'AssignmentRelationship', source: actor.id, target: role.id });
   archimate.upsertRelationship({ name: 'uses', type: 'ServingRelationship', source: app.id, target: role.id });
@@ -103,8 +103,8 @@ describe('model snapshots of models built in code', () => {
 
     const throughJson = Archimate.fromSnapshot(JSON.parse(JSON.stringify(model.snapshot())));
 
-    expect(throughJson.getProperties()).toEqual(new Map([['owner', 'team']]));
-    expect(throughJson.findElementsByName('Buyer')[0].properties).toEqual(new Map([['k', 'v']]));
+    expect(throughJson.getProperties()).toEqual([{ key: 'owner', value: 'team' }]);
+    expect(throughJson.findElementsByName('Buyer')[0].properties).toEqual([{ key: 'k', value: 'v' }]);
   });
 
   it('should not depend on the order of keys in the stored objects', () => {
@@ -149,7 +149,7 @@ describe('model snapshots of models built in code', () => {
 
   it('should leave out empty values that toXml() does not write', () => {
     const model = new Archimate();
-    model.upsertElement({ id: 'id-a', name: 'A', type: 'BusinessActor', documentation: '', properties: new Map() });
+    model.upsertElement({ id: 'id-a', name: 'A', type: 'BusinessActor', documentation: '', properties: [] });
 
     const element = model.snapshot().folders.business.elements?.[0];
 

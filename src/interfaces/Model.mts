@@ -1,3 +1,4 @@
+import type { Property } from './Property.mjs';
 import type { Element } from './Element.mjs';
 import type { Folder } from './Folder.mjs';
 import type { Profile } from './Profile.mjs';
@@ -6,7 +7,8 @@ export interface ModelFolder {
   name: string;
   id: string;
   documentation?: string;
-  properties?: Map<string, string>;
+  /** The `<property>` entries in file order. A key may appear more than once, as Archi allows. */
+  properties?: Property[];
   /** `<feature>` entries (Archi's `IFeatures`), in file order. */
   features?: Map<string, string>;
   /** All elements in this folder, including those placed in nested folders. */
@@ -44,8 +46,8 @@ export type FolderKey = keyof Model;
  */
 export interface ModelContent {
   purpose?: string;
-  /** The model's `<property>` entries, in file order. */
-  properties?: Map<string, string>;
+  /** The model's `<property>` entries in file order. A key may appear more than once, as Archi allows. */
+  properties?: Property[];
   /** The `<entry>` items of the model's `<metadata>`, in file order. */
   metadata?: Map<string, string>;
   /** The specializations defined on the model, in file order. */

@@ -1,3 +1,4 @@
+import type { Property } from './Property.mjs';
 import type { Bounds } from './Bounds.mjs';
 import type { SourceConnection } from './SourceConnection.mjs';
 
@@ -32,7 +33,8 @@ export interface Child {
   child?: Child[];
   sourceConnection?: SourceConnection | SourceConnection[];
   documentation?: string;
-  properties?: Map<string, string>;
+  /** The `<property>` entries in file order. A key may appear more than once, as Archi allows. */
+  properties?: Property[];
   /** Line opacity, 0–255 (feature `lineAlpha`). */
   lineAlpha?: number;
   /** Gradient direction, -1 for none (feature `gradient`). */

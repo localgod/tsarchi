@@ -36,12 +36,10 @@ describe('model-level content', () => {
   it('should load model properties, metadata and profiles', async () => {
     const archimate = await parseFile(fixture);
 
-    expect(archimate.getProperties()).toEqual(
-      new Map([
-        ['Owner', 'Enterprise Architecture'],
-        ['Status', 'Draft'],
-      ])
-    );
+    expect(archimate.getProperties()).toEqual([
+      { key: 'Owner', value: 'Enterprise Architecture' },
+      { key: 'Status', value: 'Draft' },
+    ]);
     expect(archimate.getMetadata()).toEqual(
       new Map([
         ['schema', 'Dublin Core'],
@@ -68,7 +66,7 @@ describe('model-level content', () => {
     archimate.setProfiles([{ id: 'id-profile', name: 'VIP', conceptType: 'BusinessActor' }]);
     archimate.setMetadata(new Map([['k', 'v']]));
     archimate.setPurpose('Why');
-    archimate.setProperties(new Map([['p', '1']]));
+    archimate.setProperties([{ key: 'p', value: '1' }]);
     archimate.updateElement('id-customer', { profiles: 'id-profile' });
 
     const model = archimateToSchema(archimate)['archimate:model'];
@@ -81,7 +79,7 @@ describe('model-level content', () => {
 
   it('should remove model properties, metadata and profiles that are cleared', async () => {
     const archimate = await parseFile(fixture);
-    archimate.setProperties(new Map());
+    archimate.setProperties([]);
     archimate.setMetadata(undefined);
     archimate.setProfiles(undefined);
     archimate.setPurpose(undefined);
@@ -135,11 +133,9 @@ describe('model-level content', () => {
   it('should keep the model properties Archi writes', async () => {
     const archimate = await parseFile('tests/fixtures/archi/Archisurance-xmlexchange.archimate');
 
-    expect(archimate.getProperties()).toEqual(
-      new Map([
-        ['Property1', 'Value of Property 1'],
-        ['Property2', 'Value of Property 2'],
-      ])
-    );
+    expect(archimate.getProperties()).toEqual([
+      { key: 'Property1', value: 'Value of Property 1' },
+      { key: 'Property2', value: 'Value of Property 2' },
+    ]);
   });
 });

@@ -47,6 +47,8 @@ import {
   Viewpoint,
 } from './constants/archi-codes.mjs';
 import { assertCode, assertOptionalCode } from './internal/Codes.mjs';
+import { copyProperties } from './internal/PropertyMapper.mjs';
+import type { Property } from './interfaces/Property.mjs';
 import type { ArchimateModelType, ArchimateRelationshipType } from './constants/archimate-mappings.mjs';
 
 /**
@@ -199,7 +201,7 @@ export class Archimate {
    * with a new one: names are not unique in a model, so they are never matched.
    * Throws when the given `id` is already used by something other than an
    * element in the target folder.
-   * Only provided properties are overwritten; others remain unchanged.
+   * Only provided fields are overwritten; others remain unchanged. A provided `properties` list replaces the existing one.
    * The model stores a copy: the given object is not changed or kept.
    * @param element Partial or full element data to insert or update.
    * @returns A copy of the inserted or updated element.
@@ -271,7 +273,7 @@ export class Archimate {
    * If the type changes, the element is moved to the appropriate folder.
    * Relationship source/target and IDs are preserved unless explicitly patched.
    * A key set to undefined removes that field (`name` becomes empty; `id` and `type` are kept); keys left out are unchanged.
-   * `properties` is merged into the existing properties, so set it to undefined to remove them all.
+   * `properties` replaces the whole list; build it with `setProperty` and the other property helpers to change one key.
    * Returns a copy of the updated element.
    */
   public updateElement(elementId: string, patch: Partial<Omit<Element, 'id'>>): Element | null {
@@ -421,7 +423,7 @@ export class Archimate {
       source: relationship.source,
       target: relationship.target,
       documentation: relationship.documentation,
-      properties: relationship.properties,
+      properties: relationship.properties && copyProperties(relationship.properties),
     };
     if (relationship.accessType !== undefined) newRelationship.accessType = relationship.accessType;
     if (relationship.directed !== undefined) newRelationship.directed = relationship.directed;
@@ -787,17 +789,18 @@ export class Archimate {
   }
 
   /**
-   * Returns a copy of the model's own properties, in file order.
+   * Returns a copy of the model's own properties, in file order. A key may appear more than once; `getProperty` and
+   * the other property helpers read the list.
    */
-  public getProperties(): Map<string, string> {
-    return new Map(this.content.properties);
+  public getProperties(): Property[] {
+    return copyProperties(this.content.properties ?? []);
   }
 
   /**
-   * Replaces the model's own properties. Pass undefined or an empty map to remove them.
+   * Replaces the model's own properties. Pass undefined or an empty list to remove them.
    */
-  public setProperties(properties: Map<string, string> | undefined): void {
-    this.content.properties = properties && properties.size > 0 ? new Map(properties) : undefined;
+  public setProperties(properties: readonly Property[] | undefined): void {
+    this.content.properties = properties && properties.length > 0 ? copyProperties(properties) : undefined;
   }
 
   /**
@@ -1095,7 +1098,7 @@ export class Archimate {
   }
 
   /**
-   * Returns the id, name, documentation, properties and features of a top-level folder. Maps are copies;
+   * Returns the id, name, documentation, properties and features of a top-level folder. Lists and maps are copies;
    * use `updateFolder` to change them.
    */
   public getFolder(folderKey: FolderKey): ModelFolderDetails {
@@ -1104,7 +1107,7 @@ export class Archimate {
 
   /**
    * Updates the name, documentation, properties or features of a top-level folder and returns its new details.
-   * A key set to undefined, an empty string or an empty map removes that detail; keys left out are unchanged.
+   * A key set to undefined, an empty string, an empty list or an empty map removes that detail; keys left out are unchanged.
    */
   public updateFolder(folderKey: FolderKey, patch: Partial<Omit<ModelFolderDetails, 'id'>>): ModelFolderDetails {
     return Archimate.applyFolderPatch(this.topLevelFolder(folderKey), patch);
@@ -1112,7 +1115,7 @@ export class Archimate {
 
   /**
    * Returns the id, name, documentation, properties and features of the folder with the given id, top-level or
-   * nested at any depth, or null when there is none. Maps are copies; use `updateFolderById` to change them.
+   * nested at any depth, or null when there is none. Lists and maps are copies; use `updateFolderById` to change them.
    */
   public getFolderById(folderId: string): FolderDetails | null {
     const folder = this.findFolderById(folderId);
@@ -1121,7 +1124,7 @@ export class Archimate {
 
   /**
    * Updates the name, documentation, properties or features of the folder with the given id, top-level or nested
-   * at any depth, and returns its new details. A key set to undefined, an empty string or an empty map removes that
+   * at any depth, and returns its new details. A key set to undefined, an empty string, an empty list or an empty map removes that
    * detail; keys left out are unchanged. Throws when there is no folder with that id.
    */
   public updateFolderById(folderId: string, patch: Partial<Omit<FolderDetails, 'id'>>): FolderDetails {
@@ -1272,7 +1275,7 @@ export class Archimate {
       folder.name = patch.name;
     }
     if ('documentation' in patch) folder.documentation = patch.documentation || undefined;
-    if ('properties' in patch) folder.properties = patch.properties?.size ? new Map(patch.properties) : undefined;
+    if ('properties' in patch) folder.properties = patch.properties?.length ? copyProperties(patch.properties) : undefined;
     if ('features' in patch) folder.features = patch.features?.size ? new Map(patch.features) : undefined;
     return Archimate.folderDetails(folder);
   }
@@ -1282,7 +1285,7 @@ export class Archimate {
       id,
       name,
       ...(documentation !== undefined && { documentation }),
-      ...(properties && { properties: new Map(properties) }),
+      ...(properties && { properties: copyProperties(properties) }),
       ...(features && { features: new Map(features) }),
     };
   }
@@ -1338,14 +1341,7 @@ export class Archimate {
         continue;
       }
 
-      if (key === 'properties' && value instanceof Map) {
-        updatedElement.properties = new Map(element.properties || []);
-        for (const [propKey, propValue] of value.entries()) {
-          updatedElement.properties.set(propKey, propValue);
-        }
-      } else {
-        (updatedElement as any)[key] = deepCopy(value);
-      }
+      (updatedElement as any)[key] = deepCopy(value);
     }
 
     return updatedElement;

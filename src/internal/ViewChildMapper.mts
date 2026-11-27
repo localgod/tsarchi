@@ -5,13 +5,6 @@ import type { ViewConnection } from '../interfaces/View.mjs';
 import { deepCopy } from './Copy.mjs';
 
 /**
- * Archi stores the ids of the connections that end on an object or connection in one space-separated attribute.
- */
-export function splitIds(ids: string | undefined): string[] {
-  return ids ? ids.split(/\s+/).filter(Boolean) : [];
-}
-
-/**
  * Copies the values a caller could change in place, so a returned view does not share them with the model.
  */
 function copyValues<T extends object>(source: T): T {
@@ -35,7 +28,7 @@ export function toViewChild(child: Child): ViewChild {
     ...copyValues(rest),
     children: (children ?? []).map(toViewChild),
     sourceConnections: (sourceConnection ?? []).map(toViewConnection),
-    targetConnections: splitIds(targetConnections),
+    targetConnections: [...(targetConnections ?? [])],
   };
 }
 
@@ -47,6 +40,6 @@ export function toViewConnection(connection: SourceConnection): ViewConnection {
   return {
     ...copyValues(rest),
     sourceConnections: (sourceConnection ?? []).map(toViewConnection),
-    targetConnections: splitIds(targetConnections),
+    targetConnections: [...(targetConnections ?? [])],
   };
 }

@@ -2,7 +2,7 @@ import type { Element } from '../interfaces/Element.mjs';
 import type { Child } from '../interfaces/Child.mjs';
 import type { SourceConnection } from '../interfaces/SourceConnection.mjs';
 import { deepCopy } from './Copy.mjs';
-import { splitIds } from './ViewChildMapper.mjs';
+import { splitIds } from './Ids.mjs';
 
 /**
  * A copy of a view with new ids for the view and everything in it, as Archi's Duplicate does: connection ends and
@@ -55,11 +55,11 @@ function forEachObject(children: Child[], onChild: (child: Child) => void, onCon
 }
 
 function rewriteIds(
-  owner: { id: string; targetConnections?: string; unrecognized?: Record<string, unknown> },
+  owner: { id: string; targetConnections?: string[]; unrecognized?: Record<string, unknown> },
   ids: Map<string, string>
 ): void {
   owner.id = ids.get(owner.id) ?? owner.id;
-  if (owner.targetConnections !== undefined) owner.targetConnections = rewriteIdList(owner.targetConnections, ids);
+  if (owner.targetConnections !== undefined) owner.targetConnections = owner.targetConnections.map(id => ids.get(id) ?? id);
   rewriteUnrecognized(owner.unrecognized, ids);
 }
 

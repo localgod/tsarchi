@@ -79,7 +79,7 @@ export interface ElementSnapshot {
   id?: string;
   type: string;
   name: string;
-  profiles?: string;
+  profiles?: string[];
   viewpoint?: string;
   background?: SnapshotNumber;
   connectionRouterType?: SnapshotNumber;
@@ -104,7 +104,7 @@ export interface ChildSnapshot {
   id?: string;
   type: string;
   name?: string;
-  targetConnections?: string;
+  targetConnections?: string[];
   archimateElement?: string;
   textAlignment?: SnapshotNumber;
   textPosition?: SnapshotNumber;
@@ -146,7 +146,7 @@ export interface ConnectionSnapshot {
   target?: string;
   archimateRelationship?: string;
   name?: string;
-  targetConnections?: string;
+  targetConnections?: string[];
   lineStyle?: SnapshotNumber;
   font?: string;
   fontColor?: string;

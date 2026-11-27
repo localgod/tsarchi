@@ -32,3 +32,31 @@ describe('child and sourceConnection are arrays', () => {
     expect(copy.toXml()).toBe(model.toXml());
   });
 });
+
+describe('profiles and targetConnections are id arrays', () => {
+  it('splits the attributes on load and joins them on save', async () => {
+    const xml = await readFile(fixture, 'utf8');
+    const model = Archimate.fromXml(xml);
+    const cashier = model.getElement('id-c2c-view')!.child!.find(child => child.id === 'id-cashier-object')!;
+
+    expect(cashier.targetConnections).toEqual(['id-assignment-connection']);
+    expect(model.getElement('id-c2c-view')!.child![0].sourceConnection![0].targetConnections).toEqual(['id-contract-connection']);
+    expect(model.toXml()).toBe(Archimate.fromXml(xml).toXml());
+  });
+
+  it('writes profiles joined by spaces and leaves out an empty list', async () => {
+    const model = Archimate.fromXml(await readFile(fixture, 'utf8'));
+    model.setProfiles([
+      { id: 'id-p1', name: 'One', conceptType: 'BusinessActor' },
+      { id: 'id-p2', name: 'Two', conceptType: 'BusinessActor' },
+    ]);
+    model.updateElement('id-clerk', { profiles: ['id-p1', 'id-p2'] });
+    model.updateElement('id-cashier', { profiles: [] });
+
+    const xml = model.toXml();
+    expect(xml).toContain('id="id-clerk" profiles="id-p1 id-p2"');
+    expect(xml).not.toMatch(/id="id-cashier" profiles=/);
+    expect(Archimate.fromXml(xml).getElement('id-clerk')!.profiles).toEqual(['id-p1', 'id-p2']);
+    expect(Archimate.fromSnapshot(model.snapshot()).getElement('id-clerk')!.profiles).toEqual(['id-p1', 'id-p2']);
+  });
+});

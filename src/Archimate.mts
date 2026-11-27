@@ -25,7 +25,6 @@ import { deepCopy } from './internal/Copy.mjs';
 import { randomArchiId } from './internal/Ids.mjs';
 import { readSnapshot, writeSnapshot } from './internal/Snapshot.mjs';
 import type { ModelSnapshot } from './interfaces/ModelSnapshot.mjs';
-import { splitIds } from './internal/ViewChildMapper.mjs';
 import { allSourceConnections, removeViewChildren, removeViewConnections } from './internal/ViewRemoval.mjs';
 import {
   folderType,
@@ -1468,7 +1467,7 @@ export class Archimate {
   }
 
   private validateElementProfiles(element: Element, path: string, profileIds: Set<string>, issues: PendingIssue[]): void {
-    for (const profileId of (element.profiles || '').split(' ').filter(Boolean)) {
+    for (const profileId of element.profiles ?? []) {
       if (!profileIds.has(profileId)) {
         issues.push({
           code: 'element-missing-profile',
@@ -1717,13 +1716,13 @@ export class Archimate {
   }
 
   private validateTargetConnections(
-    owner: { id: string; targetConnections?: string },
+    owner: { id: string; targetConnections?: string[] },
     label: string,
     path: string,
     connectionIds: Set<string>,
     issues: PendingIssue[]
   ): void {
-    for (const targetConnectionId of splitIds(owner.targetConnections)) {
+    for (const targetConnectionId of owner.targetConnections ?? []) {
       if (!connectionIds.has(targetConnectionId)) {
         issues.push({
           code: 'view-target-connection-missing-source',

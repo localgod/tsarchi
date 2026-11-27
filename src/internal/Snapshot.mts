@@ -32,6 +32,7 @@ import {
   viewAttributes,
 } from './DiagramAttributeMapper.mjs';
 import type { AttributeSpec } from './DiagramAttributeMapper.mjs';
+import { splitIds } from './Ids.mjs';
 import type { Property } from '../interfaces/Property.mjs';
 
 // A snapshot holds the model as fromXml(toXml()) would load it: the writer applies the normalisation the Serializer
@@ -133,6 +134,11 @@ function writeAttributes(target: object, source: object, specs: readonly Attribu
   for (const [property, , kind] of specs) {
     const value = from[property];
     if (value === undefined || value === null) continue;
+    if (kind === 'ids') {
+      const ids = (Array.isArray(value) ? value : splitIds(String(value))).map(String);
+      if (ids.length > 0) to[property] = ids;
+      continue;
+    }
     to[property] =
       kind === 'number'
         ? writeNumber(typeof value === 'number' ? value : Number(String(value)))
@@ -205,7 +211,7 @@ function writeElement(element: Element): ElementSnapshot {
   if (element.id != null) snapshot.id = String(element.id);
   snapshot.type = element.type ? canonicalType(element.type) : '';
   snapshot.name = element.name ? String(element.name) : '';
-  if (element.profiles) snapshot.profiles = String(element.profiles);
+  if (element.profiles && element.profiles.length > 0) snapshot.profiles = element.profiles.map(String);
   writeAttributes(snapshot, element, viewAttributes);
   if (element.source && element.target) {
     snapshot.source = String(element.source);
@@ -326,6 +332,10 @@ function readString(value: unknown, path: string): string {
   return value;
 }
 
+function readIds(value: unknown, path: string): string[] {
+  return readArray(value, path).map((id, i) => readString(id, `${path}[${i}]`));
+}
+
 function readOptionalString(value: unknown, path: string): string | undefined {
   return value === undefined ? undefined : readString(value, path);
 }
@@ -386,7 +396,14 @@ function readAttributes(target: object, source: Record<string, unknown>, specs: 
     const value = source[property];
     if (value === undefined) continue;
     const at = `${path}.${property}`;
-    to[property] = kind === 'number' ? readNumber(value, at) : kind === 'boolean' ? readBoolean(value, at) : readString(value, at);
+    to[property] =
+      kind === 'ids'
+        ? readIds(value, at)
+        : kind === 'number'
+          ? readNumber(value, at)
+          : kind === 'boolean'
+            ? readBoolean(value, at)
+            : readString(value, at);
   }
 }
 
@@ -582,8 +599,7 @@ function readElement(value: unknown, path: string): Element {
   if (documentation !== undefined) element.documentation = documentation;
   element.properties = readPropertyList(source.properties, `${path}.properties`);
   if (source.children !== undefined) element.child = readChildren(source.children, `${path}.children`);
-  const profiles = readOptionalString(source.profiles, `${path}.profiles`);
-  if (profiles !== undefined) element.profiles = profiles;
+  if (source.profiles !== undefined) element.profiles = readIds(source.profiles, `${path}.profiles`);
   readAttributes(element, source, viewAttributes, path);
   readAttributes(element, source, conceptAttributes, path);
   const features = readOptionalEntries(source.features, `${path}.features`);

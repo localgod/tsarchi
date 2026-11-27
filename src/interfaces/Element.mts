@@ -15,8 +15,8 @@ export interface Element {
   properties?: Property[];
   /** `<feature>` entries (Archi's `IFeatures`), in file order. */
   features?: Map<string, string>;
-  /** Space-separated ids of the model profiles (specializations) applied to this element or relationship. */
-  profiles?: string;
+  /** Ids of the model profiles (specializations) applied to this element or relationship (`profiles` in the file). */
+  profiles?: string[];
   /** View attributes */
   viewpoint?: string;
   background?: number;

@@ -1,3 +1,10 @@
+/**
+ * Splits an attribute that holds several ids separated by spaces, such as `targetConnections` or `profiles`.
+ */
+export function splitIds(ids: string | undefined): string[] {
+  return ids ? ids.split(/\s+/).filter(Boolean) : [];
+}
+
 const idCharacters = 'abcdef0123456789';
 
 /**

@@ -2,7 +2,6 @@ import type { Child } from '../interfaces/Child.mjs';
 import type { SourceConnection } from '../interfaces/SourceConnection.mjs';
 import type { ViewChild } from '../interfaces/ViewChild.mjs';
 import type { ViewConnection } from '../interfaces/View.mjs';
-import { toArray } from './Arrays.mjs';
 import { deepCopy } from './Copy.mjs';
 
 /**
@@ -34,8 +33,8 @@ export function toViewChild(child: Child): ViewChild {
   const { child: children, sourceConnection, targetConnections, ...rest } = child;
   return {
     ...copyValues(rest),
-    children: toArray(children).map(toViewChild),
-    sourceConnections: toArray(sourceConnection).map(toViewConnection),
+    children: (children ?? []).map(toViewChild),
+    sourceConnections: (sourceConnection ?? []).map(toViewConnection),
     targetConnections: splitIds(targetConnections),
   };
 }
@@ -47,7 +46,7 @@ export function toViewConnection(connection: SourceConnection): ViewConnection {
   const { sourceConnection, targetConnections, ...rest } = connection;
   return {
     ...copyValues(rest),
-    sourceConnections: toArray(sourceConnection).map(toViewConnection),
+    sourceConnections: (sourceConnection ?? []).map(toViewConnection),
     targetConnections: splitIds(targetConnections),
   };
 }

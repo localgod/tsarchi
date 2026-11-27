@@ -38,7 +38,7 @@ export interface SourceConnection {
    */
   features?: Map<string, string>;
   /** Connections that start on this connection, e.g. a relationship drawn onto a relationship. */
-  sourceConnection?: SourceConnection | SourceConnection[];
+  sourceConnection?: SourceConnection[];
   /**
    * Attributes and child elements that tsarchi does not map, in their parsed XML form. They are written back
    * unchanged.

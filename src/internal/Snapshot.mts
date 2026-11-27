@@ -32,7 +32,6 @@ import {
   viewAttributes,
 } from './DiagramAttributeMapper.mjs';
 import type { AttributeSpec } from './DiagramAttributeMapper.mjs';
-import { toArray } from './Arrays.mjs';
 import type { Property } from '../interfaces/Property.mjs';
 
 // A snapshot holds the model as fromXml(toXml()) would load it: the writer applies the normalisation the Serializer
@@ -216,7 +215,7 @@ function writeElement(element: Element): ElementSnapshot {
   if (element.documentation) snapshot.documentation = String(element.documentation);
   setPropertyEntries(snapshot, element.properties);
   setEntries(snapshot, 'features', element.features);
-  const children = toArray(element.child);
+  const children = (element.child ?? []);
   if (children.length > 0) snapshot.children = children.map(writeChild);
   setOpaque(snapshot, element.unrecognized);
   return snapshot;
@@ -239,7 +238,7 @@ function writeChild(child: Child): ChildSnapshot {
   setPropertyEntries(snapshot, child.properties);
   setEntries(snapshot, 'features', DiagramAttributeMapper.writeFeatures(child, child.features, childFeatures));
   if (child.child && child.child.length > 0) snapshot.children = child.child.map(writeChild);
-  const connections = toArray(child.sourceConnection);
+  const connections = (child.sourceConnection ?? []);
   if (connections.length > 0) snapshot.connections = connections.map(writeConnection);
   setOpaque(snapshot, child.unrecognized);
   return snapshot;
@@ -264,7 +263,7 @@ function writeConnection(connection: SourceConnection): ConnectionSnapshot {
   }
   setPropertyEntries(snapshot, connection.properties);
   setEntries(snapshot, 'features', DiagramAttributeMapper.writeFeatures(connection, connection.features, connectionFeatures));
-  const connections = toArray(connection.sourceConnection);
+  const connections = (connection.sourceConnection ?? []);
   if (connections.length > 0) snapshot.connections = connections.map(writeConnection);
   setOpaque(snapshot, connection.unrecognized);
   return snapshot;
@@ -627,9 +626,8 @@ function readChild(value: unknown, path: string): Child {
 /**
  * One connection is read as an object and several as an array, as the Parser reads them from XML.
  */
-function readConnections(value: unknown, path: string): SourceConnection | SourceConnection[] {
-  const connections = readArray(value, path).map((connection, i) => readConnection(connection, `${path}[${i}]`));
-  return connections.length === 1 ? connections[0] : connections;
+function readConnections(value: unknown, path: string): SourceConnection[] {
+  return readArray(value, path).map((connection, i) => readConnection(connection, `${path}[${i}]`));
 }
 
 function readConnection(value: unknown, path: string): SourceConnection {

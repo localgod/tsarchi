@@ -4,7 +4,6 @@ import type { Folder } from '../interfaces/Folder.mjs';
 import type { FolderKey, Model } from '../interfaces/Model.mjs';
 import type { Profile } from '../interfaces/Profile.mjs';
 import type { Relationship } from '../interfaces/Relationship.mjs';
-import { toArray } from './Arrays.mjs';
 import { allSourceConnections } from './ViewRemoval.mjs';
 
 /**
@@ -71,7 +70,7 @@ export class ModelIndex {
    * Records an element, relationship or view just added at the end of a top-level folder.
    */
   added(folderKey: FolderKey, element: Element): void {
-    if (toArray(element.child).length > 0) {
+    if ((element.child ?? []).length > 0) {
       this.clear();
       return;
     }
@@ -105,7 +104,7 @@ export class ModelIndex {
       yield* folderIds(folder.folders || []);
       for (const element of folder.elements || []) {
         yield element.id;
-        yield* viewChildIds(toArray(element.child));
+        yield* viewChildIds((element.child ?? []));
       }
     }
   }
@@ -122,7 +121,7 @@ function* viewChildIds(children: Child[]): Generator<string> {
   for (const child of children) {
     yield child.id;
     for (const connection of allSourceConnections(child)) yield connection.id;
-    yield* viewChildIds(toArray(child.child));
+    yield* viewChildIds((child.child ?? []));
   }
 }
 

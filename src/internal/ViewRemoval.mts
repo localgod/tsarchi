@@ -1,14 +1,13 @@
 import type { Element } from '../interfaces/Element.mjs';
 import type { Child } from '../interfaces/Child.mjs';
 import type { SourceConnection } from '../interfaces/SourceConnection.mjs';
-import { toArray } from './Arrays.mjs';
 import { splitIds } from './ViewChildMapper.mjs';
 
 /**
  * The connections starting on a child, and every connection nested in them.
  */
 export function allSourceConnections(child: Child): SourceConnection[] {
-  return flattenConnections(toArray(child.sourceConnection));
+  return flattenConnections((child.sourceConnection ?? []));
 }
 
 /**
@@ -18,7 +17,7 @@ export function flattenConnections(connections: SourceConnection[]): SourceConne
   return connections.flatMap(connection => {
     const nested = connection.sourceConnection;
     if (!nested) return [connection];
-    return [connection, ...flattenConnections(toArray(nested))];
+    return [connection, ...flattenConnections((nested ?? []))];
   });
 }
 
@@ -30,7 +29,7 @@ export function removeViewChildren(viewElement: Element, shouldRemove: (child: C
   const removedIds = new Set<string>();
   if (!viewElement.child) return removedIds;
 
-  const keptChildren = removeMatchingChildren(toArray(viewElement.child), shouldRemove, removedIds);
+  const keptChildren = removeMatchingChildren((viewElement.child ?? []), shouldRemove, removedIds);
   if (removedIds.size === 0) return removedIds;
 
   viewElement.child = keptChildren;
@@ -48,7 +47,7 @@ export function removeViewConnections(viewElement: Element, shouldRemove: (conne
   const removedIds = new Set<string>();
   if (!viewElement.child) return removedIds;
 
-  const children = toArray(viewElement.child);
+  const children = (viewElement.child ?? []);
   // A connection can be attached to a removed connection that was visited earlier or later.
   while (removeConnectionsFromChildren(children, shouldRemove, removedIds));
   if (removedIds.size > 0) removeTargetConnectionReferences(children, removedIds);
@@ -112,18 +111,16 @@ function removeConnectionsFromChildren(
 }
 
 /**
- * Filters the connections starting on a child or connection, keeping the single-object or array shape of
- * `sourceConnection`.
+ * Filters the connections starting on a child or connection, and those nested in them.
  */
 function removeOwnedConnections(
-  owner: { sourceConnection?: SourceConnection | SourceConnection[] },
+  owner: { sourceConnection?: SourceConnection[] },
   shouldRemove: (connection: SourceConnection) => boolean,
   removedIds: Set<string>
 ): boolean {
-  const sourceConnection = owner.sourceConnection;
-  if (!sourceConnection) return false;
+  const connections = owner.sourceConnection;
+  if (!connections) return false;
 
-  const connections = toArray(sourceConnection);
   let removedAny = false;
   for (const connection of connections) {
     if (removeOwnedConnections(connection, shouldRemove, removedIds)) removedAny = true;
@@ -144,7 +141,7 @@ function removeOwnedConnections(
   if (kept.length === 0) {
     delete owner.sourceConnection;
   } else {
-    owner.sourceConnection = Array.isArray(sourceConnection) ? kept : kept[0];
+    owner.sourceConnection = kept;
   }
   return true;
 }

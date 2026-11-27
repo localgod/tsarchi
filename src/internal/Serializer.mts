@@ -21,7 +21,6 @@ import {
   conceptAttributes,
   viewAttributes,
 } from './DiagramAttributeMapper.mjs';
-import { toArray } from './Arrays.mjs';
 import { propertiesToSchema } from './PropertyMapper.mjs';
 
 export class Serializer {
@@ -203,7 +202,7 @@ export class Serializer {
     Object.assign(element, DiagramAttributeMapper.writeAttributes(el, conceptAttributes));
 
     if (el.child) {
-      element.child = this.saveChildren(toArray(el.child));
+      element.child = this.saveChildren(el.child);
     }
 
     Object.assign(element, el.unrecognized);

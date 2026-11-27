@@ -56,6 +56,7 @@ Version 5.0.0 keeps properties as Archi does, as an ordered list in which a key 
 - `getProperties()` and `getMetadata()` return a `Property[]`, and `setProperties()` and `setMetadata()` take one. Model metadata keeps repeated keys too.
 - `updateElement()` and `upsertElement()` replace the whole `properties` list instead of merging it by key. To change one key, pass `setProperty(element.properties, key, value)`.
 - `updateFolder()`, `updateFolderById()` and `createFolder()` take a `properties` list; an empty list removes the properties.
+- `Element.child`, `Child.sourceConnection` and `SourceConnection.sourceConnection` are always arrays, also for a single child or connection. Code that wrote a single object, for example through `updateElement(viewId, { child })`, passes a one-item array.
 
 ## Upgrading from 3.x
 

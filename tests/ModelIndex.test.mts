@@ -101,10 +101,10 @@ describe('the lookups behind hasId, getElement and findRelationshipsForElement',
     ['createView', archimate => archimate.createView('Other')],
     ['addDiagramObject', (archimate, viewId) => archimate.addDiagramObject(viewId, 'node', { x: 0, y: 0, width: 1, height: 1 })],
     [
-      'addGroup and addDiagramObjectToGroup',
+      'addGroup and addDiagramObject into the group',
       (archimate, viewId) => {
         const group = archimate.addGroup(viewId, 'Group', { x: 0, y: 0, width: 300, height: 300 })!;
-        archimate.addDiagramObjectToGroup(viewId, group.id, 'node', { x: 10, y: 10, width: 1, height: 1 });
+        archimate.addDiagramObject(viewId, 'node', { x: 10, y: 10, width: 1, height: 1 }, { parentId: group.id });
       },
     ],
     ['addConnection', (archimate, viewId, [a, b]) => archimate.addConnection(viewId, b, a)],

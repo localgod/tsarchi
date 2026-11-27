@@ -22,6 +22,9 @@ import type { Folder } from '../interfaces/Folder.mjs';
  */
 const containerTypes = new Set(['DiagramObject', 'Group', 'SketchModelSticky', 'CanvasModelBlock']);
 
+/** The containers that can hold an ArchiMate element's diagram object: an ArchiMate diagram object or a group. */
+const archimateContainerTypes = new Set(['DiagramObject', 'Group']);
+
 /**
  * Creates, reads and edits views. Views are stored in the shape they have in the file (`Child`, with nested `child`,
  * `sourceConnection` and space-separated `targetConnections`), whether they were loaded or built here. The methods
@@ -88,13 +91,16 @@ export class ViewManager {
   }
 
   /**
-   * Adds a diagram object to a view, representing a model element
+   * Adds a diagram object for a model element to a view, or into `options.parentId`: a group or an ArchiMate diagram
+   * object in the view, at any depth, with `bounds` relative to it. Returns null when the view is not found; throws when
+   * the element or the parent is not found, or the parent cannot hold it.
    */
   addDiagramObject(
     viewId: string,
     elementId: string,
     bounds: Bounds,
     options?: {
+      parentId?: string;
       fillColor?: string;
       lineColor?: string;
       fontColor?: string;
@@ -107,8 +113,18 @@ export class ViewManager {
     const viewElement = this.findView(viewId);
     if (!viewElement) return null;
 
-    const diagramObject = this.newDiagramObject(elementId, bounds, options);
-    this.childrenOf(viewElement).push(diagramObject);
+    const { parentId, ...style } = options ?? {};
+    let siblings = this.childrenOf(viewElement);
+    if (parentId !== undefined) {
+      const parent = this.findChild(siblings, parentId);
+      if (!parent || !archimateContainerTypes.has(parent.type)) {
+        throw new Error(`Group or diagram object with ID ${parentId} not found in view`);
+      }
+      siblings = parent.child ??= [];
+    }
+
+    const diagramObject = this.newDiagramObject(elementId, bounds, style);
+    siblings.push(diagramObject);
     this.index.addId(diagramObject.id);
     return toViewChild(diagramObject) as ViewDiagramObject;
   }
@@ -135,38 +151,6 @@ export class ViewManager {
     this.childrenOf(viewElement).push(group);
     this.index.addId(group.id);
     return toViewChild(group) as ViewGroup;
-  }
-
-  /**
-   * Adds a diagram object to a group within a view
-   */
-  addDiagramObjectToGroup(
-    viewId: string,
-    groupId: string,
-    elementId: string,
-    bounds: Bounds,
-    options?: {
-      fillColor?: string;
-      lineColor?: string;
-      fontColor?: string;
-      textAlignment?: number;
-      figure?: number;
-    }
-  ): ViewDiagramObject | null {
-    assertOptionalCode('textAlignment', options?.textAlignment, TextAlignment);
-    assertOptionalCode('figure', options?.figure, DiagramObjectFigure);
-    const viewElement = this.findView(viewId);
-    if (!viewElement) return null;
-
-    const group = this.findChild(this.childrenOf(viewElement), groupId);
-    if (!group || group.type !== 'Group') {
-      throw new Error(`Group with ID ${groupId} not found in view`);
-    }
-
-    const diagramObject = this.newDiagramObject(elementId, bounds, options);
-    group.child = [...(group.child ?? []), diagramObject];
-    this.index.addId(diagramObject.id);
-    return toViewChild(diagramObject) as ViewDiagramObject;
   }
 
   /**

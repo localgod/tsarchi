@@ -48,8 +48,11 @@ export interface ModelContent {
   purpose?: string;
   /** The model's `<property>` entries in file order. A key may appear more than once, as Archi allows. */
   properties?: Property[];
-  /** The `<entry>` items of the model's `<metadata>`, in file order. */
-  metadata?: Map<string, string>;
+  /**
+   * The `<entry>` items of the model's `<metadata>`, in file order. A key may appear more than once, as Archi allows.
+   * An empty list is an empty `<metadata/>`.
+   */
+  metadata?: Property[];
   /** The specializations defined on the model, in file order. */
   profiles?: Profile[];
   /**

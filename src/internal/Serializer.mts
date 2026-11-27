@@ -59,7 +59,7 @@ export class Serializer {
       model.purpose = content.purpose;
     }
     if (content.metadata) {
-      const entry = DiagramAttributeMapper.propertiesToSchema(content.metadata);
+      const entry = propertiesToSchema(content.metadata);
       model.metadata = entry ? { entry } : '';
     }
     if (content.profiles && content.profiles.length > 0) {

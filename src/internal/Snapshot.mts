@@ -87,7 +87,7 @@ export function writeSnapshot(
   };
   if (content.purpose) snapshot.purpose = String(content.purpose);
   setPropertyEntries(snapshot, content.properties);
-  if (content.metadata) snapshot.metadata = writeEntries(content.metadata);
+  if (content.metadata) snapshot.metadata = writePropertyEntries(content.metadata);
   if (content.profiles && content.profiles.length > 0) snapshot.profiles = content.profiles.map(writeProfile);
   for (const key of folderKeys) {
     snapshot.folders[key] = writeTopLevelFolder(key, model[key]);
@@ -104,10 +104,12 @@ function setEntries(target: object, key: string, map: Map<unknown, unknown> | un
   if (map && map.size > 0) (target as Record<string, unknown>)[key] = writeEntries(map);
 }
 
+function writePropertyEntries(properties: readonly Property[]): SnapshotEntries {
+  return properties.map(({ key, value }) => [key == null ? null : String(key), value == null ? null : String(value)]);
+}
+
 function setPropertyEntries(target: { properties?: SnapshotEntries }, properties: readonly Property[] | undefined): void {
-  if (properties && properties.length > 0) {
-    target.properties = properties.map(({ key, value }) => [key == null ? null : String(key), value == null ? null : String(value)]);
-  }
+  if (properties && properties.length > 0) target.properties = writePropertyEntries(properties);
 }
 
 function setOpaque(target: { unrecognized?: SnapshotOpaque }, unrecognized: Record<string, unknown> | undefined): void {
@@ -473,8 +475,7 @@ function readModel(value: unknown): SnapshotState {
   if (purpose !== undefined) content.purpose = purpose;
   const properties = readPropertyList(snapshot.properties, 'snapshot.properties');
   if (properties.length > 0) content.properties = properties;
-  const metadata = readOptionalEntries(snapshot.metadata, 'snapshot.metadata');
-  if (metadata) content.metadata = metadata;
+  if (snapshot.metadata !== undefined) content.metadata = readPropertyList(snapshot.metadata, 'snapshot.metadata');
   if (snapshot.profiles !== undefined) {
     content.profiles = readArray(snapshot.profiles, 'snapshot.profiles').map((profile, i) =>
       readProfile(profile, `snapshot.profiles[${i}]`)

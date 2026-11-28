@@ -132,6 +132,44 @@ describe('ViewManager', () => {
     });
   });
 
+  describe('addGroup with parentId', () => {
+    const bounds = { x: 10, y: 10, width: 100, height: 80 };
+
+    it('should add a group inside a group and inside an ArchiMate diagram object, at any depth', () => {
+      const view = archimate.createView('Test View');
+      const outer = archimate.addGroup(view.id, 'Outer', { x: 0, y: 0, width: 400, height: 300 })!;
+      const inner = archimate.addGroup(view.id, 'Inner', bounds, { parentId: outer.id, fillColor: '#ffffff' })!;
+      const deep = archimate.addGroup(view.id, 'Deep', bounds, { parentId: inner.id })!;
+      const object = archimate.addDiagramObject(view.id, 'app-1', { x: 500, y: 0, width: 300, height: 200 })!;
+      const inObject = archimate.addGroup(view.id, 'In object', bounds, { parentId: object.id })!;
+
+      const children = archimate.getView(view.id)!.children;
+      expect(children[0].children.map(child => child.id)).toEqual([inner.id]);
+      expect(children[0].children[0].children.map(child => child.id)).toEqual([deep.id]);
+      expect(children[1].children.map(child => child.id)).toEqual([inObject.id]);
+      expect(inner).toMatchObject({ type: 'Group', name: 'Inner', bounds, fillColor: '#ffffff' });
+      expect(inner).not.toHaveProperty('parentId');
+      expect(Archimate.fromXml(archimate.toXml()).getView(view.id)!.children).toEqual(children);
+    });
+
+    it('should throw for a parent that is not in the view or cannot hold a group, and add nothing', () => {
+      const view = archimate.createView('Test View');
+      archimate.updateElement(view.id, { child: [{ id: 'id-note', type: 'Note', bounds }] });
+
+      expect(() => archimate.addGroup(view.id, 'G', bounds, { parentId: 'id-missing' })).toThrowError(
+        'Group or diagram object with ID id-missing not found in view'
+      );
+      expect(() => archimate.addGroup(view.id, 'G', bounds, { parentId: 'id-note' })).toThrowError(
+        'Group or diagram object with ID id-note not found in view'
+      );
+      expect(archimate.getView(view.id)!.children.map(child => child.id)).toEqual(['id-note']);
+    });
+
+    it('should return null for a view that does not exist', () => {
+      expect(archimate.addGroup('id-missing-view', 'G', bounds, { parentId: 'id-x' })).toBeNull();
+    });
+  });
+
   describe('addDiagramObject with parentId', () => {
     it('should add a diagram object to a group', () => {
       const view = archimate.createView('Test View');

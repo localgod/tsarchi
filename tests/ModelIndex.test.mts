@@ -113,6 +113,10 @@ describe('the lookups behind hasId, getElement and findRelationshipsForElement',
         archimate.addDiagramObject(viewId, 'node', { x: 10, y: 10, width: 1, height: 1 }, { parentId: group.id });
       },
     ],
+    [
+      'addGroup into a diagram object',
+      (archimate, viewId, [a]) => archimate.addGroup(viewId, 'Group', { x: 0, y: 0, width: 10, height: 10 }, { parentId: a }),
+    ],
     ['addConnection', (archimate, viewId, [a, b]) => archimate.addConnection(viewId, b, a)],
     ['deleteView', (archimate, viewId) => archimate.deleteView(viewId)],
     [

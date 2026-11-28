@@ -114,15 +114,7 @@ export class ViewManager {
     if (!viewElement) return null;
 
     const { parentId, ...style } = options ?? {};
-    let siblings = this.childrenOf(viewElement);
-    if (parentId !== undefined) {
-      const parent = this.findChild(siblings, parentId);
-      if (!parent || !archimateContainerTypes.has(parent.type)) {
-        throw new Error(`Group or diagram object with ID ${parentId} not found in view`);
-      }
-      siblings = parent.child ??= [];
-    }
-
+    const siblings = this.childListFor(viewElement, parentId);
     const diagramObject = this.newDiagramObject(elementId, bounds, style);
     siblings.push(diagramObject);
     this.index.addId(diagramObject.id);
@@ -130,13 +122,16 @@ export class ViewManager {
   }
 
   /**
-   * Creates a group in a view to organize diagram objects
+   * Creates a group in a view, or inside `options.parentId`: a group or an ArchiMate diagram object in the view, at any
+   * depth, with `bounds` relative to it, as Archi allows. Returns null when the view is not found; throws when the
+   * parent is not found or cannot hold a group.
    */
   addGroup(
     viewId: string,
     name: string,
     bounds: Bounds,
     options?: {
+      parentId?: string;
       fillColor?: string;
       lineColor?: string;
       textAlignment?: number;
@@ -147,8 +142,10 @@ export class ViewManager {
     const viewElement = this.findView(viewId);
     if (!viewElement) return null;
 
-    const group: Child = { id: this.generateUniqueId(), type: 'Group', name, bounds: { ...bounds }, ...options };
-    this.childrenOf(viewElement).push(group);
+    const { parentId, ...style } = options ?? {};
+    const siblings = this.childListFor(viewElement, parentId);
+    const group: Child = { id: this.generateUniqueId(), type: 'Group', name, bounds: { ...bounds }, ...style };
+    siblings.push(group);
     this.index.addId(group.id);
     return toViewChild(group) as ViewGroup;
   }
@@ -382,6 +379,21 @@ export class ViewManager {
     const children = viewElement.child ?? [];
     viewElement.child = children;
     return children;
+  }
+
+  /**
+   * The list a new group or ArchiMate diagram object goes into: the view's children, or those of the group or ArchiMate
+   * diagram object `parentId`, the containers Archi lets hold them (its `GroupEditPart` and `ArchimateElementEditPart`
+   * accept any diagram object). Throws when there is no such parent in the view.
+   */
+  private childListFor(viewElement: Element, parentId: string | undefined): Child[] {
+    const children = this.childrenOf(viewElement);
+    if (parentId === undefined) return children;
+    const parent = this.findChild(children, parentId);
+    if (!parent || !archimateContainerTypes.has(parent.type)) {
+      throw new Error(`Group or diagram object with ID ${parentId} not found in view`);
+    }
+    return (parent.child ??= []);
   }
 
   /**

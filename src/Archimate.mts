@@ -956,13 +956,16 @@ export class Archimate {
   }
 
   /**
-   * Creates a group in a view to organize diagram objects
+   * Creates a group in a view, or inside `options.parentId`: a group or an ArchiMate diagram object in the view, at any
+   * depth, with `bounds` relative to it, as Archi allows. Returns null when the view is not found; throws when the
+   * parent is not found or cannot hold a group.
    */
   public addGroup(
     viewId: string,
     name: string,
     bounds: Bounds,
     options?: {
+      parentId?: string;
       fillColor?: string;
       lineColor?: string;
       textAlignment?: number;

@@ -33,6 +33,12 @@ export class ModelIndex {
   private duplicateElementIds = new Set<string>();
   /** The relationships with each id as source or target, once each, in folder order. */
   private relationships: Map<string, Relationship[]> | undefined;
+  /**
+   * The ids of the views that show each element (a diagram object with that `archimateElement`) or relationship (a
+   * view connection with that `archimateRelationship`). It may list a view that no longer shows the concept, never
+   * leaves one out: additions are recorded, removals are not, as visiting one view too many only costs time.
+   */
+  private views: Map<string, Set<string>> | undefined;
 
   constructor(
     private readonly model: () => Model,
@@ -70,6 +76,39 @@ export class ModelIndex {
   }
 
   /**
+   * The ids of the views that may show the element or relationship, as a diagram object or a view connection: every
+   * view that does, and possibly some that no longer do.
+   */
+  viewsShowing(conceptId: string): Iterable<string> {
+    if (!this.views) {
+      this.views = new Map();
+      for (const view of this.model().diagrams.elements || []) this.recordView(view);
+    }
+    return this.views.get(conceptId) ?? [];
+  }
+
+  /**
+   * Records a diagram object or view connection added to a view, which shows the element or relationship.
+   */
+  shown(conceptId: string | undefined, viewId: string): void {
+    if (!this.views || conceptId === undefined) return;
+    const views = this.views.get(conceptId);
+    if (views) views.add(viewId);
+    else this.views.set(conceptId, new Set([viewId]));
+  }
+
+  private recordView(view: Element): void {
+    const visit = (children: Child[]): void => {
+      for (const child of children) {
+        this.shown(child.archimateElement, view.id);
+        for (const connection of allSourceConnections(child)) this.shown(connection.archimateRelationship, view.id);
+        visit(child.child ?? []);
+      }
+    };
+    visit(view.child ?? []);
+  }
+
+  /**
    * Records an id added anywhere in the model, such as a diagram child, view connection or folder.
    */
   addId(id: string): void {
@@ -100,6 +139,7 @@ export class ModelIndex {
       else this.duplicateElementIds.add(element.id);
     }
     if (folderKey === 'relations' && this.relationships) addByEndpoint(this.relationships, element as Relationship);
+    if (folderKey === 'diagrams' && this.views) this.recordView(element);
   }
 
   /**
@@ -119,6 +159,8 @@ export class ModelIndex {
     const removedRelationships = new Set<Element>();
     for (const element of elements) {
       this.removeIds([element.id]);
+      // A concept that shares its id with another (an invalid model) leaves the views of the other in place
+      if (!this.duplicateElementIds.has(element.id)) this.views?.delete(element.id);
       if (this.elements?.get(element.id)?.element === element) {
         // Another element with the same id (an invalid model) takes its place when the lookup is built again.
         if (this.duplicateElementIds.has(element.id)) this.elements = undefined;
@@ -146,6 +188,7 @@ export class ModelIndex {
     this.ids = undefined;
     this.elements = undefined;
     this.relationships = undefined;
+    this.views = undefined;
   }
 
   private *modelIds(): Generator<string> {

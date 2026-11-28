@@ -11,6 +11,7 @@ type IndexInternals = {
   ids?: Map<string, number>;
   elements?: Map<string, { folderKey: string; element: object }>;
   relationships?: Map<string, object[]>;
+  views?: Map<string, Set<string>>;
   modelIds(): Iterable<string>;
 };
 
@@ -22,6 +23,7 @@ function buildIndex(archimate: Archimate): void {
   index.hasId('');
   index.element('');
   index.relationshipsOf('');
+  index.viewsShowing('');
 }
 
 /** Checks that what the index holds is what it would build from the model now. */
@@ -46,6 +48,14 @@ function expectIndexCurrent(archimate: Archimate): void {
     for (const [id, entry] of fresh.elements!) {
       expect(cached.elements.get(id)?.folderKey).toBe(entry.folderKey);
       expect(cached.elements.get(id)?.element).toBe(entry.element);
+    }
+  }
+
+  // The views that show a concept may include views that no longer do, but never leave one out.
+  if (cached.views) {
+    (fresh as unknown as ModelIndex).viewsShowing('');
+    for (const [conceptId, views] of fresh.views!) {
+      for (const viewId of views) expect(cached.views.get(conceptId)?.has(viewId), `${conceptId} in ${viewId}`).toBe(true);
     }
   }
 
@@ -202,6 +212,91 @@ describe('the lookups on a model with duplicate ids', () => {
     expect(archimate.getElement('id-dup')?.name).toBe('Second');
     expect(archimate.hasId('id-dup')).toBe(true);
     expectIndexCurrent(archimate);
+  });
+});
+
+describe('deleteElement with the views that show the element', () => {
+  function modelWithViews() {
+    const { archimate, viewId, objectIds } = modelWithView();
+    // A second view showing both elements and the relationship, and a third that shows neither
+    const other = archimate.createView('Other');
+    const a = archimate.addDiagramObject(other.id, 'app-a', { x: 0, y: 0, width: 1, height: 1 })!;
+    const b = archimate.addDiagramObject(other.id, 'app-b', { x: 0, y: 0, width: 1, height: 1 })!;
+    archimate.addConnection(other.id, a.id, b.id, 'flow');
+    const unrelated = archimate.createView('Unrelated');
+    archimate.addDiagramObject(unrelated.id, 'node', { x: 0, y: 0, width: 1, height: 1 });
+    return { archimate, views: [viewId, other.id, unrelated.id], objectIds };
+  }
+  const objects = (archimate: Archimate, viewId: string) => archimate.getView(viewId)!.children.map(child => child.archimateElement);
+  const connections = (archimate: Archimate, viewId: string) =>
+    archimate.getView(viewId)!.children.flatMap(child => child.sourceConnections.map(connection => connection.archimateRelationship));
+
+  it('removes the diagram objects and connections from every view that shows them', () => {
+    const { archimate, views } = modelWithViews();
+    buildIndex(archimate);
+
+    archimate.deleteElement('app-a');
+
+    expect(views.map(view => objects(archimate, view))).toEqual([['app-b'], ['app-b'], ['node']]);
+    expect(views.map(view => connections(archimate, view))).toEqual([[], [], []]);
+    expect(archimate.validateModel().filter(issue => issue.severity === 'error')).toEqual([]);
+    expectIndexCurrent(archimate);
+  });
+
+  it('removes the connections of a deleted relationship from every view', () => {
+    const { archimate, views } = modelWithViews();
+    buildIndex(archimate);
+
+    archimate.deleteElement('flow');
+
+    expect(views.map(view => connections(archimate, view))).toEqual([[], [], []]);
+    expectIndexCurrent(archimate);
+  });
+
+  it('finds what was added after the lookup was built, in new, copied and edited views', () => {
+    const { archimate, views } = modelWithViews();
+    buildIndex(archimate);
+    archimate.addDiagramObject(views[2], 'app-a', { x: 0, y: 0, width: 1, height: 1 });
+    const copy = archimate.duplicateView(views[1])!;
+    const edited = archimate.createView('Edited');
+    archimate.updateElement(edited.id, {
+      child: [{ id: 'id-x', type: 'DiagramObject', archimateElement: 'app-a', bounds: { x: 0, y: 0, width: 1, height: 1 } }],
+    });
+
+    archimate.deleteElement('app-a');
+
+    expect([...views, copy.id, edited.id].map(view => objects(archimate, view).includes('app-a'))).toEqual([
+      false,
+      false,
+      false,
+      false,
+      false,
+    ]);
+    expectIndexCurrent(archimate);
+  });
+
+  it('does not walk views that do not show the element', () => {
+    const { archimate, views } = modelWithViews();
+    buildIndex(archimate);
+    const unrelated = internals(archimate).model.diagrams.elements!.find(view => view.id === views[2])!;
+    const child = Object.getOwnPropertyDescriptor(unrelated, 'child')!;
+    let reads = 0;
+    Object.defineProperty(unrelated, 'child', {
+      configurable: true,
+      enumerable: true,
+      get: () => {
+        reads++;
+        return child.value;
+      },
+      set: value => {
+        child.value = value;
+      },
+    });
+
+    archimate.deleteElement('app-a');
+
+    expect(reads).toBe(0);
+    Object.defineProperty(unrelated, 'child', child);
   });
 });
 

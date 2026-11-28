@@ -126,6 +126,7 @@ export class ViewManager {
     const diagramObject = this.newDiagramObject(elementId, bounds, style);
     siblings.push(diagramObject);
     this.index.addId(diagramObject.id);
+    this.index.shown(elementId, viewElement.id);
     return toViewChild(diagramObject) as ViewDiagramObject;
   }
 
@@ -200,6 +201,7 @@ export class ViewManager {
     sourceObject.sourceConnection = [...(sourceObject.sourceConnection ?? []), connection];
     targetObject.targetConnections = [...(targetObject.targetConnections ?? []), connection.id];
     this.index.addId(connection.id);
+    this.index.shown(relationshipId, viewElement.id);
 
     return toViewConnection(connection);
   }

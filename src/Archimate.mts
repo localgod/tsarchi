@@ -318,7 +318,7 @@ export class Archimate {
     if (!location) return false;
 
     location.folder.elements!.splice(location.index, 1);
-    const removed = this.removeWithDeletedElements(new Map([[location.folderKey, new Set([elementId])]]));
+    const removed = this.removeWithDeletedElements(new Map([[location.folderKey, new Set([elementId])]]), true);
     this.index.removed(
       [location.element, ...removed.relationships],
       [...viewChildIds(location.element.child ?? []), ...removed.viewObjectIds]
@@ -359,8 +359,13 @@ export class Archimate {
    * Removes what goes with elements or relationships deleted from top-level folders: their places in nested
    * folders, the relationships attached to them (transitively), and the diagram objects and view connections
    * that show any of them. Returns the relationships removed with them and the ids of the removed view objects.
+   * With `shownOnly`, only the views the index lists as showing them are visited, instead of every view; deletes of
+   * many elements at once leave it off, as one pass over every view is then cheaper.
    */
-  private removeWithDeletedElements(deletedIds: ReadonlyMap<FolderKey, ReadonlySet<string>>): {
+  private removeWithDeletedElements(
+    deletedIds: ReadonlyMap<FolderKey, ReadonlySet<string>>,
+    shownOnly = false
+  ): {
     relationships: Element[];
     viewObjectIds: Set<string>;
   } {
@@ -373,14 +378,16 @@ export class Archimate {
 
     const relationships = this.removeRelationshipsForElements(new Set([...elementIds, ...removedRelationshipIds]));
     for (const relationship of relationships) removedRelationshipIds.add(relationship.id);
+    const views = shownOnly ? this.viewsShowing([...elementIds, ...removedRelationshipIds]) : undefined;
     const viewObjectIds = new Set<string>();
     if (removedRelationshipIds.size > 0) {
       removeFromNestedFolders(this.model.relations.folders || [], removedRelationshipIds);
-      for (const id of this.removeViewConnectionsForRelationships(removedRelationshipIds)) viewObjectIds.add(id);
+      for (const id of this.removeViewConnectionsForRelationships(removedRelationshipIds, views)) viewObjectIds.add(id);
     }
     if (elementIds.size > 0) {
       const removedIds = this.removeViewChildren(
-        child => child.type === 'DiagramObject' && child.archimateElement !== undefined && elementIds.has(child.archimateElement)
+        child => child.type === 'DiagramObject' && child.archimateElement !== undefined && elementIds.has(child.archimateElement),
+        views
       );
       for (const id of removedIds) viewObjectIds.add(id);
     }
@@ -1390,6 +1397,20 @@ export class Archimate {
   /**
    * Removes the references to a view in every view, with their connections. Returns the ids removed.
    */
+  /**
+   * The stored views that may show any of the elements or relationships, by the index: each once, in no set order.
+   */
+  private viewsShowing(conceptIds: Iterable<string>): Element[] {
+    const views = new Set<Element>();
+    for (const conceptId of conceptIds) {
+      for (const viewId of this.index.viewsShowing(conceptId)) {
+        const entry = this.index.element(viewId);
+        if (entry?.folderKey === 'diagrams') views.add(entry.element);
+      }
+    }
+    return [...views];
+  }
+
   private removeDiagramModelReferences(viewId: string): Set<string> {
     return this.removeViewChildren(child => child.type === 'DiagramModelReference' && child.model === viewId);
   }
@@ -1399,9 +1420,9 @@ export class Archimate {
    * connections from or to anything removed, and every targetConnections
    * reference to a removed connection. Returns the ids removed.
    */
-  private removeViewChildren(shouldRemove: (child: Child) => boolean): Set<string> {
+  private removeViewChildren(shouldRemove: (child: Child) => boolean, views = this.model.diagrams.elements || []): Set<string> {
     const removedIds = new Set<string>();
-    for (const viewElement of this.model.diagrams.elements || []) {
+    for (const viewElement of views) {
       for (const id of removeViewChildren(viewElement, shouldRemove)) removedIds.add(id);
     }
     return removedIds;
@@ -1412,9 +1433,9 @@ export class Archimate {
    * connections attached to a removed connection, and every targetConnections
    * reference to a removed connection. Returns the ids removed.
    */
-  private removeViewConnectionsForRelationships(relationshipIds: Set<string>): Set<string> {
+  private removeViewConnectionsForRelationships(relationshipIds: Set<string>, views = this.model.diagrams.elements || []): Set<string> {
     const removedIds = new Set<string>();
-    for (const viewElement of this.model.diagrams.elements || []) {
+    for (const viewElement of views) {
       const removed = removeViewConnections(
         viewElement,
         connection => connection.archimateRelationship !== undefined && relationshipIds.has(connection.archimateRelationship)

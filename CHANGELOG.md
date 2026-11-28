@@ -8,12 +8,13 @@ This project adheres to [Keep a CHANGELOG](http://keepachangelog.com/)
 
 ## [Unreleased]
 
-## [5.0.0] - 2026-11-27
+## [5.0.0] - 2026-11-28
 
 ### Added
 
 - A stable, lossless JSON format for a model: `toJson()` and `Archimate.fromJson()`, `loadModelJson()` and `saveModelJson()` in `tsarchi/node`, the `ModelJson` types and a JSON Schema (`modelJsonSchema`, `tsarchi/schema/model-v1.json`). Concepts are flat lists sorted by id, folders list their members, codes are named, and the text is the same for the same model, for storing models in git. `ArchimateParseError` has a new kind, `not-json` ([#550](https://github.com/localgod/tsarchi/issues/550)).
 - `addDiagramObject` takes a `parentId` option to add the diagram object into a group or an ArchiMate diagram object at any depth, with bounds relative to it ([#559](https://github.com/localgod/tsarchi/issues/559)).
+- `addGroup` takes the same `parentId` option, to add a group into a group or an ArchiMate diagram object at any depth, as Archi allows ([#569](https://github.com/localgod/tsarchi/issues/569)).
 - `getProperty`, `getPropertyValues`, `getPropertyKeys`, `setProperty`, `addProperty` and `removeProperty` read a `properties` list and return changed copies, following jArchi's `prop()` and `removeProp()` ([#551](https://github.com/localgod/tsarchi/issues/551)).
 
 ### Changed

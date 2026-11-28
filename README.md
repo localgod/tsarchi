@@ -475,6 +475,14 @@ model.addDiagramObject(
   { x: 20, y: 20, width: 120, height: 55 },
   { parentId: group.id },
 );
+
+// Groups nest the same way, in a group or in an element's diagram object
+model.addGroup(
+  view.id,
+  "Integration",
+  { x: 20, y: 90, width: 300, height: 50 },
+  { parentId: group.id },
+);
 ```
 
 ### View Management Operations
